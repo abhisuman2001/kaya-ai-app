@@ -93,6 +93,11 @@ class SiteMindViewModel(application: Application) : AndroidViewModel(application
     val aiContextEngine = AiContextEngine()
     val aiContextState: StateFlow<ActiveSiteContext> = aiContextEngine.contextState
     val aiContextEvents: StateFlow<List<ContextEvent>> = aiContextEngine.eventTimeline
+    val assignedTasks = aiContextEngine.assignedTasks
+
+    fun updateTaskStatus(taskId: String, newStatus: com.example.data.model.TaskStatus) {
+        aiContextEngine.updateTaskStatus(taskId, newStatus)
+    }
 
     // Glass Device State
     private val _glassState = MutableStateFlow(GlassDeviceState())

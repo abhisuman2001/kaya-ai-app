@@ -50,6 +50,7 @@ import com.example.ui.screens.SceneAnalysisScreen
 import com.example.ui.screens.HazardDetectionScreen
 import com.example.ui.screens.QualityScreen
 import com.example.ui.screens.MaterialScreen
+import com.example.ui.screens.TasksScreen
 import com.example.ui.screens.ToolsScreen
 import com.example.ui.screens.AnalyticsScreen
 import com.example.ui.screens.NotificationsScreen
@@ -84,6 +85,7 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector)
     object LiveAi : Screen("live_ai", "Live AI", Icons.Default.Psychology)
     object Assistant : Screen("assistant", "Voice AI", Icons.Default.RecordVoiceOver)
     object Device : Screen("device", "Glasses", Icons.Default.Smartphone)
+    object Tasks : Screen("tasks", "Tasks", Icons.Default.Assignment)
     object Tools : Screen("tools", "Tools", Icons.Default.GridView)
     object SceneAnalysis : Screen("scene_analysis", "Scene AI", Icons.Default.CenterFocusStrong)
     object HazardDetection : Screen("hazard_detection", "Hazards", Icons.Default.Warning)
@@ -162,7 +164,7 @@ fun AppNavigation(
                 Screen.Home,
                 Screen.LiveAi,
                 Screen.Assistant,
-                Screen.Tools,
+                Screen.Tasks,
                 Screen.Profile
             )
 
@@ -257,6 +259,14 @@ fun AppNavigation(
                             onNavigateToKnowledge = { navController.navigate(Screen.Knowledge.route) },
                             onNavigateToReports = { navController.navigate(Screen.Reports.route) },
                             onNavigateToDevice = { navController.navigate(Screen.Device.route) }
+                        )
+                    }
+                    composable(Screen.Tasks.route) {
+                        TasksScreen(
+                            viewModel = viewModel,
+                            onNavigateToVoiceAi = { prompt ->
+                                navController.navigate(Screen.Assistant.route)
+                            }
                         )
                     }
                     composable(Screen.Tools.route) {

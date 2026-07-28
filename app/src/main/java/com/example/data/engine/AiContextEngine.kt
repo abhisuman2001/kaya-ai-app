@@ -2,11 +2,15 @@ package com.example.data.engine
 
 import com.example.data.model.ActiveSiteContext
 import com.example.data.model.AiGeneratedReport
+import com.example.data.model.ConstructionTask
 import com.example.data.model.ContextAnswer
 import com.example.data.model.ContextEvent
 import com.example.data.model.ContextEventSource
 import com.example.data.model.ContextEventType
 import com.example.data.model.ContextQueryFilter
+import com.example.data.model.ShiftTaskSummary
+import com.example.data.model.TaskPriority
+import com.example.data.model.TaskStatus
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -113,6 +117,152 @@ class AiContextEngine {
 
     private val _submittedReports = MutableStateFlow<List<AiGeneratedReport>>(initialReports)
     val submittedReports: StateFlow<List<AiGeneratedReport>> = _submittedReports.asStateFlow()
+
+    private val initialTasks = listOf(
+        ConstructionTask(
+            taskId = "TSK-101",
+            zone = "Level 12",
+            title = "Install Steel Beam B12",
+            description = "Rig and position heavy I-beam B12 onto Level 12 column seats. Secure with temporary drift pins prior to full bolt-up.",
+            priority = TaskPriority.HIGH,
+            status = TaskStatus.IN_PROGRESS,
+            estimatedDuration = "3 Hours",
+            dueTime = "11:30 AM",
+            assignedSupervisor = "Marcus Vance (Site Director)",
+            requiredPpe = listOf("Safety Helmet", "High-Vis Vest", "Safety Harness", "Steel-toe Boots"),
+            safetyRequirements = listOf(
+                "Anchor fall protection harness to 100% perimeter lifeline.",
+                "Verify crane signalman has clear line-of-sight.",
+                "Barricade ground exclusion zone below lift area."
+            ),
+            aiRecommendations = listOf(
+                "Wear helmet and reflective vest.",
+                "Inspect beam alignment before installation.",
+                "Use crane communication protocol."
+            )
+        ),
+        ConstructionTask(
+            taskId = "TSK-102",
+            zone = "West Wing",
+            title = "Inspect Scaffold",
+            description = "Audit perimeter modular scaffolding for plank anchoring, toe-board attachment, and structural ties.",
+            priority = TaskPriority.MEDIUM,
+            status = TaskStatus.IN_PROGRESS,
+            estimatedDuration = "45 Minutes",
+            dueTime = "01:15 PM",
+            assignedSupervisor = "Sarah Jenkins (Safety Officer)",
+            requiredPpe = listOf("Safety Helmet", "High-Vis Vest", "Safety Gloves", "Steel-toe Boots"),
+            safetyRequirements = listOf(
+                "Check green scaffold inspection tag before mounting.",
+                "Report loose timber planks immediately."
+            ),
+            aiRecommendations = listOf(
+                "Verify scaffold load rating tag matches current live load.",
+                "Take AI camera snapshot of platform joints for instant audit log."
+            )
+        ),
+        ConstructionTask(
+            taskId = "TSK-103",
+            zone = "Level 18 Deck",
+            title = "Concrete Surface Inspection",
+            description = "Perform optical surface audit on poured slab for hairline cracking and edge spalling.",
+            priority = TaskPriority.LOW,
+            status = TaskStatus.COMPLETED,
+            estimatedDuration = "1 Hour",
+            dueTime = "09:30 AM",
+            assignedSupervisor = "Marcus Vance (Site Director)",
+            requiredPpe = listOf("Safety Helmet", "High-Vis Vest", "Safety Glasses"),
+            safetyRequirements = listOf(
+                "Maintain 2-meter standoff from unprotected slab edges."
+            ),
+            aiRecommendations = listOf(
+                "Surface micro-crack tolerance verified under 0.2mm standard."
+            )
+        ),
+        ConstructionTask(
+            taskId = "TSK-104",
+            zone = "Level 12 Frame B-12",
+            title = "Torque Test Flange Fasteners",
+            description = "Apply calibrated digital torque wrench to high-strength bolts on structural steel splices.",
+            priority = TaskPriority.HIGH,
+            status = TaskStatus.PENDING,
+            estimatedDuration = "1.5 Hours",
+            dueTime = "03:00 PM",
+            assignedSupervisor = "Marcus Vance (Site Director)",
+            requiredPpe = listOf("Safety Helmet", "Impact Gloves", "High-Vis Vest", "Ear Protection"),
+            safetyRequirements = listOf(
+                "Verify torque wrench calibration sticker date."
+            ),
+            aiRecommendations = listOf(
+                "Calibrate digital wrench to 450 Nm target specification.",
+                "Record torque log directly to AI Context Engine."
+            )
+        ),
+        ConstructionTask(
+            taskId = "TSK-105",
+            zone = "Grid Line C-2 Level 12",
+            title = "Electrical Conduit Clearance",
+            description = "Verify temporary 480V electrical cable routing clears active movement paths and moisture zones.",
+            priority = TaskPriority.MEDIUM,
+            status = TaskStatus.PENDING,
+            estimatedDuration = "1 Hour",
+            dueTime = "04:30 PM",
+            assignedSupervisor = "Dave Miller (Electrical Lead)",
+            requiredPpe = listOf("Safety Helmet", "Insulated Gloves", "High-Vis Vest"),
+            safetyRequirements = listOf(
+                "Confirm zero-energy lockout tagout status before touching conduit."
+            ),
+            aiRecommendations = listOf(
+                "Scan conduit with Live AI Vision for thermal hot spots."
+            )
+        )
+    )
+
+    private val _assignedTasks = MutableStateFlow<List<ConstructionTask>>(initialTasks)
+    val assignedTasks: StateFlow<List<ConstructionTask>> = _assignedTasks.asStateFlow()
+
+    fun getShiftTaskSummary(): ShiftTaskSummary {
+        val tasks = _assignedTasks.value
+        val completed = tasks.count { it.status == TaskStatus.COMPLETED }
+        val total = tasks.size
+        return ShiftTaskSummary(
+            completedCount = completed,
+            totalCount = total,
+            remainingTimeFormatted = "5h 20m"
+        )
+    }
+
+    fun updateTaskStatus(taskId: String, newStatus: TaskStatus) {
+        _assignedTasks.update { list ->
+            list.map { task ->
+                if (task.taskId == taskId) task.copy(status = newStatus) else task
+            }
+        }
+        val task = _assignedTasks.value.find { it.taskId == taskId }
+        if (task != null) {
+            val event = ContextEvent(
+                id = "evt_tsk_${System.currentTimeMillis()}",
+                formattedTime = formatTime(System.currentTimeMillis()),
+                type = ContextEventType.SESSION_STATE_CHANGED,
+                source = ContextEventSource.SYSTEM,
+                title = "Task Updated: ${task.title}",
+                description = "Status changed to ${newStatus.label} in Zone ${task.zone}.",
+                location = task.zone
+            )
+            recordEvent(event)
+        }
+    }
+
+    fun markCurrentTaskCompleted(): String {
+        val activeTask = _assignedTasks.value.firstOrNull { it.status == TaskStatus.IN_PROGRESS }
+            ?: _assignedTasks.value.firstOrNull { it.status == TaskStatus.PENDING }
+        return if (activeTask != null) {
+            updateTaskStatus(activeTask.taskId, TaskStatus.COMPLETED)
+            "I've marked '${activeTask.title}' as Completed. Your progress is updated."
+        } else {
+            "All assigned tasks for today's shift are already completed."
+        }
+    }
 
     private val _contextState = MutableStateFlow(
         ActiveSiteContext(
@@ -577,6 +727,81 @@ class AiContextEngine {
         val timeline = _eventTimeline.value
 
         return when {
+            // "What is my next task?" / "my task"
+            q.contains("next task") || q.contains("my task") || q.contains("what task") || q.contains("assigned task") -> {
+                val tasks = _assignedTasks.value
+                val activeTask = tasks.firstOrNull { it.status == TaskStatus.IN_PROGRESS } 
+                    ?: tasks.firstOrNull { it.status == TaskStatus.PENDING }
+                if (activeTask != null) {
+                    ContextAnswer(
+                        questionText = questionText,
+                        responseText = "Your next task is ${activeTask.title} on ${activeTask.zone}.",
+                        suggestedFollowUps = listOf("Explain this task.", "What safety equipment do I need?", "Mark this task complete.")
+                    )
+                } else {
+                    ContextAnswer(
+                        questionText = questionText,
+                        responseText = "You have no remaining tasks for today's shift. All assigned work is completed!",
+                        suggestedFollowUps = listOf("Report an issue", "Is this area safe?")
+                    )
+                }
+            }
+
+            // "Explain this task" / "task details"
+            q.contains("explain") && q.contains("task") || q.contains("task detail") || q.contains("how to do") -> {
+                val tasks = _assignedTasks.value
+                val activeTask = tasks.firstOrNull { it.status == TaskStatus.IN_PROGRESS }
+                    ?: tasks.firstOrNull { it.status == TaskStatus.PENDING }
+                    ?: tasks.firstOrNull()
+                if (activeTask != null) {
+                    val ppeStr = activeTask.requiredPpe.joinToString(", ")
+                    val recStr = activeTask.aiRecommendations.joinToString(" ")
+                    ContextAnswer(
+                        questionText = questionText,
+                        responseText = "${activeTask.title} on ${activeTask.zone}: ${activeTask.description} Safety Requirements: ${activeTask.safetyRequirements.joinToString(". ")}. AI Recommendations: $recStr",
+                        suggestedFollowUps = listOf("What safety equipment do I need?", "Mark this task complete.", "Report an issue")
+                    )
+                } else {
+                    ContextAnswer(
+                        questionText = questionText,
+                        responseText = "No active task available to explain.",
+                        suggestedFollowUps = listOf("What is my next task?")
+                    )
+                }
+            }
+
+            // "Mark this task complete" / "complete task"
+            q.contains("mark") && q.contains("complete") || q.contains("mark complete") || q.contains("task complete") || q.contains("finish task") -> {
+                val confirmMsg = markCurrentTaskCompleted()
+                ContextAnswer(
+                    questionText = questionText,
+                    responseText = confirmMsg,
+                    suggestedFollowUps = listOf("What is my next task?", "Explain this task.", "Is this area safe?")
+                )
+            }
+
+            // "What safety equipment do I need?" / "required ppe"
+            q.contains("safety equipment") || q.contains("equipment do i need") || q.contains("ppe") || q.contains("gear do i need") -> {
+                val tasks = _assignedTasks.value
+                val activeTask = tasks.firstOrNull { it.status == TaskStatus.IN_PROGRESS }
+                    ?: tasks.firstOrNull { it.status == TaskStatus.PENDING }
+                    ?: tasks.firstOrNull()
+                if (activeTask != null) {
+                    val ppeList = activeTask.requiredPpe.joinToString(", ")
+                    ContextAnswer(
+                        questionText = questionText,
+                        responseText = "Required safety equipment for ${activeTask.title}: $ppeList.",
+                        suggestedFollowUps = listOf("Explain this task.", "Mark this task complete.", "Is this area safe?")
+                    )
+                } else {
+                    ContextAnswer(
+                        questionText = questionText,
+                        responseText = "Standard required site PPE: Safety Helmet, High-Vis Vest, Steel-toe Boots, and Eye Protection.",
+                        suggestedFollowUps = listOf("What is my next task?")
+                    )
+                }
+            }
+
             // "What was the last hazard?"
             q.contains("last hazard") || q.contains("recent hazard") || q.contains("previous hazard") -> {
                 val lastHaz = getLastHazard()
