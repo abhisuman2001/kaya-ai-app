@@ -1,0 +1,384 @@
+package com.example.ui.components
+
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.BatteryChargingFull
+import androidx.compose.material.icons.filled.BluetoothConnected
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.Videocam
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import com.example.R
+import com.example.data.model.GlassAiState
+import com.example.data.model.GlassDeviceState
+import com.example.ui.theme.BorderDark
+import com.example.ui.theme.GlassAnalyzing
+import com.example.ui.theme.GlassCharging
+import com.example.ui.theme.GlassConnected
+import com.example.ui.theme.GlassIdle
+import com.example.ui.theme.GlassListening
+import com.example.ui.theme.GlassOffline
+import com.example.ui.theme.GlassSpeaking
+import com.example.ui.theme.GlassThinking
+import com.example.ui.theme.MetaBlue
+import com.example.ui.theme.SiteSurfaceDark
+
+@Composable
+fun RayBanGlassesHero(
+    deviceState: GlassDeviceState,
+    onStateSelect: (GlassAiState) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val stateColor by animateColorAsState(
+        targetValue = when (deviceState.connectionState) {
+            GlassAiState.IDLE -> GlassIdle
+            GlassAiState.CONNECTED -> GlassConnected
+            GlassAiState.LISTENING -> GlassListening
+            GlassAiState.THINKING -> GlassThinking
+            GlassAiState.ANALYZING -> GlassAnalyzing
+            GlassAiState.SPEAKING -> GlassSpeaking
+            GlassAiState.CHARGING -> GlassCharging
+            GlassAiState.OFFLINE -> GlassOffline
+        },
+        label = "glass_state_color"
+    )
+
+    val infiniteTransition = rememberInfiniteTransition(label = "pulse_transition")
+    val pulseScale by infiniteTransition.animateFloat(
+        initialValue = 0.95f,
+        targetValue = 1.05f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1200, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "pulse_scale"
+    )
+
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .testTag("rayban_glasses_hero_card"),
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = SiteSurfaceDark)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(20.dp)
+        ) {
+            // Top Bar: Ray-Ban Meta Branding + Status Pill
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    modifier = Modifier.weight(1f, fill = false),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(10.dp)
+                            .clip(CircleShape)
+                            .background(stateColor)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = "RAY-BAN META SMART GLASSES",
+                        color = Color.White,
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 1.sp,
+                        maxLines = 1,
+                        overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                    )
+                }
+
+                Spacer(modifier = Modifier.width(8.dp))
+
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = Color.White.copy(alpha = 0.12f),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.18f))
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        val batteryColor = when {
+                            deviceState.batteryPercent > 50 -> Color(0xFF22C55E)
+                            deviceState.batteryPercent > 20 -> Color(0xFFEAB308)
+                            else -> Color(0xFFEF4444)
+                        }
+
+                        // Battery visual bar representation
+                        Box(
+                            modifier = Modifier
+                                .width(20.dp)
+                                .height(10.dp)
+                                .border(1.dp, Color.White.copy(alpha = 0.8f), RoundedCornerShape(2.5.dp))
+                                .padding(1.dp),
+                            contentAlignment = Alignment.CenterStart
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxHeight()
+                                    .fillMaxWidth(deviceState.batteryPercent / 100f)
+                                    .clip(RoundedCornerShape(1.dp))
+                                    .background(batteryColor)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(6.dp))
+
+                        Text(
+                            text = "${deviceState.batteryPercent}%",
+                            color = Color.White,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Ray-Ban Meta Smart Glasses Frame Image Display
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(170.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(
+                        Brush.radialGradient(
+                            colors = listOf(
+                                stateColor.copy(alpha = 0.25f),
+                                Color(0xFF0F172A).copy(alpha = 0.8f)
+                            )
+                        )
+                    )
+                    .border(1.dp, stateColor.copy(alpha = 0.35f), RoundedCornerShape(16.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                // Background Ambient Glow Aura around Glasses
+                Canvas(modifier = Modifier.fillMaxSize()) {
+                    drawCircle(
+                        brush = Brush.radialGradient(
+                            colors = listOf(stateColor.copy(alpha = 0.4f), Color.Transparent)
+                        ),
+                        radius = size.width * 0.45f,
+                        center = center
+                    )
+                }
+
+                // Ray-Ban Meta Front View Glasses Asset
+                Image(
+                    painter = painterResource(id = R.drawable.ic_rayban_meta_front),
+                    contentDescription = "Ray-Ban Meta Smart Glasses",
+                    modifier = Modifier
+                        .fillMaxWidth(0.92f)
+                        .height(140.dp),
+                    contentScale = ContentScale.Fit
+                )
+
+                // Top Left Live HUD Badge
+                Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = stateColor.copy(alpha = 0.85f),
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(10.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(6.dp)
+                                .clip(CircleShape)
+                                .background(Color.White)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "GLASSES AI • ${deviceState.connectionState.label}",
+                            fontSize = 9.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color.White
+                        )
+                    }
+                }
+
+                // Bottom Center Meta Glasses Status Overlay
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(bottom = 8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "RAY-BAN  META",
+                        color = Color.White.copy(alpha = 0.95f),
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 2.sp
+                    )
+                    Text(
+                        text = deviceState.connectionState.description,
+                        color = Color.White.copy(alpha = 0.75f),
+                        fontSize = 10.sp
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Quick Info Chips (Bluetooth, 12MP Camera, 5-Mic Array) with explicit gap & flex weights
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                InfoChip(
+                    icon = Icons.Default.BluetoothConnected,
+                    label = "Bluetooth 5.3",
+                    value = "Low Latency",
+                    modifier = Modifier.weight(1f)
+                )
+                InfoChip(
+                    icon = Icons.Default.Videocam,
+                    label = "12MP Camera",
+                    value = if (deviceState.isLiveStreaming) "1080p HUD" else "Standby",
+                    modifier = Modifier.weight(1f)
+                )
+                InfoChip(
+                    icon = Icons.Default.Mic,
+                    label = "5-Mic Array",
+                    value = "Noise Shield",
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun InfoChip(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(12.dp),
+        color = Color.White.copy(alpha = 0.08f),
+        border = androidx.compose.foundation.BorderStroke(1.dp, BorderDark)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = label,
+                tint = MetaBlue,
+                modifier = Modifier.size(14.dp)
+            )
+            Spacer(modifier = Modifier.width(6.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = label,
+                    color = Color.White.copy(alpha = 0.6f),
+                    fontSize = 9.sp,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                )
+                Text(
+                    text = value,
+                    color = Color.White,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 1,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun StatePill(
+    state: GlassAiState,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier.clickable { onClick() },
+        shape = RoundedCornerShape(10.dp),
+        color = if (isSelected) MetaBlue else Color.White.copy(alpha = 0.08f),
+        border = if (isSelected) null else androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.15f))
+    ) {
+        Box(
+            modifier = Modifier
+                .padding(vertical = 6.dp)
+                .fillMaxWidth(),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = state.label,
+                fontSize = 10.sp,
+                fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                color = if (isSelected) Color.White else Color.White.copy(alpha = 0.7f)
+            )
+        }
+    }
+}
