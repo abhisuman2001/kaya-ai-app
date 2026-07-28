@@ -4,6 +4,9 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.data.ai.MultiAgentService
+import com.example.data.engine.AiContextEngine
+import com.example.data.model.ActiveSiteContext
+import com.example.data.model.ContextEvent
 import com.example.data.local.BlueprintEntity
 import com.example.data.local.HazardEntity
 import com.example.data.local.KnowledgeItemEntity
@@ -85,6 +88,11 @@ class SiteMindViewModel(application: Application) : AndroidViewModel(application
         db.knowledgeDao()
     )
     private val aiService = MultiAgentService()
+
+    // Central Memory Layer - AI Context Engine
+    val aiContextEngine = AiContextEngine()
+    val aiContextState: StateFlow<ActiveSiteContext> = aiContextEngine.contextState
+    val aiContextEvents: StateFlow<List<ContextEvent>> = aiContextEngine.eventTimeline
 
     // Glass Device State
     private val _glassState = MutableStateFlow(GlassDeviceState())
@@ -1070,6 +1078,9 @@ class SiteMindViewModel(application: Application) : AndroidViewModel(application
 
             val result = aiService.processQueryAndFrame(query)
 
+            // Record voice interaction into central AI Context Engine memory
+            aiContextEngine.recordVoiceInteraction(query, result.aiResponseText)
+
             _glassState.value = _glassState.value.copy(connectionState = GlassAiState.SPEAKING)
             _liveResult.value = result
             _isAnalyzing.value = false
@@ -1091,6 +1102,13 @@ class SiteMindViewModel(application: Application) : AndroidViewModel(application
 
     fun triggerEmergencySos() {
         _isEmergencyActive.value = true
+        aiContextEngine.recordHazardDetected(
+            title = "🚨 EMERGENCY SOS BROADCAST TRIGGERED",
+            severity = "CRITICAL",
+            location = "Zone B-4 Level 3",
+            description = "Site worker triggered high-priority SOS alert from Ray-Ban Meta glasses live stream.",
+            category = "EMERGENCY"
+        )
         // Add emergency hazard to DB
         viewModelScope.launch {
             repository.insertHazard(
@@ -1115,9 +1133,11 @@ class SiteMindViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun toggleLiveStream() {
+        val nextStreamingState = !_glassState.value.isLiveStreaming
         _glassState.value = _glassState.value.copy(
-            isLiveStreaming = !_glassState.value.isLiveStreaming
+            isLiveStreaming = nextStreamingState
         )
+        aiContextEngine.recordSessionStateChange(nextStreamingState)
     }
 
     fun toggleVoiceTrigger() {
@@ -1131,6 +1151,7 @@ class SiteMindViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun resolveHazard(hazard: HazardEntity) {
+        aiContextEngine.recordHazardResolved(hazard.title, hazard.location)
         viewModelScope.launch {
             repository.updateHazard(
                 hazard.copy(
@@ -1142,6 +1163,7 @@ class SiteMindViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun addHazard(title: String, category: String, severity: String, location: String, description: String) {
+        aiContextEngine.recordHazardDetected(title, severity, location, description, category)
         viewModelScope.launch {
             repository.insertHazard(
                 HazardEntity(
@@ -1156,6 +1178,7 @@ class SiteMindViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun addReport(type: String, title: String, summary: String, crewCount: Int, hazardsCount: Int) {
+        aiContextEngine.recordReportSubmitted(title, type, "Zone B-4 Level 3")
         viewModelScope.launch {
             repository.insertReport(
                 ReportEntity(

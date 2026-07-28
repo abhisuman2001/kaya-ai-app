@@ -90,6 +90,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.data.model.AiGeneratedReport
+import com.example.ui.components.ReportConfirmationBottomSheet
 import com.example.ui.theme.MetaBlue
 import com.example.ui.theme.StatusError
 import com.example.ui.theme.StatusSuccess
@@ -134,6 +136,9 @@ fun AiAssistantScreen(
     var textInputText by remember { mutableStateOf("") }
     var showTextInput by remember { mutableStateOf(false) }
 
+    var activeDraftReport by remember { mutableStateOf<AiGeneratedReport?>(null) }
+    var showReportBottomSheet by remember { mutableStateOf(false) }
+
     val messages = remember { mutableStateListOf<VoiceChatMessage>() }
     val listState = rememberLazyListState()
     val coroutineScope = rememberCoroutineScope()
@@ -141,13 +146,14 @@ fun AiAssistantScreen(
     // Suggested Questions
     val suggestedQuestions = remember {
         listOf(
+            "Report damaged scaffold.",
+            "Report exposed wiring.",
+            "Report missing safety barrier.",
+            "Did I already report this?",
+            "What's the status of my report?",
             "Is this area safe?",
             "What am I looking at?",
-            "Explain the current hazard.",
-            "What should I do next?",
-            "Summarize this work zone.",
-            "Are all workers wearing PPE?",
-            "Describe today's site conditions."
+            "Summarize this work zone."
         )
     }
 
@@ -172,6 +178,14 @@ fun AiAssistantScreen(
         textInputText = ""
         liveTranscriptText = questionText
 
+        // Check if query is hands-free report creation intent
+        val isReporting = viewModel.aiContextEngine.isReportIntent(questionText)
+        if (isReporting) {
+            val draft = viewModel.aiContextEngine.generateReportFromVoice(questionText)
+            activeDraftReport = draft
+            showReportBottomSheet = true
+        }
+
         // Scroll to latest
         coroutineScope.launch {
             delay(100)
@@ -188,8 +202,17 @@ fun AiAssistantScreen(
             voiceState = VoiceState.THINKING
             delay(1200)
 
-            // Generate AI Response based on question & live context
-            val aiResponseText = generateContextualAiResponse(questionText, isLiveStreaming)
+            // Generate AI Response dynamically via Central AI Context Engine
+            val aiResponseText = if (isReporting && activeDraftReport != null) {
+                val draft = activeDraftReport!!
+                "I've captured the current camera frame and context, classified the issue as '${draft.issueType}' (${draft.severity} severity), and generated a draft report for '${draft.title}'. Please review and confirm."
+            } else {
+                val contextAnswer = viewModel.aiContextEngine.answerContextualQuestion(questionText)
+                contextAnswer.responseText
+            }
+
+            viewModel.aiContextEngine.recordVoiceInteraction(questionText, aiResponseText)
+
             val aiMsgId = "ai_${System.currentTimeMillis()}"
 
             messages.add(
@@ -347,6 +370,32 @@ fun AiAssistantScreen(
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
         )
+
+        // Hands-Free Report Confirmation Bottom Sheet
+        if (showReportBottomSheet && activeDraftReport != null) {
+            ReportConfirmationBottomSheet(
+                report = activeDraftReport!!,
+                onDismiss = {
+                    showReportBottomSheet = false
+                },
+                onSubmit = { submittedReport ->
+                    viewModel.aiContextEngine.recordStructuredReport(submittedReport)
+                    val confirmMsg = "✓ I've created the report for '${submittedReport.title}' (${submittedReport.issueType}) with current camera evidence and notified your supervisor."
+                    messages.add(
+                        VoiceChatMessage(
+                            id = "ai_sub_${System.currentTimeMillis()}",
+                            isUser = false,
+                            text = confirmMsg,
+                            timestamp = SimpleTimeFormatter.now()
+                        )
+                    )
+                    viewModel.aiContextEngine.recordVoiceInteraction(
+                        userQuery = "Confirm Report: ${submittedReport.title}",
+                        aiResponse = "I've created the report and notified your supervisor."
+                    )
+                }
+            )
+        }
     }
 }
 
