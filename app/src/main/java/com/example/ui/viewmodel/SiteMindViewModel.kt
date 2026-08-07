@@ -1,12 +1,16 @@
 package com.example.ui.viewmodel
 
+import com.example.BuildConfig
 import android.app.Application
+import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.data.ai.MultiAgentService
 import com.example.data.engine.AiContextEngine
 import com.example.data.model.ActiveSiteContext
 import com.example.data.model.ContextEvent
+import com.example.data.model.ContextEventSource
+import com.example.data.model.ContextEventType
 import com.example.data.local.BlueprintEntity
 import com.example.data.local.HazardEntity
 import com.example.data.local.KnowledgeItemEntity
@@ -70,6 +74,7 @@ import com.example.data.model.QualityInspectionItem
 import com.example.data.model.QualityInspectionState
 import com.example.data.model.QualityRecommendationItem
 import com.example.data.repository.SiteMindRepository
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -81,6 +86,7 @@ import kotlinx.coroutines.launch
 class SiteMindViewModel(application: Application) : AndroidViewModel(application) {
 
     private val db = SiteMindDatabase.getDatabase(application)
+    private val prefs = application.getSharedPreferences("sitemind_prefs", Context.MODE_PRIVATE)
     private val repository = SiteMindRepository(
         db.hazardDao(),
         db.reportDao(),
@@ -169,9 +175,10 @@ class SiteMindViewModel(application: Application) : AndroidViewModel(application
 
     private val _discoveredDevices = MutableStateFlow<List<DiscoveredGlassDevice>>(
         listOf(
-            DiscoveredGlassDevice("rb_01", "Ray-Ban Meta Wayfarer", "7C:49:EB:11:82:90", -48, "Wayfarer", "Matte Black", 92, true),
-            DiscoveredGlassDevice("rb_02", "Ray-Ban Meta Headliner", "9A:12:DF:33:41:02", -62, "Headliner", "Shiny Black", 85, false),
-            DiscoveredGlassDevice("rb_03", "Ray-Ban Meta Skyler", "3F:88:AC:99:12:44", -78, "Skyler", "Chalk Grey", 100, false)
+            DiscoveredGlassDevice("phone_bridge_01", "Smartphone Camera & Mic Bridge", "94:11:AB:22:90:FF", -42, "Mobile Phone Bridge", "Graphite Black", 98, false, isSmartphoneBridge = true),
+            DiscoveredGlassDevice("rb_01", "Ray-Ban Meta Wayfarer", "7C:49:EB:11:82:90", -48, "Wayfarer", "Matte Black", 92, true, isSmartphoneBridge = false),
+            DiscoveredGlassDevice("rb_02", "Ray-Ban Meta Headliner", "9A:12:DF:33:41:02", -62, "Headliner", "Shiny Black", 85, false, isSmartphoneBridge = false),
+            DiscoveredGlassDevice("rb_03", "Ray-Ban Meta Skyler", "3F:88:AC:99:12:44", -78, "Skyler", "Chalk Grey", 100, false, isSmartphoneBridge = false)
         )
     )
     val discoveredDevices: StateFlow<List<DiscoveredGlassDevice>> = _discoveredDevices.asStateFlow()
@@ -930,8 +937,280 @@ class SiteMindViewModel(application: Application) : AndroidViewModel(application
     val siteTasks: StateFlow<List<SiteTaskItem>> = _siteTasks.asStateFlow()
 
     init {
+        val savedTheme = prefs.getString("app_theme", null)
+        if (savedTheme != null) {
+            val updatedUser = _profileState.value.profile.copy(theme = savedTheme)
+            _profileState.value = _profileState.value.copy(profile = updatedUser)
+        }
+        // Fetch live real-time weather based on user location
+        detectAndFetchLocationWeather()
         // Run initial AI analysis
         runAiQuery("Perform initial safety & blueprint check")
+    }
+
+    fun detectAndFetchLocationWeather() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val app = getApplication<Application>()
+            val fineGranted = androidx.core.content.ContextCompat.checkSelfPermission(
+                app, android.Manifest.permission.ACCESS_FINE_LOCATION
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            val coarseGranted = androidx.core.content.ContextCompat.checkSelfPermission(
+                app, android.Manifest.permission.ACCESS_COARSE_LOCATION
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+
+            if (fineGranted || coarseGranted) {
+                val locationManager = app.getSystemService(Context.LOCATION_SERVICE) as? android.location.LocationManager
+                var bestLoc: android.location.Location? = null
+                if (locationManager != null) {
+                    val providers = listOf(
+                        android.location.LocationManager.GPS_PROVIDER,
+                        android.location.LocationManager.NETWORK_PROVIDER,
+                        android.location.LocationManager.PASSIVE_PROVIDER
+                    )
+                    for (provider in providers) {
+                        try {
+                            val loc = locationManager.getLastKnownLocation(provider)
+                            if (loc != null && (bestLoc == null || loc.accuracy < bestLoc.accuracy)) {
+                                bestLoc = loc
+                            }
+                        } catch (e: SecurityException) {
+                            e.printStackTrace()
+                        }
+                    }
+                }
+
+                if (bestLoc != null) {
+                    val lat = bestLoc.latitude
+                    val lon = bestLoc.longitude
+                    val cityName = getCityNameFromCoordinates(app, lat, lon)
+                    fetchRealtimeWeather(lat, lon, cityName)
+                    return@launch
+                }
+            }
+
+            // Fallback: detect real location via IP if GPS location not available or permission not yet granted
+            try {
+                val ipUrl = "https://ip-api.com/json/"
+                val conn = java.net.URL(ipUrl).openConnection() as java.net.HttpURLConnection
+                conn.connectTimeout = 5000
+                conn.readTimeout = 5000
+                if (conn.responseCode == 200) {
+                    val json = conn.inputStream.bufferedReader().use { it.readText() }
+                    val obj = org.json.JSONObject(json)
+                    if (obj.optString("status") == "success") {
+                        val lat = obj.optDouble("lat", 37.7749)
+                        val lon = obj.optDouble("lon", -122.4194)
+                        val city = obj.optString("city")
+                        val region = obj.optString("regionName")
+                        val locName = if (city.isNotEmpty() && region.isNotEmpty()) "$city, $region" else if (city.isNotEmpty()) city else "Local Site"
+                        fetchRealtimeWeather(lat, lon, locName)
+                        return@launch
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+
+            fetchRealtimeWeather()
+        }
+    }
+
+    private fun getCityNameFromCoordinates(app: Application, lat: Double, lon: Double): String {
+        try {
+            val geocoder = android.location.Geocoder(app, java.util.Locale.getDefault())
+            @Suppress("DEPRECATION")
+            val addresses = geocoder.getFromLocation(lat, lon, 1)
+            if (!addresses.isNullOrEmpty()) {
+                val addr = addresses[0]
+                val city = addr.locality ?: addr.subAdminArea ?: addr.subLocality
+                val state = addr.adminArea ?: addr.countryName
+                if (!city.isNullOrEmpty() && !state.isNullOrEmpty()) {
+                    return "$city, $state"
+                } else if (!city.isNullOrEmpty()) {
+                    return city
+                } else if (!state.isNullOrEmpty()) {
+                    return state
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        try {
+            val geoUrl = "https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=$lat&longitude=$lon&localityLanguage=en"
+            val conn = java.net.URL(geoUrl).openConnection() as java.net.HttpURLConnection
+            conn.connectTimeout = 4000
+            conn.readTimeout = 4000
+            if (conn.responseCode == 200) {
+                val json = conn.inputStream.bufferedReader().use { it.readText() }
+                val obj = org.json.JSONObject(json)
+                val city = obj.optString("city").ifEmpty { obj.optString("locality") }
+                val region = obj.optString("principalSubdivision")
+                if (city.isNotEmpty() && region.isNotEmpty()) return "$city, $region"
+                if (city.isNotEmpty()) return city
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return "Local Site"
+    }
+
+    fun fetchRealtimeWeather(lat: Double = 37.7749, lon: Double = -122.4194, city: String = "San Francisco, CA") {
+        viewModelScope.launch(Dispatchers.IO) {
+            var fetchedSuccess = false
+            // 1. Try OpenWeatherMap API if key is available
+            val openWeatherKey = try { BuildConfig.OPENWEATHER_API_KEY } catch (e: Throwable) { "" }
+            if (!openWeatherKey.isNullOrBlank() && !openWeatherKey.contains("MY_OPENWEATHER_API_KEY")) {
+                try {
+                    val owmUrl = "https://api.openweathermap.org/data/2.5/weather?lat=$lat&lon=$lon&units=metric&appid=$openWeatherKey"
+                    val connection = java.net.URL(owmUrl).openConnection() as java.net.HttpURLConnection
+                    connection.requestMethod = "GET"
+                    connection.connectTimeout = 8000
+                    connection.readTimeout = 8000
+
+                    if (connection.responseCode == 200) {
+                        val jsonStr = connection.inputStream.bufferedReader().use { it.readText() }
+                        val jsonObj = org.json.JSONObject(jsonStr)
+                        val mainObj = jsonObj.optJSONObject("main")
+                        val windObj = jsonObj.optJSONObject("wind")
+                        val weatherArray = jsonObj.optJSONArray("weather")
+                        val weatherObj = if (weatherArray != null && weatherArray.length() > 0) weatherArray.getJSONObject(0) else null
+
+                        if (mainObj != null) {
+                            val tempC = mainObj.optDouble("temp", 24.0)
+                            val humidity = mainObj.optInt("humidity", 50)
+                            val windMs = windObj?.optDouble("speed", 3.3) ?: 3.3
+                            val windDeg = windObj?.optDouble("deg", 0.0) ?: 0.0
+                            val conditionStr = weatherObj?.optString("main") ?: "Clear"
+                            val locName = jsonObj.optString("name", city)
+
+                            val tempIntC = Math.round(tempC).toInt()
+                            val tempIntF = Math.round(tempC * 9.0 / 5.0 + 32).toInt()
+                            val windIntKmh = Math.round(windMs * 3.6).toInt()
+                            val windIntMph = Math.round(windMs * 2.23694).toInt()
+
+                            _weatherInfo.value = WeatherInfo(
+                                tempCelsius = tempIntC,
+                                tempFahrenheit = tempIntF,
+                                condition = conditionStr,
+                                windSpeedKmh = windIntKmh,
+                                windSpeedMph = windIntMph,
+                                windDirection = parseWindDirection(windDeg),
+                                humidityPercent = humidity,
+                                uvIndex = "Moderate (4)",
+                                airQualityIndex = 32,
+                                safetyStatus = if (windIntKmh >= 35) "Warning: High Wind ($windIntKmh km/h)" else "Optimal for Crane Lifting & High-Rise Glazing",
+                                locationName = locName,
+                                isLive = true
+                            )
+                            fetchedSuccess = true
+                        }
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+
+            // 2. Fallback to Open-Meteo live API if OpenWeatherMap is unavailable or fails
+            if (!fetchedSuccess) {
+                try {
+                    val urlString = "https://api.open-meteo.com/v1/forecast?latitude=$lat&longitude=$lon&current=temperature_2m,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m,uv_index&wind_speed_unit=kmh"
+                    val connection = java.net.URL(urlString).openConnection() as java.net.HttpURLConnection
+                    connection.requestMethod = "GET"
+                    connection.connectTimeout = 8000
+                    connection.readTimeout = 8000
+
+                    if (connection.responseCode == 200) {
+                        val stream = connection.inputStream
+                        val jsonStr = stream.bufferedReader().use { it.readText() }
+                        val jsonObj = org.json.JSONObject(jsonStr)
+                        val currentObj = jsonObj.optJSONObject("current")
+
+                        if (currentObj != null) {
+                            val tempC = currentObj.optDouble("temperature_2m", 24.0)
+                            val humidity = currentObj.optInt("relative_humidity_2m", 50)
+                            val weatherCode = currentObj.optInt("weather_code", 0)
+                            val windKmh = currentObj.optDouble("wind_speed_10m", 12.0)
+                            val windDeg = currentObj.optDouble("wind_direction_10m", 0.0)
+                            val uvVal = currentObj.optDouble("uv_index", 3.0)
+
+                            val tempIntC = Math.round(tempC).toInt()
+                            val tempIntF = Math.round(tempC * 9.0 / 5.0 + 32).toInt()
+                            val windIntKmh = Math.round(windKmh).toInt()
+                            val windIntMph = Math.round(windKmh * 0.621371).toInt()
+                            val conditionStr = parseWmoWeatherCode(weatherCode)
+                            val windDirStr = parseWindDirection(windDeg)
+                            val uvStr = formatUvIndex(uvVal)
+                            val safetyStr = if (windIntKmh >= 35) {
+                                "Warning: High Wind ($windIntKmh km/h) — Suspend Crane Hoisting"
+                            } else if (weatherCode >= 61) {
+                                "Precipitation Alert — Ensure Anti-Slip Decking Covers"
+                            } else {
+                                "Optimal for Crane Lifting & High-Rise Glazing"
+                            }
+
+                            _weatherInfo.value = WeatherInfo(
+                                tempCelsius = tempIntC,
+                                tempFahrenheit = tempIntF,
+                                condition = conditionStr,
+                                windSpeedKmh = windIntKmh,
+                                windSpeedMph = windIntMph,
+                                windDirection = windDirStr,
+                                humidityPercent = humidity,
+                                uvIndex = uvStr,
+                                airQualityIndex = 32,
+                                safetyStatus = safetyStr,
+                                locationName = city,
+                                isLive = true
+                            )
+                        }
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        }
+    }
+
+    private fun parseWmoWeatherCode(code: Int): String {
+        return when (code) {
+            0 -> "Clear Sky"
+            1, 2 -> "Partly Cloudy"
+            3 -> "Overcast"
+            45, 48 -> "Foggy & Hazy"
+            51, 53, 55 -> "Light Drizzle"
+            61, 63 -> "Moderate Rain"
+            65 -> "Heavy Rain"
+            71, 73, 75 -> "Snowfall"
+            80, 81, 82 -> "Rain Showers"
+            95, 96, 99 -> "Thunderstorm Alert"
+            else -> "Clear & Mild"
+        }
+    }
+
+    private fun parseWindDirection(deg: Double): String {
+        val normalized = (deg % 360 + 360) % 360
+        return when {
+            normalized >= 337.5 || normalized < 22.5 -> "N"
+            normalized < 67.5 -> "NE"
+            normalized < 112.5 -> "E"
+            normalized < 157.5 -> "SE"
+            normalized < 202.5 -> "S"
+            normalized < 247.5 -> "SW"
+            normalized < 292.5 -> "W"
+            else -> "NW"
+        }
+    }
+
+    private fun formatUvIndex(uv: Double): String {
+        val rounded = Math.round(uv * 10.0) / 10.0
+        return when {
+            uv < 3.0 -> "Low ($rounded)"
+            uv < 6.0 -> "Moderate ($rounded)"
+            uv < 8.0 -> "High ($rounded)"
+            uv < 11.0 -> "Very High ($rounded)"
+            else -> "Extreme ($rounded)"
+        }
     }
 
     fun navigateToAuth(screen: AuthScreenState) {
@@ -1138,6 +1417,10 @@ class SiteMindViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun toggleLiveStream() {
+        if (_glassState.value.connectionState == GlassAiState.OFFLINE) {
+            connectGlass()
+            return
+        }
         val nextStreamingState = !_glassState.value.isLiveStreaming
         _glassState.value = _glassState.value.copy(
             isLiveStreaming = nextStreamingState
@@ -1276,8 +1559,13 @@ class SiteMindViewModel(application: Application) : AndroidViewModel(application
             _glassState.value = _glassState.value.copy(
                 deviceName = "${device.name} (${device.color})",
                 connectionState = GlassAiState.CONNECTED,
-                batteryPercent = device.batteryPercent
+                batteryPercent = device.batteryPercent,
+                isPhoneBridgeMode = device.isSmartphoneBridge,
+                connectedPhoneName = if (device.isSmartphoneBridge) device.name else ""
             )
+            if (device.isSmartphoneBridge) {
+                enablePhoneBridgeMode(device.name)
+            }
             _discoveredDevices.value = _discoveredDevices.value.map {
                 if (it.id == device.id) it.copy(isPaired = true) else it.copy(isPaired = false)
             }
@@ -1301,7 +1589,97 @@ class SiteMindViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun disconnectDevice() {
-        _glassState.value = _glassState.value.copy(connectionState = GlassAiState.OFFLINE)
+        disconnectGlass()
+    }
+
+    fun connectGlass() {
+        _glassState.value = _glassState.value.copy(
+            connectionState = GlassAiState.CONNECTED,
+            isLiveStreaming = true,
+            batteryPercent = if (_glassState.value.batteryPercent == 0) 92 else _glassState.value.batteryPercent
+        )
+    }
+
+    fun disconnectGlass() {
+        _glassState.value = _glassState.value.copy(
+            connectionState = GlassAiState.OFFLINE,
+            isLiveStreaming = false,
+            isPhoneBridgeMode = false,
+            isDemoSimulatedMode = false
+        )
+    }
+
+    fun toggleGlassConnection() {
+        if (_glassState.value.connectionState == GlassAiState.OFFLINE) {
+            connectGlass()
+        } else {
+            disconnectGlass()
+        }
+    }
+
+    // Smartphone as Glass Bridge / Demo Mode Functions for Testing
+    fun enablePhoneBridgeMode(phoneName: String = "Smartphone Camera & Mic Bridge") {
+        viewModelScope.launch {
+            _glassState.value = _glassState.value.copy(
+                deviceName = "Demo Glass Proxy: $phoneName",
+                connectionState = GlassAiState.CONNECTED,
+                isPhoneBridgeMode = true,
+                isDemoSimulatedMode = true,
+                connectedPhoneName = phoneName,
+                isCameraActive = true,
+                isMicActive = true,
+                isLiveStreaming = true,
+                batteryPercent = 98,
+                firmwareVersion = "v2.0-PhoneBridge-BT"
+            )
+            _connectionQuality.value = ConnectionQualityInfo(
+                rssiDbm = -42,
+                bandwidthMbps = 72,
+                latencyMs = 12,
+                signalRating = "Ultra HD Phone Bridge"
+            )
+            val event = ContextEvent(
+                id = "evt_phone_bridge_${System.currentTimeMillis()}",
+                formattedTime = "Just Now",
+                type = ContextEventType.SESSION_STATE_CHANGED,
+                source = ContextEventSource.SMART_GLASSES,
+                title = "Mobile Phone Glass Bridge Active",
+                description = "Connected $phoneName as Meta Glasses hardware emulator. Phone camera, mic, and speaker routed to SiteMind AI.",
+                location = "Testing Suite Bridge"
+            )
+            aiContextEngine.recordEvent(event)
+        }
+    }
+
+    fun enableDemoMode() {
+        enablePhoneBridgeMode("Current Phone Camera & Mic Simulator")
+    }
+
+    fun disablePhoneBridgeMode() {
+        _glassState.value = _glassState.value.copy(
+            deviceName = "Ray-Ban Meta Wayfarer (Matte Black)",
+            isPhoneBridgeMode = false,
+            isDemoSimulatedMode = false,
+            connectedPhoneName = ""
+        )
+    }
+
+    fun toggleDemoMode() {
+        if (_glassState.value.isDemoSimulatedMode || _glassState.value.isPhoneBridgeMode) {
+            disablePhoneBridgeMode()
+        } else {
+            enableDemoMode()
+        }
+    }
+
+    fun togglePhoneBridgeCameraFacing() {
+        val currentFacing = _glassState.value.cameraFacing
+        val nextFacing = if (currentFacing == "REAR") "FRONT" else "REAR"
+        _glassState.value = _glassState.value.copy(cameraFacing = nextFacing)
+    }
+
+    fun togglePhoneBridgeTorch() {
+        _glassState.value = _glassState.value.copy(isTorchActive = !_glassState.value.isTorchActive)
     }
 
     fun checkFirmwareUpdate() {
@@ -1913,6 +2291,7 @@ class SiteMindViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun setProfileTheme(theme: String) {
+        prefs.edit().putString("app_theme", theme).apply()
         val updatedUser = _profileState.value.profile.copy(theme = theme)
         _profileState.value = _profileState.value.copy(profile = updatedUser)
     }

@@ -152,7 +152,7 @@ class MultiAgentService {
                 })
             }
 
-            val url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$apiKey"
+            val url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=$apiKey"
             val httpRequest = Request.Builder()
                 .url(url)
                 .post(jsonBody.toString().toRequestBody("application/json".toMediaType()))

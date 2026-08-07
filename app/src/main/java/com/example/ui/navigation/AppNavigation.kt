@@ -312,7 +312,10 @@ fun AppNavigation(
                         SafetyScreen(viewModel = viewModel)
                     }
                     composable(Screen.Device.route) {
-                        DeviceScreen(viewModel = viewModel)
+                        DeviceScreen(
+                            viewModel = viewModel,
+                            onNavigateToRoute = { route -> navController.navigate(route) }
+                        )
                     }
                     composable(Screen.Blueprints.route) {
                         BlueprintScreen(viewModel = viewModel)

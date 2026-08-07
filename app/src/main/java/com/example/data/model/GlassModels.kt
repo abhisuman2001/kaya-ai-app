@@ -27,7 +27,13 @@ data class GlassDeviceState(
     val volumePercent: Int = 80,
     val brightnessPercent: Int = 85,
     val firmwareVersion: String = "v3.1.4-build92",
-    val serialNumber: String = "RBM-88942-CON"
+    val serialNumber: String = "RBM-88942-CON",
+    val isPhoneBridgeMode: Boolean = false,
+    val connectedPhoneName: String = "",
+    val cameraFacing: String = "REAR",
+    val isTorchActive: Boolean = false,
+    val bluetoothMacAddress: String = "94:11:AB:22:90:FF",
+    val isDemoSimulatedMode: Boolean = false
 )
 
 data class DiscoveredGlassDevice(
@@ -38,7 +44,8 @@ data class DiscoveredGlassDevice(
     val model: String,
     val color: String,
     val batteryPercent: Int = 92,
-    val isPaired: Boolean = false
+    val isPaired: Boolean = false,
+    val isSmartphoneBridge: Boolean = false
 )
 
 enum class PairingStep {

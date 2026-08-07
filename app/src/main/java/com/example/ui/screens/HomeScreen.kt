@@ -87,6 +87,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.data.local.HazardEntity
+import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.IconButton
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import com.example.data.local.ReportEntity
 import com.example.data.model.AuthScreenState
 import com.example.data.model.GlassAiState
@@ -125,9 +130,24 @@ fun HomeScreen(
     val siteTasks by viewModel.siteTasks.collectAsStateWithLifecycle()
     val recentReports by viewModel.allReports.collectAsStateWithLifecycle()
 
+    val locationLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        if (permissions[android.Manifest.permission.ACCESS_FINE_LOCATION] == true ||
+            permissions[android.Manifest.permission.ACCESS_COARSE_LOCATION] == true) {
+            viewModel.detectAndFetchLocationWeather()
+        }
+    }
+
     var isVisible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         isVisible = true
+        locationLauncher.launch(
+            arrayOf(
+                android.Manifest.permission.ACCESS_FINE_LOCATION,
+                android.Manifest.permission.ACCESS_COARSE_LOCATION
+            )
+        )
     }
 
     Scaffold(
@@ -191,13 +211,17 @@ fun HomeScreen(
                 item {
                     RayBanGlassesHero(
                         deviceState = glassState,
-                        onStateSelect = { newState -> viewModel.setGlassState(newState) }
+                        onStateSelect = { newState -> viewModel.setGlassState(newState) },
+                        onToggleConnection = { viewModel.toggleGlassConnection() }
                     )
                 }
 
                 // Weather Widget Card
                 item {
-                    WeatherWidgetCard(weather = weatherInfo)
+                    WeatherWidgetCard(
+                        weather = weatherInfo,
+                        onRefreshLocation = { viewModel.detectAndFetchLocationWeather() }
+                    )
                 }
 
                 item { Spacer(modifier = Modifier.height(16.dp)) }
@@ -331,7 +355,7 @@ private fun StartAiSessionBanner(
                         text = "Launch Live AI Vision Stream",
                         fontSize = 17.sp,
                         fontWeight = FontWeight.Bold,
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.onSurface
                     )
 
                     Text(
@@ -361,11 +385,14 @@ private fun StartAiSessionBanner(
 }
 
 @Composable
-private fun WeatherWidgetCard(weather: WeatherInfo) {
+private fun WeatherWidgetCard(
+    weather: WeatherInfo,
+    onRefreshLocation: () -> Unit
+) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .border(1.dp, BorderDark, RoundedCornerShape(20.dp)),
+            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(20.dp)),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
@@ -375,7 +402,10 @@ private fun WeatherWidgetCard(weather: WeatherInfo) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
                     Box(
                         modifier = Modifier
                             .size(38.dp)
@@ -385,27 +415,56 @@ private fun WeatherWidgetCard(weather: WeatherInfo) {
                         Icon(Icons.Default.WbSunny, contentDescription = null, tint = Color(0xFFFFB300), modifier = Modifier.size(22.dp))
                     }
                     Spacer(modifier = Modifier.width(10.dp))
-                    Column {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = "${weather.tempFahrenheit}°F • ${weather.condition}",
-                            fontSize = 15.sp,
+                            text = "${weather.tempCelsius}°C • ${weather.condition}",
+                            fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
-                            color = Color.White
+                            color = MaterialTheme.colorScheme.onSurface
                         )
-                        Text(
-                            text = "Site Conditions Summary",
-                            fontSize = 10.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.LocationOn,
+                                contentDescription = null,
+                                tint = MetaBlue,
+                                modifier = Modifier.size(12.dp)
+                            )
+                            Spacer(modifier = Modifier.width(2.dp))
+                            Text(
+                                text = "Live • ${weather.locationName}",
+                                fontSize = 10.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
                     }
                 }
 
-                Box(
-                    modifier = Modifier
-                        .background(StatusSuccess.copy(0.15f), RoundedCornerShape(10.dp))
-                        .padding(horizontal = 8.dp, vertical = 4.dp)
-                ) {
-                    Text("AQI: ${weather.airQualityIndex} (Good)", color = StatusSuccess, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(
+                        onClick = onRefreshLocation,
+                        modifier = Modifier
+                            .size(32.dp)
+                            .testTag("refresh_location_weather_button")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MyLocation,
+                            contentDescription = "Refresh Location Weather",
+                            tint = MetaBlue,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.width(4.dp))
+
+                    Box(
+                        modifier = Modifier
+                            .background(StatusSuccess.copy(0.15f), RoundedCornerShape(10.dp))
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                    ) {
+                        Text("AQI: ${weather.airQualityIndex} (Good)", color = StatusSuccess, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
 
@@ -415,7 +474,7 @@ private fun WeatherWidgetCard(weather: WeatherInfo) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceAround
             ) {
-                WeatherMetricItem(icon = Icons.Default.Air, label = "Wind", value = "${weather.windSpeedMph} mph ${weather.windDirection}")
+                WeatherMetricItem(icon = Icons.Default.Air, label = "Wind", value = "${weather.windSpeedKmh} km/h ${weather.windDirection}")
                 WeatherMetricItem(icon = Icons.Default.WaterDrop, label = "Humidity", value = "${weather.humidityPercent}%")
                 WeatherMetricItem(icon = Icons.Default.Thermostat, label = "UV Index", value = weather.uvIndex)
             }
@@ -451,7 +510,7 @@ private fun WeatherMetricItem(
         Spacer(modifier = Modifier.width(4.dp))
         Column {
             Text(text = label, fontSize = 9.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(text = value, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            Text(text = value, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
         }
     }
 }
@@ -461,7 +520,7 @@ private fun ProjectInfoCard(project: ProjectInfo) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .border(1.dp, BorderDark, RoundedCornerShape(20.dp)),
+            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(20.dp)),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
@@ -503,7 +562,7 @@ private fun ProjectInfoCard(project: ProjectInfo) {
                 text = project.name,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -548,7 +607,7 @@ private fun ShiftInfoCard(shift: ShiftInfo) {
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .border(1.dp, BorderDark, RoundedCornerShape(20.dp)),
+            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(20.dp)),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
@@ -598,7 +657,7 @@ private fun ShiftInfoCard(shift: ShiftInfo) {
                 text = shift.shiftName,
                 fontSize = 14.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis
             )
@@ -734,7 +793,7 @@ private fun TaskCardItem(
                     text = task.title,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
-                    color = if (task.isCompleted) Color.White.copy(0.6f) else Color.White
+                    color = if (task.isCompleted) MaterialTheme.colorScheme.onSurface.copy(0.6f) else MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = "${task.category} • ${task.location} • Due: ${task.dueTime}",
@@ -778,7 +837,7 @@ private fun RecentReportCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .border(1.dp, BorderDark, RoundedCornerShape(16.dp))
+            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(16.dp))
             .clip(RoundedCornerShape(16.dp))
             .clickable { onClick() }
             .testTag("recent_report_card_${report.id}"),
@@ -808,7 +867,7 @@ private fun RecentReportCard(
 
             Spacer(modifier = Modifier.height(6.dp))
 
-            Text(report.title, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color.White)
+            Text(report.title, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
             Text(report.summary, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2)
         }
     }

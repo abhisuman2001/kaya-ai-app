@@ -1,14 +1,18 @@
 package com.example.data.model
 
 data class WeatherInfo(
+    val tempCelsius: Int = 26,
     val tempFahrenheit: Int = 78,
     val condition: String = "Clear & Dry",
-    val windSpeedMph: Int = 8,
+    val windSpeedKmh: Int = 14,
+    val windSpeedMph: Int = 9,
     val windDirection: String = "NW",
     val humidityPercent: Int = 42,
     val uvIndex: String = "Low (2)",
     val airQualityIndex: Int = 32,
-    val safetyStatus: String = "Optimal for Crane Lifting & High-Rise Glazing"
+    val safetyStatus: String = "Optimal for Crane Lifting & High-Rise Glazing",
+    val locationName: String = "San Francisco, CA",
+    val isLive: Boolean = true
 )
 
 data class ProjectInfo(

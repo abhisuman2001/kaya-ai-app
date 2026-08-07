@@ -26,24 +26,43 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.Assignment
 import androidx.compose.material.icons.filled.BatteryChargingFull
 import androidx.compose.material.icons.filled.BluetoothConnected
 import androidx.compose.material.icons.filled.BluetoothSearching
+import androidx.compose.material.icons.filled.Cameraswitch
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ErrorOutline
 import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.FlashOff
+import androidx.compose.material.icons.filled.FlashOn
 import androidx.compose.material.icons.filled.GraphicEq
+import androidx.compose.material.icons.filled.HelpOutline
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.SdStorage
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.SignalCellularAlt
+import androidx.compose.material.icons.filled.Smartphone
 import androidx.compose.material.icons.filled.SystemUpdate
 import androidx.compose.material.icons.filled.Thermostat
 import androidx.compose.material.icons.filled.Videocam
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.WifiTethering
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -84,6 +103,7 @@ import com.example.ui.viewmodel.SiteMindViewModel
 @Composable
 fun DeviceScreen(
     viewModel: SiteMindViewModel,
+    onNavigateToRoute: ((String) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val glassState by viewModel.glassState.collectAsStateWithLifecycle()
@@ -236,6 +256,15 @@ fun DeviceScreen(
             RayBanGlassesHero(
                 deviceState = glassState,
                 onStateSelect = { newState -> viewModel.setGlassState(newState) }
+            )
+        }
+
+        // Smartphone as Meta Glass Bridge Card (For Testing Without Physical Glasses)
+        item {
+            PhoneGlassBridgeCard(
+                glassState = glassState,
+                viewModel = viewModel,
+                onNavigateToRoute = onNavigateToRoute
             )
         }
 
@@ -715,10 +744,15 @@ private fun DiscoveredDeviceItem(
                 Box(
                     modifier = Modifier
                         .size(36.dp)
-                        .background(MetaBlue.copy(0.15f), CircleShape),
+                        .background(if (device.isSmartphoneBridge) StatusSuccess.copy(0.2f) else MetaBlue.copy(0.15f), CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
-                    Icon(Icons.Default.BluetoothConnected, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(18.dp))
+                    Icon(
+                        imageVector = if (device.isSmartphoneBridge) Icons.Default.Smartphone else Icons.Default.BluetoothConnected,
+                        contentDescription = null,
+                        tint = if (device.isSmartphoneBridge) StatusSuccess else MetaBlue,
+                        modifier = Modifier.size(18.dp)
+                    )
                 }
 
                 Spacer(modifier = Modifier.width(10.dp))
@@ -727,7 +761,15 @@ private fun DiscoveredDeviceItem(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(device.name, fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color.White)
                         Spacer(modifier = Modifier.width(6.dp))
-                        if (device.isPaired) {
+                        if (device.isSmartphoneBridge) {
+                            Box(
+                                modifier = Modifier
+                                    .background(StatusSuccess.copy(0.2f), RoundedCornerShape(6.dp))
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Text("PHONE BRIDGE", color = StatusSuccess, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                            }
+                        } else if (device.isPaired) {
                             Box(
                                 modifier = Modifier
                                     .background(StatusSuccess.copy(0.2f), RoundedCornerShape(6.dp))
@@ -749,15 +791,15 @@ private fun DiscoveredDeviceItem(
             Button(
                 onClick = onPairClick,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (device.isPaired) MaterialTheme.colorScheme.surfaceVariant else MetaBlue
+                    containerColor = if (device.isSmartphoneBridge) StatusSuccess else if (device.isPaired) MaterialTheme.colorScheme.surfaceVariant else MetaBlue
                 ),
                 shape = RoundedCornerShape(10.dp),
                 modifier = Modifier.testTag("pair_device_${device.id}_button")
             ) {
                 Text(
-                    text = if (device.isPaired) "Re-Pair" else "Pair Device",
+                    text = if (device.isSmartphoneBridge) "Connect Bridge" else if (device.isPaired) "Re-Pair" else "Pair Device",
                     fontSize = 11.sp,
-                    color = if (device.isPaired) Color.White else Color.White
+                    color = Color.White
                 )
             }
         }
@@ -883,3 +925,570 @@ private fun SubMetric(
         }
     }
 }
+
+@Composable
+private fun PhoneGlassBridgeCard(
+    glassState: com.example.data.model.GlassDeviceState,
+    viewModel: SiteMindViewModel,
+    onNavigateToRoute: ((String) -> Unit)?
+) {
+    val isBridgeActive = glassState.isPhoneBridgeMode
+    var isGuideExpanded by remember { mutableStateOf(false) }
+
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        // MAIN PHONE BRIDGE STATUS CARD
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(
+                    1.dp,
+                    if (isBridgeActive) StatusSuccess else MetaBlue.copy(0.6f),
+                    RoundedCornerShape(20.dp)
+                ),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        ) {
+            Column(modifier = Modifier.padding(18.dp)) {
+                // Header Row
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .background(if (isBridgeActive) StatusSuccess.copy(0.2f) else MetaBlue.copy(0.2f), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Smartphone,
+                                contentDescription = null,
+                                tint = if (isBridgeActive) StatusSuccess else MetaBlue,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                text = "DEMO MODE / SIMULATE META GLASSES",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isBridgeActive) StatusSuccess else MetaBlue,
+                                letterSpacing = 1.sp
+                            )
+                            Text(
+                                text = if (isBridgeActive) "Demo Mode Active (Phone Camera & Mic)" else "Simulate Glasses on This Phone",
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                if (isBridgeActive) StatusSuccess.copy(0.2f) else MaterialTheme.colorScheme.surfaceVariant,
+                                RoundedCornerShape(12.dp)
+                            )
+                            .padding(horizontal = 10.dp, vertical = 5.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(6.dp)
+                                    .background(if (isBridgeActive) StatusSuccess else StatusWarning, CircleShape)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = if (isBridgeActive) "DEMO ACTIVE" else "STANDBY",
+                                color = if (isBridgeActive) StatusSuccess else StatusWarning,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text(
+                    text = "Activate Demo Mode to use this smartphone's built-in camera, microphone, and speaker as a full Ray-Ban Meta Glasses hardware proxy. Live video frames, ambient voice queries, and spoken AI responses function instantly without needing physical smart glasses.",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // REALTIME STATUS TELEMETRY GRID
+                Text(
+                    text = "REAL-TIME PHONE TELEMETRY & HARDWARE STATUS",
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    letterSpacing = 1.sp
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(0.4f), RoundedCornerShape(16.dp))
+                        .padding(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // Row 1: Battery & Connection
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        // Phone Battery Telemetry
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.BatteryChargingFull, contentDescription = null, tint = StatusSuccess, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Phone Battery", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "${if (isBridgeActive) glassState.batteryPercent else 98}% • Charging (USB-C Fast)",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                            Spacer(modifier = Modifier.height(6.dp))
+                            LinearProgressIndicator(
+                                progress = { if (isBridgeActive) glassState.batteryPercent / 100f else 0.98f },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .height(4.dp)
+                                    .clip(RoundedCornerShape(2.dp)),
+                                color = StatusSuccess,
+                                trackColor = MaterialTheme.colorScheme.surface
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(16.dp))
+
+                        // Connection Status Telemetry
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.BluetoothConnected, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Bluetooth & Wireless", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = if (isBridgeActive) "BT 5.3 + Wi-Fi Direct" else "Ready to Pair",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (isBridgeActive) StatusSuccess else MaterialTheme.colorScheme.onSurface
+                            )
+                            Spacer(modifier = Modifier.height(2.dp))
+                            Text(
+                                text = if (isBridgeActive) "Signal: -42 dBm (Ultra Low Latency)" else "MAC: ${glassState.bluetoothMacAddress}",
+                                fontSize = 10.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    // Divider line
+                    Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outlineVariant.copy(0.3f)))
+
+                    // Row 2: Camera Sensor & Flash Torch
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        // Camera Sensor Status
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.Videocam, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Camera Sensor", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = if (glassState.cameraFacing == "REAR") "Rear Cam • 1080p 60fps" else "Front Cam • 1080p 30fps",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(16.dp))
+
+                        // Torch Light Status
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = if (glassState.isTorchActive) Icons.Default.FlashOn else Icons.Default.FlashOff,
+                                    contentDescription = null,
+                                    tint = if (glassState.isTorchActive) StatusSuccess else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Flashlight Torch", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = if (glassState.isTorchActive) "TORCH ACTIVE" else "Standby (OFF)",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (glassState.isTorchActive) StatusSuccess else Color.White
+                            )
+                        }
+                    }
+
+                    // Divider line
+                    Box(modifier = Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outlineVariant.copy(0.3f)))
+
+                    // Row 3: Audio Array & Thermal Health
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        // Microphone Array
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.Mic, contentDescription = null, tint = StatusSuccess, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Phone Mic Array", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Capturing 48kHz Voice",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.width(16.dp))
+
+                        // Speaker Output
+                        Column(modifier = Modifier.weight(1f)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.VolumeUp, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(16.dp))
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text("Audio Speaker", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Volume 80% • HUD Voice",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // Interactive Controls when Active
+                if (isBridgeActive) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        // Camera Flip Toggle
+                        OutlinedButton(
+                            onClick = { viewModel.togglePhoneBridgeCameraFacing() },
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag("toggle_camera_facing_button")
+                        ) {
+                            Icon(Icons.Default.Cameraswitch, contentDescription = null, modifier = Modifier.size(14.dp), tint = MetaBlue)
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(if (glassState.cameraFacing == "REAR") "Rear Cam" else "Front Cam", fontSize = 11.sp, color = Color.White)
+                        }
+
+                        // Torch Toggle
+                        OutlinedButton(
+                            onClick = { viewModel.togglePhoneBridgeTorch() },
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag("toggle_torch_button")
+                        ) {
+                            Icon(
+                                imageVector = if (glassState.isTorchActive) Icons.Default.FlashOn else Icons.Default.FlashOff,
+                                contentDescription = null,
+                                modifier = Modifier.size(14.dp),
+                                tint = if (glassState.isTorchActive) StatusSuccess else MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(if (glassState.isTorchActive) "Torch ON" else "Torch OFF", fontSize = 11.sp, color = Color.White)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(12.dp))
+
+                    // Testing Feature Launchpad
+                    Text(
+                        text = "FEATURE TESTING LAUNCHPAD",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        letterSpacing = 1.sp
+                    )
+
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Button(
+                            onClick = { onNavigateToRoute?.invoke(com.example.ui.navigation.Screen.LiveAi.route) },
+                            colors = ButtonDefaults.buttonColors(containerColor = MetaBlue),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag("test_live_ai_button")
+                        ) {
+                            Icon(Icons.Default.Videocam, contentDescription = null, modifier = Modifier.size(14.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Live Vision", fontSize = 11.sp)
+                        }
+
+                        Button(
+                            onClick = { onNavigateToRoute?.invoke(com.example.ui.navigation.Screen.Assistant.route) },
+                            colors = ButtonDefaults.buttonColors(containerColor = MetaBlue),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag("test_voice_ai_button")
+                        ) {
+                            Icon(Icons.Default.Psychology, contentDescription = null, modifier = Modifier.size(14.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Voice AI", fontSize = 11.sp)
+                        }
+
+                        Button(
+                            onClick = { onNavigateToRoute?.invoke(com.example.ui.navigation.Screen.Tasks.route) },
+                            colors = ButtonDefaults.buttonColors(containerColor = MetaBlue),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier
+                                .weight(1f)
+                                .testTag("test_tasks_button")
+                        ) {
+                            Icon(Icons.Default.Assignment, contentDescription = null, modifier = Modifier.size(14.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Tasks", fontSize = 11.sp)
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    OutlinedButton(
+                        onClick = { viewModel.disablePhoneBridgeMode() },
+                        shape = RoundedCornerShape(12.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, StatusError.copy(0.5f)),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("disconnect_phone_bridge_button")
+                    ) {
+                        Text("Exit Demo Mode / Stop Phone Simulation", fontSize = 12.sp, color = StatusError)
+                    }
+                } else {
+                    // Connect Button
+                    Button(
+                        onClick = { viewModel.enableDemoMode() },
+                        colors = ButtonDefaults.buttonColors(containerColor = MetaBlue),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("enable_phone_bridge_button")
+                    ) {
+                        Icon(Icons.Default.Smartphone, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Start Demo Mode (Simulate Glasses via Phone Cam & Mic)", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+        }
+
+        // BLUETOOTH CONNECTION GUIDE CARD
+        Card(
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(1.dp, MetaBlue.copy(0.4f), RoundedCornerShape(20.dp)),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        ) {
+            Column(modifier = Modifier.padding(18.dp)) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { isGuideExpanded = !isGuideExpanded },
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(36.dp)
+                                .background(MetaBlue.copy(0.15f), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.HelpOutline,
+                                contentDescription = null,
+                                tint = MetaBlue,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column {
+                            Text(
+                                text = "SETUP & BLUETOOTH GUIDE",
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MetaBlue,
+                                letterSpacing = 1.sp
+                            )
+                            Text(
+                                text = "How to Connect Mobile Phone via Bluetooth",
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+                    }
+
+                    Icon(
+                        imageVector = if (isGuideExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                        contentDescription = null,
+                        tint = MetaBlue
+                    )
+                }
+
+                AnimatedVisibility(visible = isGuideExpanded) {
+                    Column(modifier = Modifier.padding(top = 16.dp)) {
+                        Text(
+                            text = "Follow these simple steps to pair a secondary phone or connect this smartphone as your Ray-Ban Meta Glass hardware emulator over Bluetooth:",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        Spacer(modifier = Modifier.height(14.dp))
+
+                        // Step 1
+                        GuideStepItem(
+                            stepNumber = "1",
+                            title = "Enable Bluetooth & Wi-Fi",
+                            description = "Turn on Bluetooth and Wi-Fi on both your primary device and the mobile phone you wish to use as a smart glass bridge."
+                        )
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // Step 2
+                        GuideStepItem(
+                            stepNumber = "2",
+                            title = "Set Phone in Discovery Mode",
+                            description = "Open Bluetooth Settings on the bridge phone and ensure 'Visible to nearby devices' or Pair Mode is enabled."
+                        )
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // Step 3
+                        GuideStepItem(
+                            stepNumber = "3",
+                            title = "Scan & Select Device",
+                            description = "In SiteMind, scroll to 'Discovered Glasses & Mobile Bridges' on this screen and tap 'Connect Bridge' on 'Smartphone Camera & Mic Bridge'."
+                        )
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // Step 4
+                        GuideStepItem(
+                            stepNumber = "4",
+                            title = "Grant Camera & Mic Permissions",
+                            description = "Allow camera and microphone access so the phone can capture visual scenes and ambient voice queries."
+                        )
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // Step 5
+                        GuideStepItem(
+                            stepNumber = "5",
+                            title = "Launch Live Vision & Voice AI",
+                            description = "Go to Live Vision to see real-time 1080p camera stream, AI object detection, and spoken HUD audio guidance directly from your phone!"
+                        )
+
+                        Spacer(modifier = Modifier.height(16.dp))
+
+                        Button(
+                            onClick = {
+                                viewModel.enablePhoneBridgeMode("Smartphone Camera & Mic Bridge")
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = MetaBlue),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("guide_quick_connect_button")
+                        ) {
+                            Icon(Icons.Default.BluetoothConnected, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text("Pair Mobile Phone Bridge Now", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun GuideStepItem(
+    stepNumber: String,
+    title: String,
+    description: String
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(0.3f), RoundedCornerShape(12.dp))
+            .padding(10.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+        Box(
+            modifier = Modifier
+                .size(24.dp)
+                .background(MetaBlue, CircleShape),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = stepNumber,
+                color = Color.White,
+                fontSize = 11.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        Spacer(modifier = Modifier.width(10.dp))
+
+        Column {
+            Text(
+                text = title,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = description,
+                fontSize = 11.sp,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+

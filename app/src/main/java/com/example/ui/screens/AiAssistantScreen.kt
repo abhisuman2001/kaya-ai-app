@@ -1,5 +1,6 @@
 package com.example.ui.screens
 
+import android.speech.tts.TextToSpeech
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
@@ -37,6 +38,8 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.BluetoothConnected
+import androidx.compose.material.icons.filled.BluetoothDisabled
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.DeleteOutline
@@ -45,6 +48,7 @@ import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Keyboard
 import androidx.compose.material.icons.filled.Lightbulb
 import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.MicOff
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.RecordVoiceOver
@@ -66,6 +70,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -81,6 +86,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontFamily
@@ -91,6 +97,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.data.model.AiGeneratedReport
+import com.example.data.model.GlassAiState
 import com.example.ui.components.ReportConfirmationBottomSheet
 import com.example.ui.theme.MetaBlue
 import com.example.ui.theme.StatusError
@@ -129,7 +136,25 @@ fun AiAssistantScreen(
     modifier: Modifier = Modifier
 ) {
     val glassState by viewModel.glassState.collectAsStateWithLifecycle()
+    val isGlassConnected = glassState.connectionState != GlassAiState.OFFLINE
     val isLiveStreaming = glassState.isLiveStreaming
+
+    val context = LocalContext.current
+    var tts by remember { mutableStateOf<TextToSpeech?>(null) }
+
+    DisposableEffect(context) {
+        var textToSpeech: TextToSpeech? = null
+        textToSpeech = TextToSpeech(context) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                textToSpeech?.language = java.util.Locale.US
+            }
+        }
+        tts = textToSpeech
+        onDispose {
+            textToSpeech.stop()
+            textToSpeech.shutdown()
+        }
+    }
 
     var voiceState by remember { mutableStateOf(VoiceState.IDLE) }
     var liveTranscriptText by remember { mutableStateOf("") }
@@ -160,6 +185,10 @@ fun AiAssistantScreen(
     // Function to handle submitting a question (from Voice, Suggestion Chip, or Typed input)
     fun processUserQuestion(questionText: String) {
         if (questionText.isBlank()) return
+
+        if (!isGlassConnected) {
+            viewModel.connectGlass()
+        }
 
         val timestamp = SimpleTimeFormatter.now()
         val userMsgId = "user_${System.currentTimeMillis()}"
@@ -194,15 +223,17 @@ fun AiAssistantScreen(
             }
         }
 
-        // Simulate AI Voice Processing Cycle: Listening -> Thinking -> Speaking -> Idle
+        // AI Voice Processing Cycle: Listening -> Thinking -> Speaking -> Idle
         coroutineScope.launch {
             voiceState = VoiceState.LISTENING
-            delay(800)
+            delay(600)
 
             voiceState = VoiceState.THINKING
-            delay(1200)
+            
+            // Run real AI analysis using Gemini API or Context Engine
+            viewModel.runAiQuery(questionText)
+            delay(1000)
 
-            // Generate AI Response dynamically via Central AI Context Engine
             val aiResponseText = if (isReporting && activeDraftReport != null) {
                 val draft = activeDraftReport!!
                 "I've captured the current camera frame and context, classified the issue as '${draft.issueType}' (${draft.severity} severity), and generated a draft report for '${draft.title}'. Please review and confirm."
@@ -225,7 +256,9 @@ fun AiAssistantScreen(
             )
 
             voiceState = VoiceState.SPEAKING
-            delay(2400)
+            // Speak output voice through the mobile phone speaker (acting as Meta Glass speaker)
+            tts?.speak(aiResponseText, TextToSpeech.QUEUE_FLUSH, null, "voice_ai_output")
+            delay(2800)
 
             voiceState = VoiceState.IDLE
             liveTranscriptText = ""
@@ -238,6 +271,10 @@ fun AiAssistantScreen(
 
     // Handle Microphone button tap
     fun toggleMicrophone() {
+        if (!isGlassConnected) {
+            viewModel.connectGlass()
+            return
+        }
         when (voiceState) {
             VoiceState.IDLE -> {
                 voiceState = VoiceState.LISTENING
@@ -299,12 +336,127 @@ fun AiAssistantScreen(
                     }
                 }
 
+                if (!isGlassConnected) {
+                    item {
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .testTag("voice_ai_glass_disconnected_card"),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, StatusError.copy(alpha = 0.5f)),
+                            shape = RoundedCornerShape(20.dp)
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(18.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.MicOff,
+                                        contentDescription = null,
+                                        tint = StatusError,
+                                        modifier = Modifier.size(26.dp)
+                                    )
+                                    Text(
+                                        text = "Smart Glasses Disconnected",
+                                        fontSize = 16.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                                Spacer(modifier = Modifier.height(6.dp))
+                                Text(
+                                    text = "Voice AI features require an active connection to your Ray-Ban Meta open-ear speakers & microphone array.",
+                                    fontSize = 12.sp,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    textAlign = TextAlign.Center,
+                                    lineHeight = 17.sp
+                                )
+                                Spacer(modifier = Modifier.height(14.dp))
+                                Button(
+                                    onClick = { viewModel.connectGlass() },
+                                    colors = ButtonDefaults.buttonColors(containerColor = MetaBlue),
+                                    shape = RoundedCornerShape(12.dp),
+                                    modifier = Modifier
+                                        .fillMaxWidth(0.85f)
+                                        .testTag("connect_glass_from_voice_ai_button")
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.BluetoothConnected,
+                                        contentDescription = null,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "Connect Smart Glasses",
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.sp
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
                 // 2. AI Status Card
                 item {
                     AiStatusCard(
                         isLiveStreaming = isLiveStreaming,
                         onStartLiveAi = { viewModel.toggleLiveStream() }
                     )
+                }
+
+                // 2b. Live Smart Glasses / Phone Camera Stream Feed in Voice AI
+                item {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "📷 LIVE CAMERA VIEW",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MetaBlue,
+                                letterSpacing = 1.sp
+                            )
+                            Surface(
+                                shape = RoundedCornerShape(12.dp),
+                                color = StatusSuccess.copy(alpha = 0.15f)
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.VolumeUp,
+                                        contentDescription = null,
+                                        tint = StatusSuccess,
+                                        modifier = Modifier.size(12.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(4.dp))
+                                    Text(
+                                        text = "Phone Speaker Output Active",
+                                        fontSize = 10.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        color = StatusSuccess
+                                    )
+                                }
+                            }
+                        }
+
+                        LiveCameraView(
+                            isActive = true,
+                            deviceName = glassState.deviceName,
+                            isPhoneBridgeMode = glassState.isPhoneBridgeMode
+                        )
+                    }
                 }
 
                 // 3. Empty State (When no messages yet)
@@ -329,7 +481,13 @@ fun AiAssistantScreen(
                                 val index = messages.indexOfFirst { it.id == msgId }
                                 if (index != -1) {
                                     val current = messages[index]
-                                    messages[index] = current.copy(isTtsPlaying = !current.isTtsPlaying)
+                                    val newTtsPlaying = !current.isTtsPlaying
+                                    messages[index] = current.copy(isTtsPlaying = newTtsPlaying)
+                                    if (newTtsPlaying) {
+                                        tts?.speak(current.text, TextToSpeech.QUEUE_FLUSH, null, "voice_msg_speak")
+                                    } else {
+                                        tts?.stop()
+                                    }
                                 }
                             }
                         )

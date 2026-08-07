@@ -27,8 +27,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.BatteryChargingFull
 import androidx.compose.material.icons.filled.BluetoothConnected
+import androidx.compose.material.icons.filled.BluetoothDisabled
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Videocam
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -67,11 +70,14 @@ import com.example.ui.theme.GlassSpeaking
 import com.example.ui.theme.GlassThinking
 import com.example.ui.theme.MetaBlue
 import com.example.ui.theme.SiteSurfaceDark
+import com.example.ui.theme.StatusError
+import com.example.ui.theme.StatusSuccess
 
 @Composable
 fun RayBanGlassesHero(
     deviceState: GlassDeviceState,
     onStateSelect: (GlassAiState) -> Unit,
+    onToggleConnection: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val stateColor by animateColorAsState(
@@ -102,9 +108,10 @@ fun RayBanGlassesHero(
     Card(
         modifier = modifier
             .fillMaxWidth()
+            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(24.dp))
             .testTag("rayban_glasses_hero_card"),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.cardColors(containerColor = SiteSurfaceDark)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(
             modifier = Modifier
@@ -130,7 +137,7 @@ fun RayBanGlassesHero(
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "RAY-BAN META SMART GLASSES",
-                        color = Color.White,
+                        color = MaterialTheme.colorScheme.onSurface,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 1.sp,
@@ -143,8 +150,8 @@ fun RayBanGlassesHero(
 
                 Surface(
                     shape = RoundedCornerShape(12.dp),
-                    color = Color.White.copy(alpha = 0.12f),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.18f))
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
@@ -161,7 +168,7 @@ fun RayBanGlassesHero(
                             modifier = Modifier
                                 .width(20.dp)
                                 .height(10.dp)
-                                .border(1.dp, Color.White.copy(alpha = 0.8f), RoundedCornerShape(2.5.dp))
+                                .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f), RoundedCornerShape(2.5.dp))
                                 .padding(1.dp),
                             contentAlignment = Alignment.CenterStart
                         ) {
@@ -178,7 +185,7 @@ fun RayBanGlassesHero(
 
                         Text(
                             text = "${deviceState.batteryPercent}%",
-                            color = Color.White,
+                            color = MaterialTheme.colorScheme.onSurface,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
                             maxLines = 1
@@ -199,7 +206,7 @@ fun RayBanGlassesHero(
                         Brush.radialGradient(
                             colors = listOf(
                                 stateColor.copy(alpha = 0.25f),
-                                Color(0xFF0F172A).copy(alpha = 0.8f)
+                                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.8f)
                             )
                         )
                     )
@@ -264,14 +271,14 @@ fun RayBanGlassesHero(
                 ) {
                     Text(
                         text = "RAY-BAN  META",
-                        color = Color.White.copy(alpha = 0.95f),
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.95f),
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         letterSpacing = 2.sp
                     )
                     Text(
                         text = deviceState.connectionState.description,
-                        color = Color.White.copy(alpha = 0.75f),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         fontSize = 10.sp
                     )
                 }
@@ -303,6 +310,63 @@ fun RayBanGlassesHero(
                     modifier = Modifier.weight(1f)
                 )
             }
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // Interactive Connect / Disconnect Action Control
+            val isConnected = deviceState.connectionState != GlassAiState.OFFLINE
+
+            Surface(
+                color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                shape = RoundedCornerShape(16.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text(
+                            text = if (isConnected) "GLASSES LINK ACTIVE" else "GLASSES DISCONNECTED",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = if (isConnected) StatusSuccess else StatusError
+                        )
+                        Text(
+                            text = if (isConnected) "Paired to Meta Wayfarer" else "Tap button to pair glasses",
+                            fontSize = 10.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+
+                    Button(
+                        onClick = { onToggleConnection() },
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = if (isConnected) StatusError.copy(alpha = 0.2f) else MetaBlue,
+                            contentColor = if (isConnected) StatusError else Color.White
+                        ),
+                        shape = RoundedCornerShape(12.dp),
+                        border = if (isConnected) androidx.compose.foundation.BorderStroke(1.dp, StatusError) else null,
+                        modifier = Modifier.testTag("toggle_glass_connection_button")
+                    ) {
+                        Icon(
+                            imageVector = if (isConnected) Icons.Default.BluetoothDisabled else Icons.Default.BluetoothConnected,
+                            contentDescription = null,
+                            modifier = Modifier.size(16.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = if (isConnected) "Disconnect" else "Connect Glass",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -317,8 +381,8 @@ private fun InfoChip(
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(12.dp),
-        color = Color.White.copy(alpha = 0.08f),
-        border = androidx.compose.foundation.BorderStroke(1.dp, BorderDark)
+        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
     ) {
         Row(
             modifier = Modifier
@@ -336,14 +400,14 @@ private fun InfoChip(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = label,
-                    color = Color.White.copy(alpha = 0.6f),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     fontSize = 9.sp,
                     maxLines = 1,
                     overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                 )
                 Text(
                     text = value,
-                    color = Color.White,
+                    color = MaterialTheme.colorScheme.onSurface,
                     fontSize = 10.sp,
                     fontWeight = FontWeight.SemiBold,
                     maxLines = 1,
@@ -364,8 +428,8 @@ private fun StatePill(
     Surface(
         modifier = modifier.clickable { onClick() },
         shape = RoundedCornerShape(10.dp),
-        color = if (isSelected) MetaBlue else Color.White.copy(alpha = 0.08f),
-        border = if (isSelected) null else androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.15f))
+        color = if (isSelected) MetaBlue else MaterialTheme.colorScheme.surfaceVariant,
+        border = if (isSelected) null else androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
     ) {
         Box(
             modifier = Modifier
@@ -377,7 +441,7 @@ private fun StatePill(
                 text = state.label,
                 fontSize = 10.sp,
                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                color = if (isSelected) Color.White else Color.White.copy(alpha = 0.7f)
+                color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }

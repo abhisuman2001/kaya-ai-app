@@ -1,5 +1,11 @@
 package com.example.ui.screens
 
+import android.Manifest
+import android.speech.tts.TextToSpeech
+import androidx.camera.core.CameraSelector
+import androidx.camera.core.Preview
+import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
@@ -35,6 +41,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.BluetoothConnected
+import androidx.compose.material.icons.filled.BluetoothDisabled
 import androidx.compose.material.icons.filled.CenterFocusWeak
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ChevronRight
@@ -48,6 +56,7 @@ import androidx.compose.material.icons.filled.ReportProblem
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.StopCircle
 import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -63,6 +72,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -78,17 +88,25 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.data.model.GlassAiState
 import com.example.ui.theme.MetaBlue
 import com.example.ui.theme.StatusError
 import com.example.ui.theme.StatusSuccess
 import com.example.ui.viewmodel.SiteMindViewModel
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
 
 // ==========================================
 // HAZARD DATA MODELS & SEVERITY LEVELS
@@ -227,7 +245,74 @@ fun LiveAiScreen(
             }
         }
 
-        if (!isSessionActive) {
+        val isGlassConnected = glassState.connectionState != GlassAiState.OFFLINE
+
+        if (!isGlassConnected) {
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("live_ai_glass_disconnected_card"),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, StatusError.copy(alpha = 0.5f)),
+                    shape = RoundedCornerShape(20.dp)
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(20.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.BluetoothDisabled,
+                                contentDescription = null,
+                                tint = StatusError,
+                                modifier = Modifier.size(28.dp)
+                            )
+                            Text(
+                                text = "Smart Glasses Disconnected",
+                                fontSize = 17.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = "Live AI features and real-time computer vision stream require an active Ray-Ban Meta glasses connection. Connect your glasses to start scene analysis.",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                            lineHeight = 17.sp
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Button(
+                            onClick = { viewModel.connectGlass() },
+                            colors = ButtonDefaults.buttonColors(containerColor = MetaBlue),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier
+                                .fillMaxWidth(0.85f)
+                                .testTag("connect_glass_from_live_ai_button")
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.BluetoothConnected,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Connect Smart Glasses",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp
+                            )
+                        }
+                    }
+                }
+            }
+        } else if (!isSessionActive) {
             // User Flow: Empty State when AI Session is not running
             item {
                 EmptyLiveAISession(
@@ -240,7 +325,8 @@ fun LiveAiScreen(
             item {
                 LiveCameraView(
                     isActive = true,
-                    deviceName = glassState.deviceName
+                    deviceName = glassState.deviceName,
+                    isPhoneBridgeMode = glassState.isPhoneBridgeMode
                 )
             }
 
@@ -300,7 +386,15 @@ fun LiveAiScreen(
 
             // 5. Scene Summary
             item {
-                SceneSummaryCard()
+                val liveResult by viewModel.liveResult.collectAsStateWithLifecycle()
+                val isAnalyzing by viewModel.isAnalyzing.collectAsStateWithLifecycle()
+                SceneSummaryCard(
+                    liveResult = liveResult,
+                    isAnalyzing = isAnalyzing,
+                    onAnalyzeCameraView = {
+                        viewModel.runAiQuery("Perform real-time scene understanding and summarize what the camera sees")
+                    }
+                )
             }
 
             // 6. Bottom Action: Only one primary button
@@ -989,12 +1083,35 @@ private fun HazardBottomSheetItemCard(
 // EXISTING LIVE AI COMPONENTS
 // ==========================================
 
+@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun LiveCameraView(
     isActive: Boolean,
     deviceName: String,
+    isPhoneBridgeMode: Boolean = false,
+    cameraFacing: String = "REAR",
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    val cameraPermissionState = rememberPermissionState(permission = Manifest.permission.CAMERA)
+
+    var tts by remember { mutableStateOf<TextToSpeech?>(null) }
+
+    DisposableEffect(context) {
+        val textToSpeech = TextToSpeech(context) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                // Initialized
+            }
+        }
+        tts = textToSpeech
+        onDispose {
+            textToSpeech.stop()
+            textToSpeech.shutdown()
+        }
+    }
+
+    var showBoundingBoxes by remember { mutableStateOf(false) }
+
     val detectedObjects = remember {
         listOf(
             DetectedObjectBox("Worker #1", "👷", 0.12f, 0.22f, 0.26f, 0.52f, Color(0xFFEF4444)),
@@ -1013,66 +1130,179 @@ fun LiveCameraView(
         colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)),
         border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.15f))
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(1.1f)
-                .clip(RoundedCornerShape(24.dp))
-                .background(Color(0xFF0F172A))
-        ) {
-            // Simulated HUD Camera Viewport Canvas
-            SimulatedCameraFeedBackground()
-
-            // AI Bounding Box Overlays
-            BoundingBoxOverlay(
-                objects = detectedObjects,
-                modifier = Modifier.fillMaxSize()
-            )
-
-            // Top Control Bar Overlay Inside Camera
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(14.dp)
-                    .align(Alignment.TopCenter),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                AIStatusChip(isActive = isActive)
-                LiveIndicatorBadge()
-            }
-
-            // Bottom HUD Overlay Label
+        Column {
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .align(Alignment.BottomCenter)
-                    .background(Color.Black.copy(alpha = 0.65f))
-                    .padding(horizontal = 14.dp, vertical = 8.dp)
+                    .aspectRatio(1.1f)
+                    .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
+                    .background(Color(0xFF0F172A))
             ) {
+                if (cameraPermissionState.status.isGranted) {
+                    // Real CameraX Hardware Feed
+                    RealCameraXPreview(
+                        cameraFacing = cameraFacing,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                } else {
+                    // Simulated HUD Camera Viewport Canvas
+                    SimulatedCameraFeedBackground()
+                }
+
+                // AI Bounding Box Overlays (Only shown when explicitly toggled on)
+                if (showBoundingBoxes) {
+                    BoundingBoxOverlay(
+                        objects = detectedObjects,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
+
+                // Top Control Bar Overlay Inside Camera
                 Row(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(14.dp)
+                        .align(Alignment.TopCenter),
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "RAY-BAN META STREAM • 1080p 60FPS",
-                        color = Color.White.copy(alpha = 0.8f),
-                        fontSize = 10.sp,
-                        fontFamily = FontFamily.Monospace,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = "LATENCY: 18ms",
-                        color = StatusSuccess,
-                        fontSize = 10.sp,
-                        fontFamily = FontFamily.Monospace,
-                        fontWeight = FontWeight.Bold
-                    )
+                    AIStatusChip(isActive = isActive)
+                    LiveIndicatorBadge()
+                }
+
+                // Bottom HUD Overlay Label
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(Alignment.BottomCenter)
+                        .background(Color.Black.copy(alpha = 0.65f))
+                        .padding(horizontal = 14.dp, vertical = 8.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = if (isPhoneBridgeMode) "📱 PHONE CAMERA BRIDGE STREAM • 1080p 60FPS" else "RAY-BAN META STREAM • 1080p 60FPS",
+                            color = Color.White.copy(alpha = 0.8f),
+                            fontSize = 10.sp,
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = if (cameraPermissionState.status.isGranted) "HARDWARE CAM ACTIVE" else "HUD SIMULATED",
+                            color = StatusSuccess,
+                            fontSize = 10.sp,
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+
+            // Interactive Controls for Camera Permission, AI Boxes & Speaker Speech Output
+            Surface(
+                color = Color(0xFF1E293B),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        if (!cameraPermissionState.status.isGranted) {
+                            Button(
+                                onClick = { cameraPermissionState.launchPermissionRequest() },
+                                colors = ButtonDefaults.buttonColors(containerColor = MetaBlue),
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text("📷 Enable Device Camera", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            }
+                        } else {
+                            OutlinedButton(
+                                onClick = { /* Camera Active */ },
+                                shape = RoundedCornerShape(12.dp),
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text("✅ Camera Stream Active", fontSize = 11.sp, color = StatusSuccess)
+                            }
+                        }
+
+                        Button(
+                            onClick = {
+                                val speechText = "SiteMind AI online. Site assessment active. Camera and microphone feed clean."
+                                tts?.speak(speechText, TextToSpeech.QUEUE_FLUSH, null, "hud_voice")
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF334155)),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(Icons.Default.VolumeUp, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("🔊 Test Speaker", fontSize = 11.sp, color = Color.White)
+                        }
+
+                        OutlinedButton(
+                            onClick = { showBoundingBoxes = !showBoundingBoxes },
+                            shape = RoundedCornerShape(12.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, if (showBoundingBoxes) MetaBlue else Color.Gray.copy(alpha = 0.5f))
+                        ) {
+                            Text(
+                                text = if (showBoundingBoxes) "🔲 Boxes: ON" else "🔲 Boxes: OFF",
+                                fontSize = 11.sp,
+                                color = if (showBoundingBoxes) MetaBlue else Color.White.copy(alpha = 0.7f)
+                            )
+                        }
+                    }
                 }
             }
         }
     }
+}
+
+@Composable
+fun RealCameraXPreview(
+    cameraFacing: String,
+    modifier: Modifier = Modifier
+) {
+    val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val cameraProviderFuture = remember { ProcessCameraProvider.getInstance(context) }
+
+    AndroidView(
+        factory = { ctx ->
+            val previewView = PreviewView(ctx).apply {
+                scaleType = PreviewView.ScaleType.FILL_CENTER
+            }
+            val executor = ContextCompat.getMainExecutor(ctx)
+            cameraProviderFuture.addListener({
+                try {
+                    val cameraProvider = cameraProviderFuture.get()
+                    val preview = Preview.Builder().build().also {
+                        it.setSurfaceProvider(previewView.surfaceProvider)
+                    }
+                    val cameraSelector = if (cameraFacing == "FRONT") {
+                        CameraSelector.DEFAULT_FRONT_CAMERA
+                    } else {
+                        CameraSelector.DEFAULT_BACK_CAMERA
+                    }
+                    cameraProvider.unbindAll()
+                    cameraProvider.bindToLifecycle(lifecycleOwner, cameraSelector, preview)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }, executor)
+            previewView
+        },
+        modifier = modifier
+    )
 }
 
 @Composable
@@ -1320,6 +1550,9 @@ fun CurrentObservationCard(
 
 @Composable
 fun SceneSummaryCard(
+    liveResult: com.example.data.model.LiveAiAnalysisResult? = null,
+    isAnalyzing: Boolean = false,
+    onAnalyzeCameraView: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -1336,29 +1569,54 @@ fun SceneSummaryCard(
                 .padding(16.dp)
         ) {
             Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(MetaBlue.copy(alpha = 0.12f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.AutoAwesome,
+                            contentDescription = null,
+                            tint = MetaBlue,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            text = "Live Camera Scene Summary",
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Text(
+                            text = "Real-time Gemini AI Vision Analysis",
+                            fontSize = 11.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+
+                IconButton(
+                    onClick = onAnalyzeCameraView,
                     modifier = Modifier
                         .size(32.dp)
-                        .clip(CircleShape)
-                        .background(MetaBlue.copy(alpha = 0.12f)),
-                    contentAlignment = Alignment.Center
+                        .testTag("analyze_camera_view_button")
                 ) {
                     Icon(
-                        imageVector = Icons.Default.AutoAwesome,
-                        contentDescription = null,
+                        imageVector = Icons.Default.Refresh,
+                        contentDescription = "Re-analyze scene",
                         tint = MetaBlue,
                         modifier = Modifier.size(18.dp)
                     )
                 }
-                Spacer(modifier = Modifier.width(10.dp))
-                Text(
-                    text = "Scene Summary",
-                    fontSize = 15.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -1369,13 +1627,35 @@ fun SceneSummaryCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.padding(14.dp)) {
-                    Text(
-                        text = "Workers are assembling the steel framework near the crane.\nAll visible workers are wearing helmets.",
-                        fontSize = 13.sp,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        lineHeight = 19.sp,
-                        fontWeight = FontWeight.Medium
-                    )
+                    if (isAnalyzing) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "✨ Gemini AI analyzing live camera feed...",
+                                fontSize = 13.sp,
+                                color = MetaBlue,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    } else {
+                        val summaryText = liveResult?.aiResponseText ?: "Workers assembling steel framework near crane. Camera feed analyzed in real-time."
+                        Text(
+                            text = summaryText,
+                            fontSize = 13.sp,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            lineHeight = 19.sp,
+                            fontWeight = FontWeight.Medium
+                        )
+
+                        if (!liveResult?.materialSpecs.isNullOrBlank()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Material & Spec: ${liveResult?.materialSpecs}",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
                 }
             }
         }
