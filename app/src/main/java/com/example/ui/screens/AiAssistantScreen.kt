@@ -136,6 +136,7 @@ fun AiAssistantScreen(
     modifier: Modifier = Modifier
 ) {
     val glassState by viewModel.glassState.collectAsStateWithLifecycle()
+    val liveResult by viewModel.liveResult.collectAsStateWithLifecycle()
     val isGlassConnected = glassState.connectionState != GlassAiState.OFFLINE
     val isLiveStreaming = glassState.isLiveStreaming
 
@@ -239,7 +240,12 @@ fun AiAssistantScreen(
                 "I've captured the current camera frame and context, classified the issue as '${draft.issueType}' (${draft.severity} severity), and generated a draft report for '${draft.title}'. Please review and confirm."
             } else {
                 val contextAnswer = viewModel.aiContextEngine.answerContextualQuestion(questionText)
-                contextAnswer.responseText
+                val liveCameraObs = liveResult?.aiResponseText
+                if (!liveCameraObs.isNullOrBlank() && (questionText.contains("see", ignoreCase = true) || questionText.contains("camera", ignoreCase = true) || questionText.contains("look", ignoreCase = true) || questionText.contains("scene", ignoreCase = true) || questionText.contains("view", ignoreCase = true))) {
+                    "Observing camera feed: $liveCameraObs. ${contextAnswer.responseText}"
+                } else {
+                    contextAnswer.responseText
+                }
             }
 
             viewModel.aiContextEngine.recordVoiceInteraction(questionText, aiResponseText)
@@ -411,53 +417,7 @@ fun AiAssistantScreen(
                     )
                 }
 
-                // 2b. Live Smart Glasses / Phone Camera Stream Feed in Voice AI
-                item {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "📷 LIVE CAMERA VIEW",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = MetaBlue,
-                                letterSpacing = 1.sp
-                            )
-                            Surface(
-                                shape = RoundedCornerShape(12.dp),
-                                color = StatusSuccess.copy(alpha = 0.15f)
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.VolumeUp,
-                                        contentDescription = null,
-                                        tint = StatusSuccess,
-                                        modifier = Modifier.size(12.dp)
-                                    )
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Text(
-                                        text = "Phone Speaker Output Active",
-                                        fontSize = 10.sp,
-                                        fontWeight = FontWeight.Bold,
-                                        color = StatusSuccess
-                                    )
-                                }
-                            }
-                        }
 
-                        LiveCameraView(
-                            isActive = true,
-                            deviceName = glassState.deviceName,
-                            isPhoneBridgeMode = glassState.isPhoneBridgeMode
-                        )
-                    }
-                }
 
                 // 3. Empty State (When no messages yet)
                 if (messages.isEmpty()) {
