@@ -1,11 +1,21 @@
 package com.example.ui.screens
 
 import android.Manifest
+import android.content.Intent
+import android.graphics.Bitmap
+import android.graphics.Matrix
+import android.speech.RecognitionListener
+import android.speech.RecognizerIntent
+import android.speech.SpeechRecognizer
 import android.speech.tts.TextToSpeech
+import android.util.Base64
 import androidx.camera.core.CameraSelector
+import androidx.camera.core.ImageAnalysis
+import androidx.camera.core.ImageProxy
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import java.io.ByteArrayOutputStream
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
@@ -49,6 +59,8 @@ import androidx.compose.material.icons.filled.ChevronRight
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Lightbulb
+import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.MicOff
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Refresh
@@ -62,6 +74,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -326,10 +339,12 @@ fun LiveAiScreen(
             // Active Session View Hierarchy:
             // 2. Live Camera Preview (Largest Section)
             item {
+                val liveResult by viewModel.liveResult.collectAsStateWithLifecycle()
                 LiveCameraView(
                     isActive = true,
                     deviceName = glassState.deviceName,
-                    isPhoneBridgeMode = glassState.isPhoneBridgeMode
+                    isPhoneBridgeMode = glassState.isPhoneBridgeMode,
+                    viewModel = viewModel
                 )
             }
 
@@ -395,7 +410,8 @@ fun LiveAiScreen(
 
             // 4. Current Observation Panel
             item {
-                CurrentObservationCard()
+                val liveResult by viewModel.liveResult.collectAsStateWithLifecycle()
+                CurrentObservationCard(liveResult = liveResult)
             }
 
             // 5. Scene Summary
@@ -1099,6 +1115,28 @@ private fun HazardBottomSheetItemCard(
     }
 }
 
+private fun imageProxyToBase64(imageProxy: ImageProxy): String? {
+    return try {
+        val bitmap = imageProxy.toBitmap()
+        val rotationDegrees = imageProxy.imageInfo.rotationDegrees
+        val rotatedBitmap = if (rotationDegrees != 0) {
+            val matrix = Matrix().apply { postRotate(rotationDegrees.toFloat()) }
+            Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
+        } else {
+            bitmap
+        }
+        val outputStream = ByteArrayOutputStream()
+        rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, 70, outputStream)
+        val bytes = outputStream.toByteArray()
+        Base64.encodeToString(bytes, Base64.NO_WRAP)
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
+    } finally {
+        imageProxy.close()
+    }
+}
+
 // ==========================================
 // EXISTING LIVE AI COMPONENTS
 // ==========================================
@@ -1110,12 +1148,86 @@ fun LiveCameraView(
     deviceName: String,
     isPhoneBridgeMode: Boolean = false,
     cameraFacing: String = "REAR",
+    viewModel: SiteMindViewModel? = null,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val cameraPermissionState = rememberPermissionState(permission = Manifest.permission.CAMERA)
+    val audioPermissionState = rememberPermissionState(permission = Manifest.permission.RECORD_AUDIO)
 
     var tts by remember { mutableStateOf<TextToSpeech?>(null) }
+    var latestCapturedFrame by remember { mutableStateOf<String?>(null) }
+
+    // Speech-to-Text state
+    var isListeningSpeech by remember { mutableStateOf(false) }
+    var recognizedSpeechText by remember { mutableStateOf("") }
+    var partialSpeechText by remember { mutableStateOf("") }
+    var speechStatusMessage by remember { mutableStateOf<String?>(null) }
+
+    val speechRecognizer = remember {
+        if (SpeechRecognizer.isRecognitionAvailable(context)) {
+            SpeechRecognizer.createSpeechRecognizer(context)
+        } else null
+    }
+
+    DisposableEffect(speechRecognizer) {
+        speechRecognizer?.setRecognitionListener(object : RecognitionListener {
+            override fun onReadyForSpeech(params: android.os.Bundle?) {
+                isListeningSpeech = true
+                speechStatusMessage = "Listening for voice query..."
+            }
+
+            override fun onBeginningOfSpeech() {
+                isListeningSpeech = true
+            }
+
+            override fun onRmsChanged(rmsdB: Float) {}
+            override fun onBufferReceived(buffer: ByteArray?) {}
+            override fun onEndOfSpeech() {
+                isListeningSpeech = false
+            }
+
+            override fun onError(error: Int) {
+                isListeningSpeech = false
+                speechStatusMessage = when (error) {
+                    SpeechRecognizer.ERROR_NO_MATCH -> "No speech recognized. Please try again."
+                    SpeechRecognizer.ERROR_AUDIO -> "Audio recording error."
+                    SpeechRecognizer.ERROR_NETWORK -> "Network issue during speech recognition."
+                    else -> "Voice recognition ended."
+                }
+            }
+
+            override fun onResults(results: android.os.Bundle?) {
+                isListeningSpeech = false
+                val matches = results?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                val text = matches?.firstOrNull().orEmpty().trim()
+                if (text.isNotBlank()) {
+                    recognizedSpeechText = text
+                    speechStatusMessage = "Spoken: \"$text\""
+                    // Pass recognized text AND captured vision frame to AI
+                    viewModel?.runAiQuery(query = text, base64Frame = latestCapturedFrame)
+                }
+            }
+
+            override fun onPartialResults(partialResults: android.os.Bundle?) {
+                val matches = partialResults?.getStringArrayList(SpeechRecognizer.RESULTS_RECOGNITION)
+                val text = matches?.firstOrNull().orEmpty()
+                if (text.isNotBlank()) {
+                    partialSpeechText = text
+                }
+            }
+
+            override fun onEvent(eventType: Int, params: android.os.Bundle?) {}
+        })
+
+        onDispose {
+            try {
+                speechRecognizer?.destroy()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
 
     DisposableEffect(context) {
         val textToSpeech = TextToSpeech(context) { status ->
@@ -1130,16 +1242,24 @@ fun LiveCameraView(
         }
     }
 
-    var showBoundingBoxes by remember { mutableStateOf(false) }
+    var showBoundingBoxes by remember { mutableStateOf(true) }
 
-    val detectedObjects = remember {
-        listOf(
-            DetectedObjectBox("Worker #1", "👷", 0.12f, 0.22f, 0.26f, 0.52f, Color(0xFFEF4444)),
-            DetectedObjectBox("Helmet", "⛑", 0.16f, 0.20f, 0.18f, 0.14f, Color(0xFFF59E0B)),
-            DetectedObjectBox("Worker #2", "👷", 0.52f, 0.30f, 0.24f, 0.48f, Color(0xFF10B981)),
-            DetectedObjectBox("Tower Crane", "🏗", 0.62f, 0.08f, 0.32f, 0.38f, Color(0xFF2563EB)),
-            DetectedObjectBox("Scaffold", "🪜", 0.04f, 0.48f, 0.22f, 0.44f, Color(0xFF8B5CF6))
-        )
+    val liveResultState = viewModel?.liveResult?.collectAsStateWithLifecycle()
+    val liveResult = liveResultState?.value
+
+    val detectedObjects = remember(liveResult?.detectedObjects) {
+        val rawList = liveResult?.detectedObjects.orEmpty()
+        rawList.map { box ->
+            DetectedObjectBox(
+                label = box.label,
+                emoji = if (box.isHazard) "⚠️" else "🔍",
+                xPercent = box.normX,
+                yPercent = box.normY,
+                widthPercent = box.normWidth,
+                heightPercent = box.normHeight,
+                color = if (box.isHazard) Color(0xFFEF4444) else Color(0xFF10B981)
+            )
+        }
     }
 
     Card(
@@ -1159,9 +1279,14 @@ fun LiveCameraView(
                     .background(Color(0xFF0F172A))
             ) {
                 if (cameraPermissionState.status.isGranted) {
-                    // Real CameraX Hardware Feed
+                    // Real CameraX Hardware Feed with ImageAnalysis frame emission
                     RealCameraXPreview(
                         cameraFacing = cameraFacing,
+                        isSessionActive = isActive,
+                        onFrameCaptured = { base64Frame ->
+                            latestCapturedFrame = base64Frame
+                            viewModel?.runAiQuery(query = recognizedSpeechText.ifBlank { "" }, base64Frame = base64Frame)
+                        },
                         modifier = Modifier.fillMaxSize()
                     )
                 } else {
@@ -1169,12 +1294,103 @@ fun LiveCameraView(
                     SimulatedCameraFeedBackground()
                 }
 
-                // AI Bounding Box Overlays (Only shown when explicitly toggled on)
-                if (showBoundingBoxes) {
+                // AI Bounding Box Overlays
+                if (showBoundingBoxes && detectedObjects.isNotEmpty()) {
                     BoundingBoxOverlay(
                         objects = detectedObjects,
                         modifier = Modifier.fillMaxSize()
                     )
+                }
+
+                // Vision Status Overlay (In Flight / Error / Clear Scene)
+                val isAnalyzingState = viewModel?.isAnalyzing?.collectAsStateWithLifecycle()
+                val isAnalyzing = isAnalyzingState?.value ?: false
+
+                if (isAnalyzing) {
+                    Surface(
+                        color = Color.Black.copy(alpha = 0.80f),
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .padding(16.dp)
+                            .testTag("vision_analyzing_indicator")
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(18.dp),
+                                color = MetaBlue,
+                                strokeWidth = 2.dp
+                            )
+                            Spacer(modifier = Modifier.width(10.dp))
+                            Text(
+                                text = "Analyzing camera feed...",
+                                color = Color.White,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+                } else if (liveResult?.isApiError == true) {
+                    Surface(
+                        color = Color(0xFF7F1D1D).copy(alpha = 0.90f),
+                        shape = RoundedCornerShape(16.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFEF4444)),
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .padding(16.dp)
+                            .testTag("vision_error_overlay")
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    imageVector = Icons.Default.Warning,
+                                    contentDescription = null,
+                                    tint = Color(0xFFFCA5A5),
+                                    modifier = Modifier.size(20.dp)
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = "Vision analysis unavailable — retrying",
+                                    color = Color.White,
+                                    fontSize = 13.sp,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            val errorMsg = liveResult.apiErrorMessage
+                            if (!errorMsg.isNullOrBlank()) {
+                                Spacer(modifier = Modifier.height(4.dp))
+                                Text(
+                                    text = errorMsg,
+                                    color = Color(0xFFFECACA),
+                                    fontSize = 11.sp,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
+                    }
+                } else if (liveResult != null && !liveResult.isApiError && detectedObjects.isEmpty()) {
+                    Surface(
+                        color = Color.Black.copy(alpha = 0.65f),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .padding(16.dp)
+                            .testTag("clear_scene_indicator")
+                    ) {
+                        Text(
+                            text = "Scene Clear — 0 objects detected",
+                            color = Color.White.copy(alpha = 0.85f),
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Medium,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                        )
+                    }
                 }
 
                 // Top Control Bar Overlay Inside Camera
@@ -1188,6 +1404,37 @@ fun LiveCameraView(
                 ) {
                     AIStatusChip(isActive = isActive)
                     LiveIndicatorBadge()
+                }
+
+                // Voice Listening HUD Overlay
+                if (isListeningSpeech || !speechStatusMessage.isNullOrBlank()) {
+                    Surface(
+                        color = Color.Black.copy(alpha = 0.85f),
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .padding(16.dp)
+                            .testTag("speech_transcript_hud")
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = if (isListeningSpeech) Icons.Default.Mic else Icons.Default.VolumeUp,
+                                contentDescription = null,
+                                tint = if (isListeningSpeech) StatusError else MetaBlue,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = if (isListeningSpeech && partialSpeechText.isNotBlank()) "🎤 $partialSpeechText" else (speechStatusMessage ?: "Listening..."),
+                                color = Color.White,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
                 }
 
                 // Bottom HUD Overlay Label
@@ -1221,7 +1468,7 @@ fun LiveCameraView(
                 }
             }
 
-            // Interactive Controls for Camera Permission, AI Boxes & Speaker Speech Output
+            // Interactive Controls for Speech, Camera Permission, AI Boxes & Speaker Speech Output
             Surface(
                 color = Color(0xFF1E293B),
                 modifier = Modifier.fillMaxWidth()
@@ -1236,6 +1483,53 @@ fun LiveCameraView(
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
+                        // Mic Speech-to-Text Button
+                        Button(
+                            onClick = {
+                                if (!audioPermissionState.status.isGranted) {
+                                    audioPermissionState.launchPermissionRequest()
+                                } else {
+                                    if (isListeningSpeech) {
+                                        try { speechRecognizer?.stopListening() } catch (e: Exception) { e.printStackTrace() }
+                                        isListeningSpeech = false
+                                    } else {
+                                        try {
+                                            val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
+                                                putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
+                                                putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
+                                                putExtra(RecognizerIntent.EXTRA_LANGUAGE, java.util.Locale.getDefault())
+                                            }
+                                            speechRecognizer?.startListening(intent)
+                                            isListeningSpeech = true
+                                            speechStatusMessage = "Listening for query..."
+                                        } catch (e: Exception) {
+                                            speechStatusMessage = "Speech recognizer unavailable"
+                                            isListeningSpeech = false
+                                        }
+                                    }
+                                }
+                            },
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (isListeningSpeech) StatusError else MetaBlue
+                            ),
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.weight(1f).testTag("speech_mic_button")
+                        ) {
+                            Icon(
+                                imageVector = if (isListeningSpeech) Icons.Default.MicOff else Icons.Default.Mic,
+                                contentDescription = "Mic STT",
+                                tint = Color.White,
+                                modifier = Modifier.size(16.dp)
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = if (isListeningSpeech) "🔴 Stop Rec" else "🎤 Talk to AI",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White
+                            )
+                        }
+
                         if (!cameraPermissionState.status.isGranted) {
                             Button(
                                 onClick = { cameraPermissionState.launchPermissionRequest() },
@@ -1243,7 +1537,7 @@ fun LiveCameraView(
                                 shape = RoundedCornerShape(12.dp),
                                 modifier = Modifier.weight(1f)
                             ) {
-                                Text("📷 Enable Device Camera", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                Text("📷 Cam Perm", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                             }
                         } else {
                             OutlinedButton(
@@ -1251,22 +1545,8 @@ fun LiveCameraView(
                                 shape = RoundedCornerShape(12.dp),
                                 modifier = Modifier.weight(1f)
                             ) {
-                                Text("✅ Camera Stream Active", fontSize = 11.sp, color = StatusSuccess)
+                                Text("✅ Cam Active", fontSize = 11.sp, color = StatusSuccess)
                             }
-                        }
-
-                        Button(
-                            onClick = {
-                                val speechText = "SiteMind AI online. Site assessment active. Camera and microphone feed clean."
-                                tts?.speak(speechText, TextToSpeech.QUEUE_FLUSH, null, "hud_voice")
-                            },
-                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF334155)),
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.weight(1f)
-                        ) {
-                            Icon(Icons.Default.VolumeUp, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text("🔊 Test Speaker", fontSize = 11.sp, color = Color.White)
                         }
 
                         OutlinedButton(
@@ -1275,7 +1555,7 @@ fun LiveCameraView(
                             border = androidx.compose.foundation.BorderStroke(1.dp, if (showBoundingBoxes) MetaBlue else Color.Gray.copy(alpha = 0.5f))
                         ) {
                             Text(
-                                text = if (showBoundingBoxes) "🔲 Boxes: ON" else "🔲 Boxes: OFF",
+                                text = if (showBoundingBoxes) "🔲 Boxes ON" else "🔲 Boxes OFF",
                                 fontSize = 11.sp,
                                 color = if (showBoundingBoxes) MetaBlue else Color.White.copy(alpha = 0.7f)
                             )
@@ -1290,11 +1570,14 @@ fun LiveCameraView(
 @Composable
 fun RealCameraXPreview(
     cameraFacing: String,
+    isSessionActive: Boolean = true,
+    onFrameCaptured: ((String) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val cameraProviderFuture = remember { ProcessCameraProvider.getInstance(context) }
+    var lastAnalyzedTime by remember { mutableStateOf(0L) }
 
     AndroidView(
         factory = { ctx ->
@@ -1308,13 +1591,31 @@ fun RealCameraXPreview(
                     val preview = Preview.Builder().build().also {
                         it.setSurfaceProvider(previewView.surfaceProvider)
                     }
+
+                    val imageAnalysis = ImageAnalysis.Builder()
+                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                        .build()
+
+                    imageAnalysis.setAnalyzer(executor) { imageProxy ->
+                        val currentTime = System.currentTimeMillis()
+                        if (isSessionActive && currentTime - lastAnalyzedTime >= 3500) {
+                            lastAnalyzedTime = currentTime
+                            val base64 = imageProxyToBase64(imageProxy)
+                            if (!base64.isNullOrBlank() && onFrameCaptured != null) {
+                                onFrameCaptured(base64)
+                            }
+                        } else {
+                            imageProxy.close()
+                        }
+                    }
+
                     val cameraSelector = if (cameraFacing == "FRONT") {
                         CameraSelector.DEFAULT_FRONT_CAMERA
                     } else {
                         CameraSelector.DEFAULT_BACK_CAMERA
                     }
                     cameraProvider.unbindAll()
-                    cameraProvider.bindToLifecycle(lifecycleOwner, cameraSelector, preview)
+                    cameraProvider.bindToLifecycle(lifecycleOwner, cameraSelector, preview, imageAnalysis)
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
@@ -1485,15 +1786,27 @@ fun LiveIndicatorBadge() {
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun CurrentObservationCard(
+    liveResult: com.example.data.model.LiveAiAnalysisResult? = null,
     modifier: Modifier = Modifier
 ) {
-    val observations = listOf(
-        "👷 Workers (3)",
-        "⛑ Helmets (3)",
-        "🦺 Safety Vests (2)",
-        "🏗 Crane",
-        "🪜 Scaffold"
-    )
+    val observations = remember(liveResult) {
+        if (liveResult != null && !liveResult.isApiError && liveResult.detectedObjects.isNotEmpty()) {
+            val list = mutableListOf<String>()
+            list.add("🛡 PPE: ${liveResult.ppeCompliancePercent}%")
+            if (liveResult.blueprintDeviationMm > 0) {
+                list.add("📐 CAD Var: ${liveResult.blueprintDeviationMm}mm")
+            }
+            liveResult.detectedObjects.forEach { obj ->
+                val icon = if (obj.isHazard) "⚠️" else "📦"
+                list.add("$icon ${obj.label}")
+            }
+            list
+        } else if (liveResult?.isApiError == true) {
+            listOf("⚠️ Vision analysis unavailable")
+        } else {
+            listOf("🔍 No objects detected in scene")
+        }
+    }
 
     Card(
         modifier = modifier

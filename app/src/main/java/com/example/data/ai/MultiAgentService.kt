@@ -6,7 +6,6 @@ import com.example.data.model.AgentStatus
 import com.example.data.model.LiveAiAnalysisResult
 import com.example.data.model.VisionBoundingBox
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -25,109 +24,121 @@ class MultiAgentService {
 
     suspend fun processQueryAndFrame(
         query: String,
+        base64Frame: String? = null,
         siteZone: String = "Grid B-4 Level 3"
     ): LiveAiAnalysisResult = withContext(Dispatchers.Default) {
 
         val apiKey = try { BuildConfig.GEMINI_API_KEY } catch (e: Exception) { "" }
 
-        val steps = mutableListOf<AgentExecutionStep>()
+        val geminiResult = callGeminiApi(apiKey, query, base64Frame, siteZone)
 
-        // 1. Vision Agent
-        delay(120)
-        steps.add(
+        var aiResponseText = ""
+        var ppeCompliancePercent = 95
+        var blueprintDeviationMm = 0.0f
+        var materialSpecs = "C35/45 Concrete & Grade 8.8 Structural Steel"
+        val detectedObjectsList = mutableListOf<VisionBoundingBox>()
+
+        val isJsonSuccess = !geminiResult.isError && !geminiResult.text.isNullOrBlank()
+
+        if (isJsonSuccess) {
+            try {
+                val rawText = geminiResult.text!!.trim()
+                val cleanedText = rawText
+                    .replace("^```json".toRegex(RegexOption.IGNORE_CASE), "")
+                    .replace("^```".toRegex(), "")
+                    .replace("```$".toRegex(), "")
+                    .trim()
+
+                val json = JSONObject(cleanedText)
+                aiResponseText = json.optString("aiResponseText", "Camera view analyzed.")
+                ppeCompliancePercent = json.optInt("ppeCompliancePercent", 95)
+                blueprintDeviationMm = json.optDouble("blueprintDeviationMm", 0.0).toFloat()
+                materialSpecs = json.optString("materialSpecs", "Standard Site Construction Specs")
+
+                val objectsArray = json.optJSONArray("detectedObjects")
+                if (objectsArray != null) {
+                    for (i in 0 until objectsArray.length()) {
+                        val obj = objectsArray.optJSONObject(i) ?: continue
+                        val label = obj.optString("label", "Detected Item")
+                        val conf = obj.optDouble("confidence", 0.92).toFloat()
+                        val isHazard = obj.optBoolean("isHazard", false)
+                        val nx = obj.optDouble("normX", 0.15).toFloat().coerceIn(0f, 1f)
+                        val ny = obj.optDouble("normY", 0.15).toFloat().coerceIn(0f, 1f)
+                        val nw = obj.optDouble("normWidth", 0.25).toFloat().coerceIn(0.05f, 0.95f)
+                        val nh = obj.optDouble("normHeight", 0.25).toFloat().coerceIn(0.05f, 0.95f)
+                        val risk = obj.optString("riskLevel", if (isHazard) "HIGH" else "LOW")
+                        val cat = obj.optString("category", "Vision Object")
+
+                        detectedObjectsList.add(
+                            VisionBoundingBox(
+                                label = label,
+                                confidence = conf,
+                                isHazard = isHazard,
+                                normX = nx,
+                                normY = ny,
+                                normWidth = nw,
+                                normHeight = nh,
+                                riskLevel = risk,
+                                category = cat
+                            )
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                aiResponseText = geminiResult.text ?: generateSmartFallbackResponse(query, siteZone)
+            }
+        } else {
+            aiResponseText = generateSmartFallbackResponse(query, siteZone)
+        }
+
+        val hazardCount = detectedObjectsList.count { it.isHazard }
+
+        val steps = mutableListOf(
             AgentExecutionStep(
                 agentName = "Vision Agent",
                 status = AgentStatus.SUCCESS,
-                output = "Segmented rebar layout, W14 steel beam, 3 workers in frame.",
+                output = if (!base64Frame.isNullOrBlank()) "Analyzed live camera image frame via gemini-3.5-flash. Identified ${detectedObjectsList.size} objects." else "Processed prompt in text-only mode.",
                 latencyMs = 120
-            )
-        )
-
-        // 2. Safety Agent
-        delay(180)
-        val hasPpeIssue = query.contains("PPE", ignoreCase = true) || query.contains("safety", ignoreCase = true) || query.contains("hazard", ignoreCase = true)
-        steps.add(
+            ),
             AgentExecutionStep(
                 agentName = "Safety Agent",
-                status = if (hasPpeIssue) AgentStatus.WARNING else AgentStatus.SUCCESS,
-                output = if (hasPpeIssue) "Non-conformance: Worker #2 missing safety glasses & high-vis vest." else "OSHA 1926 Fall protection & tie-off verified.",
+                status = if (hazardCount > 0 || ppeCompliancePercent < 90) AgentStatus.WARNING else AgentStatus.SUCCESS,
+                output = if (hazardCount > 0) "Safety Alert: $hazardCount risk items flagged in frame. PPE compliance evaluated at $ppeCompliancePercent%." else "OSHA compliance & PPE status verified ($ppeCompliancePercent%).",
                 latencyMs = 180
-            )
-        )
-
-        // 3. Quality Agent
-        delay(150)
-        val isBlueprintQuery = query.contains("beam", ignoreCase = true) || query.contains("align", ignoreCase = true) || query.contains("blueprint", ignoreCase = true)
-        steps.add(
+            ),
             AgentExecutionStep(
                 agentName = "Quality Agent",
-                status = if (isBlueprintQuery) AgentStatus.WARNING else AgentStatus.SUCCESS,
-                output = if (isBlueprintQuery) "Beam B-12 alignment variance: +14mm from CAD S-204 spec." else "Rebar spacing 150mm c/c meets GFC drawing 108.",
+                status = if (blueprintDeviationMm > 5.0f) AgentStatus.WARNING else AgentStatus.SUCCESS,
+                output = if (blueprintDeviationMm > 5.0f) "CAD blueprint variance detected: ${blueprintDeviationMm}mm." else "Structural alignment within spec tolerance (${blueprintDeviationMm}mm).",
                 latencyMs = 150
-            )
-        )
-
-        // 4. Knowledge Agent (RAG)
-        delay(140)
-        steps.add(
+            ),
             AgentExecutionStep(
                 agentName = "Knowledge Agent",
                 status = AgentStatus.SUCCESS,
-                output = "Retrieved SOP-202 (Steel Beam Installation) & OSHA 1926.501 guidelines.",
+                output = "Retrieved SOP-202 & OSHA 1926 site compliance guidelines.",
                 latencyMs = 140
-            )
-        )
-
-        // 5. Reporting Agent
-        delay(100)
-        steps.add(
+            ),
             AgentExecutionStep(
                 agentName = "Reporting Agent",
                 status = AgentStatus.SUCCESS,
-                output = "Logged site inspection entry into DPR #42 with geo-stamp ($siteZone).",
+                output = "Logged site inspection entry into DPR (#$siteZone).",
                 latencyMs = 100
-            )
-        )
-
-        // 6. Decision Engine
-        delay(110)
-        steps.add(
+            ),
             AgentExecutionStep(
                 agentName = "Decision Engine",
                 status = AgentStatus.SUCCESS,
-                output = "Action triggered: Audio response delivered to Ray-Ban Meta earpiece.",
+                output = "Action triggered: Audio response & bounding boxes delivered to earpiece/screen.",
                 latencyMs = 110
             )
         )
 
-        val geminiResult = callGeminiApi(apiKey, query, siteZone)
-        val responseText = geminiResult.text ?: generateSmartFallbackResponse(query, siteZone)
-
-        val boxes = if (hasPpeIssue) {
-            listOf(
-                VisionBoundingBox("Worker #1 (PPE OK)", 0.98f, false, 0.15f, 0.25f, 0.25f, 0.55f, riskLevel = "LOW", category = "Personnel"),
-                VisionBoundingBox("Missing Glasses & Vest ⚠️", 0.94f, true, 0.52f, 0.28f, 0.30f, 0.58f, riskLevel = "HIGH", category = "Safety PPE"),
-                VisionBoundingBox("Scaffolding Guardrail", 0.91f, false, 0.05f, 0.10f, 0.88f, 0.20f, riskLevel = "LOW", category = "Perimeter Safety")
-            )
-        } else if (isBlueprintQuery) {
-            listOf(
-                VisionBoundingBox("Beam B-12 (+14mm Dev)", 0.96f, true, 0.25f, 0.35f, 0.50f, 0.30f, riskLevel = "CRITICAL", category = "CAD Tolerance"),
-                VisionBoundingBox("Anchor Bolt Group", 0.98f, false, 0.20f, 0.68f, 0.22f, 0.22f, riskLevel = "LOW", category = "Fasteners")
-            )
-        } else {
-            listOf(
-                VisionBoundingBox("C35 Concrete Rebar", 0.99f, false, 0.18f, 0.22f, 0.65f, 0.60f, riskLevel = "LOW", category = "Reinforcement"),
-                VisionBoundingBox("Safety Helmet", 0.97f, false, 0.42f, 0.12f, 0.18f, 0.18f, riskLevel = "LOW", category = "PPE Gear")
-            )
-        }
-
         LiveAiAnalysisResult(
             queryText = query,
-            aiResponseText = responseText,
-            detectedObjects = boxes,
-            ppeCompliancePercent = if (hasPpeIssue) 88 else 98,
-            blueprintDeviationMm = if (isBlueprintQuery) 14.2f else 0.8f,
-            materialSpecs = "C35/45 Reinforced Concrete & Grade 8.8 Structural Steel",
+            aiResponseText = aiResponseText,
+            detectedObjects = detectedObjectsList,
+            ppeCompliancePercent = ppeCompliancePercent,
+            blueprintDeviationMm = blueprintDeviationMm,
+            materialSpecs = materialSpecs,
             agentSteps = steps,
             isApiError = geminiResult.isError,
             apiErrorMessage = geminiResult.errorMessage
@@ -140,7 +151,7 @@ class MultiAgentService {
         val errorMessage: String?
     )
 
-    private fun callGeminiApi(apiKey: String, query: String, zone: String): GeminiApiCallResult {
+    private fun callGeminiApi(apiKey: String, query: String, base64Frame: String?, zone: String): GeminiApiCallResult {
         if (apiKey.isBlank() || apiKey == "MY_GEMINI_API_KEY") {
             return GeminiApiCallResult(
                 text = null,
@@ -149,18 +160,62 @@ class MultiAgentService {
             )
         }
         return try {
-            val systemPrompt = "You are SiteMind AI, an expert construction intelligence assistant running on Ray-Ban Meta Smart Glasses. Answer concisely, professionally, and prioritize safety, OSHA rules, and quality standards for location: $zone."
-            val fullPrompt = "$systemPrompt\n\nWorker query: $query"
+            val systemPrompt = """
+                You are SiteMind AI, a real-time computer vision and safety intelligence engine running on Ray-Ban Meta Smart Glasses on a construction site (Location: $zone).
+                Analyze the provided camera image (if available) and answer the worker's query: "$query".
 
-            val jsonBody = JSONObject().apply {
-                put("contents", JSONArray().apply {
+                Return ONLY a valid JSON object matching this exact schema without any markdown wrapping:
+                {
+                  "aiResponseText": "Clear concise summary of what you see and direct answer to the worker query",
+                  "ppeCompliancePercent": 95,
+                  "blueprintDeviationMm": 0.0,
+                  "materialSpecs": "Brief description of visible materials",
+                  "detectedObjects": [
+                    {
+                      "label": "Name of object, person, equipment, or PPE item",
+                      "confidence": 0.95,
+                      "isHazard": false,
+                      "normX": 0.15,
+                      "normY": 0.20,
+                      "normWidth": 0.25,
+                      "normHeight": 0.50,
+                      "riskLevel": "LOW",
+                      "category": "Personnel or Safety PPE or Equipment"
+                    }
+                  ]
+                }
+
+                Rules:
+                1. Look closely at the image provided. Detect people, helmets, safety vests, boots, scaffolding, beams, tools, and any safety hazards.
+                2. Bounding box coordinates (normX, normY, normWidth, normHeight) must be normalized float numbers between 0.0 and 1.0 representing percentage of image dimensions.
+                3. If a worker is missing a helmet, vest, or safety gear, set isHazard=true and riskLevel="HIGH" or "CRITICAL".
+                4. Base your evaluation strictly on the actual image provided.
+            """.trimIndent()
+
+            val partsArray = JSONArray().apply {
+                put(JSONObject().apply {
+                    put("text", systemPrompt)
+                })
+                if (!base64Frame.isNullOrBlank()) {
                     put(JSONObject().apply {
-                        put("parts", JSONArray().apply {
-                            put(JSONObject().apply {
-                                put("text", fullPrompt)
-                            })
+                        put("inline_data", JSONObject().apply {
+                            put("mime_type", "image/jpeg")
+                            put("data", base64Frame)
                         })
                     })
+                }
+            }
+
+            val contentsArray = JSONArray().apply {
+                put(JSONObject().apply {
+                    put("parts", partsArray)
+                })
+            }
+
+            val jsonBody = JSONObject().apply {
+                put("contents", contentsArray)
+                put("generationConfig", JSONObject().apply {
+                    put("responseMimeType", "application/json")
                 })
             }
 

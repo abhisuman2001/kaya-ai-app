@@ -70,7 +70,10 @@ fun ProfileScreen(
 
         // 1. Profile Header Card
         item {
-            ProfileHeaderCard(profile = profile)
+            ProfileHeaderCard(
+                profile = profile,
+                onSaveProfile = { updated -> viewModel.saveUserDetailChanges(updated) }
+            )
         }
 
         // 2. System Preferences & Privacy Card

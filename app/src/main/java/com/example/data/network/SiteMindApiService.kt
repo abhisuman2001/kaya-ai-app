@@ -33,6 +33,7 @@ data class SupabaseAuthUser(
 )
 
 data class SupabaseAuthResponseDto(
+    val id: String? = null,
     val access_token: String? = null,
     val token_type: String? = null,
     val user: SupabaseAuthUser? = null,
@@ -105,19 +106,19 @@ data class SupabaseProfileDto(
     val approval_status: String? = "approved"
 )
 
+data class SupabaseUserRoleDto(
+    val user_id: String,
+    val role: String = "supervisor"
+)
+
 interface SiteMindApiService {
 
-    @POST("../auth/v1/admin/users")
-    suspend fun adminSignUp(
-        @Body request: SupabaseSignUpRequestDto
-    ): Response<SupabaseAuthUser>
-
-    @POST("../auth/v1/signup")
+    @POST("/auth/v1/signup")
     suspend fun signUp(
         @Body request: SupabaseSignUpRequestDto
     ): Response<SupabaseAuthResponseDto>
 
-    @POST("../auth/v1/token?grant_type=password")
+    @POST("/auth/v1/token?grant_type=password")
     suspend fun signIn(
         @Body request: SupabaseSignInRequestDto
     ): Response<SupabaseAuthResponseDto>
@@ -171,6 +172,9 @@ interface SiteMindApiService {
 
     @GET("profiles")
     suspend fun getProfiles(@Query("select") select: String = "*"): Response<List<SupabaseProfileDto>>
+
+    @POST("user_roles")
+    suspend fun createUserRole(@Body userRole: SupabaseUserRoleDto): Response<List<SupabaseUserRoleDto>>
 }
 
 
