@@ -22,14 +22,14 @@ class SiteMindRepository(
     val allBlueprints: Flow<List<BlueprintEntity>> = blueprintDao.getAllBlueprints()
     val allKnowledge: Flow<List<KnowledgeItemEntity>> = knowledgeDao.getAllKnowledge()
 
-    suspend fun insertHazard(hazard: HazardEntity) = hazardDao.insertHazard(hazard)
+    suspend fun insertHazard(hazard: HazardEntity): Long = hazardDao.insertHazard(hazard)
     suspend fun updateHazard(hazard: HazardEntity) = hazardDao.updateHazard(hazard)
     suspend fun resolveHazard(id: Int, actionTaken: String) {
         // Find and update hazard
         // For simplicity, resolve via SQL or direct update call
     }
 
-    suspend fun insertReport(report: ReportEntity) = reportDao.insertReport(report)
+    suspend fun insertReport(report: ReportEntity): Long = reportDao.insertReport(report)
     suspend fun insertBlueprint(blueprint: BlueprintEntity) = blueprintDao.insertBlueprint(blueprint)
     fun searchKnowledge(query: String): Flow<List<KnowledgeItemEntity>> = knowledgeDao.searchKnowledge(query)
 }

@@ -68,6 +68,6 @@ data class SceneAnalysisData(
         "Halts work near perimeter until 1/2 inch steel cable perimeter safety fence is installed.",
         "Issue mandatory tie-off directive to Subcontractor Team #3 before proceeding with rebar tie.",
         "Request immediate re-certification of East Scaffolding platform from Safety Inspector.",
-        "Log automated safety infraction report to Superintendent Marcus Vance."
+        "Log automated safety infraction report to Site Supervisor."
     )
 )

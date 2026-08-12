@@ -16,7 +16,7 @@ interface HazardDao {
     fun getActiveHazards(): Flow<List<HazardEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertHazard(hazard: HazardEntity)
+    suspend fun insertHazard(hazard: HazardEntity): Long
 
     @Update
     suspend fun updateHazard(hazard: HazardEntity)
@@ -31,7 +31,7 @@ interface ReportDao {
     fun getAllReports(): Flow<List<ReportEntity>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertReport(report: ReportEntity)
+    suspend fun insertReport(report: ReportEntity): Long
 }
 
 @Dao

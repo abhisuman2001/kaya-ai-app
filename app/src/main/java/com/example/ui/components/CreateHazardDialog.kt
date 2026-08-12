@@ -45,6 +45,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import com.example.data.model.HazardCategory
+import com.example.data.model.WorkerItem
+import com.example.data.model.sampleWorkerRoster
 import com.example.ui.theme.MetaBlue
 import com.example.ui.theme.StatusError
 import com.example.ui.theme.StatusSuccess
@@ -54,7 +56,9 @@ import com.example.ui.theme.StatusWarning
 @Composable
 fun CreateHazardDialog(
     onDismiss: () -> Unit,
-    onCreate: (title: String, category: HazardCategory, severity: String, location: String, oshaStandard: String, description: String) -> Unit,
+    onCreate: (title: String, category: HazardCategory, severity: String, location: String, oshaStandard: String, description: String, workerId: String?, workerName: String?) -> Unit,
+    workerRoster: List<WorkerItem> = sampleWorkerRoster,
+    isSupervisor: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     var title by remember { mutableStateOf("") }
@@ -63,6 +67,7 @@ fun CreateHazardDialog(
     var location by remember { mutableStateOf("Level 18 Deck • Grid B-4") }
     var oshaStandard by remember { mutableStateOf("OSHA 1926.100(a)") }
     var description by remember { mutableStateOf("") }
+    var selectedWorker by remember { mutableStateOf(if (isSupervisor && workerRoster.isNotEmpty()) workerRoster.first() else null) }
 
     val severities = listOf("CRITICAL", "HIGH", "MEDIUM", "LOW")
 
@@ -107,6 +112,30 @@ fun CreateHazardDialog(
                         modifier = Modifier.testTag("close_create_hazard_dialog")
                     ) {
                         Icon(imageVector = Icons.Default.Close, contentDescription = "Close", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+
+                if (!isSupervisor) {
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = StatusError.copy(alpha = 0.12f),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, StatusError.copy(0.4f)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(imageVector = Icons.Default.Warning, contentDescription = null, tint = StatusError, modifier = Modifier.size(20.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "SUPERVISOR ROLE REQUIRED: Hazard filing and worker assignments are restricted to site supervisors.",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = StatusError
+                            )
+                        }
                     }
                 }
 
@@ -241,17 +270,65 @@ fun CreateHazardDialog(
                     maxLines = 3
                 )
 
+                if (isSupervisor) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text("ASSIGNED WORKER (REQUIRED)", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = MetaBlue)
+                    Spacer(modifier = Modifier.height(6.dp))
+
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        workerRoster.forEach { worker ->
+                            val isSelected = selectedWorker?.id == worker.id
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = if (isSelected) MetaBlue else MaterialTheme.colorScheme.surfaceVariant,
+                                modifier = Modifier
+                                    .clickable { selectedWorker = worker }
+                                    .testTag("select_worker_${worker.id}")
+                            ) {
+                                Column(modifier = Modifier.padding(horizontal = 8.dp, vertical = 5.dp)) {
+                                    Text(
+                                        text = worker.name,
+                                        fontSize = 11.sp,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
+                                        color = if (isSelected) Color.White else MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Text(
+                                        text = worker.jobTitle,
+                                        fontSize = 9.sp,
+                                        color = if (isSelected) Color.White.copy(0.8f) else MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // Submit Button
+                val isFormValid = isSupervisor && title.isNotBlank() && selectedWorker != null
                 Button(
                     onClick = {
-                        if (title.isNotBlank()) {
-                            onCreate(title, selectedCategory, selectedSeverity, location, oshaStandard, description)
+                        if (isFormValid) {
+                            val wName = selectedWorker?.let { "${it.name} (${it.jobTitle})" }
+                            onCreate(
+                                title,
+                                selectedCategory,
+                                selectedSeverity,
+                                location,
+                                oshaStandard,
+                                description,
+                                selectedWorker?.id,
+                                wName
+                            )
                             onDismiss()
                         }
                     },
-                    enabled = title.isNotBlank(),
+                    enabled = isFormValid,
                     colors = ButtonDefaults.buttonColors(containerColor = StatusError),
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier

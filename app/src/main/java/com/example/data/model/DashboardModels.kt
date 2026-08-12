@@ -27,8 +27,8 @@ data class ProjectInfo(
 data class ShiftInfo(
     val shiftName: String = "Day / Evening Inspection Shift",
     val shiftHours: String = "08:00 - 18:00",
-    val activeWorkerCount: Int = 22,
-    val shiftLeadName: String = "Marcus Vance (Superintendent)",
+    val activeWorkerCount: Int = 12,
+    val shiftLeadName: String = "Site Supervisor",
     val briefingCompleted: Boolean = true,
     val emergencyRadioChannel: String = "Ch 4 (312.45 MHz)"
 )

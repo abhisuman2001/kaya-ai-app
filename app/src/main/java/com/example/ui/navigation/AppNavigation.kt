@@ -51,20 +51,14 @@ import com.example.ui.screens.HazardDetectionScreen
 import com.example.ui.screens.QualityScreen
 import com.example.ui.screens.MaterialScreen
 import com.example.ui.screens.TasksScreen
-import com.example.ui.screens.ToolsScreen
 import com.example.ui.screens.AnalyticsScreen
 import com.example.ui.screens.NotificationsScreen
 import com.example.ui.screens.ProfileScreen
-import com.example.ui.screens.BackendScreen
 import com.example.ui.screens.AiIntegrationScreen
-import com.example.ui.screens.ProductionReadinessScreen
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.BarChart
-import androidx.compose.material.icons.filled.Dns
-import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.FactCheck
 import androidx.compose.material.icons.filled.Warning
@@ -86,7 +80,6 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector)
     object Assistant : Screen("assistant", "Voice AI", Icons.Default.RecordVoiceOver)
     object Device : Screen("device", "Glasses", Icons.Default.Smartphone)
     object Tasks : Screen("tasks", "Tasks", Icons.Default.Assignment)
-    object Tools : Screen("tools", "Tools", Icons.Default.GridView)
     object SceneAnalysis : Screen("scene_analysis", "Scene AI", Icons.Default.CenterFocusStrong)
     object HazardDetection : Screen("hazard_detection", "Hazards", Icons.Default.Warning)
     object Safety : Screen("safety", "Safety", Icons.Default.Shield)
@@ -98,9 +91,7 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector)
     object Analytics : Screen("analytics", "Analytics", Icons.Default.BarChart)
     object Notifications : Screen("notifications", "Alerts", Icons.Default.NotificationsActive)
     object Profile : Screen("profile", "Profile", Icons.Default.Person)
-    object Backend : Screen("backend", "Backend", Icons.Default.Dns)
     object AiIntegration : Screen("ai_integration", "AI Engine", Icons.Default.AutoAwesome)
-    object ProductionReadiness : Screen("production_readiness", "Production", Icons.Default.VerifiedUser)
 }
 
 @Composable
@@ -168,24 +159,6 @@ fun AppNavigation(
                 Screen.Profile
             )
 
-            val toolSubRoutes = setOf(
-                Screen.Tools.route,
-                Screen.Analytics.route,
-                Screen.Notifications.route,
-                Screen.SceneAnalysis.route,
-                Screen.HazardDetection.route,
-                Screen.Safety.route,
-                Screen.Blueprints.route,
-                Screen.Quality.route,
-                Screen.Material.route,
-                Screen.Knowledge.route,
-                Screen.Reports.route,
-                Screen.Device.route,
-                Screen.Backend.route,
-                Screen.AiIntegration.route,
-                Screen.ProductionReadiness.route
-            )
-
             Scaffold(
                 bottomBar = {
                     Box(
@@ -203,11 +176,7 @@ fun AppNavigation(
                                 .border(width = 1.dp, color = BorderDark)
                         ) {
                             bottomNavItems.forEach { screen ->
-                                val isSelected = if (screen == Screen.Tools) {
-                                    currentRoute in toolSubRoutes
-                                } else {
-                                    currentRoute == screen.route
-                                }
+                                val isSelected = currentRoute == screen.route
                                 NavigationBarItem(
                                     icon = { Icon(imageVector = screen.icon, contentDescription = screen.title) },
                                     label = { Text(text = screen.title, fontSize = 10.sp) },
@@ -269,12 +238,6 @@ fun AppNavigation(
                             }
                         )
                     }
-                    composable(Screen.Tools.route) {
-                        ToolsScreen(
-                            viewModel = viewModel,
-                            onNavigateToRoute = { route -> navController.navigate(route) }
-                        )
-                    }
                     composable(Screen.Analytics.route) {
                         AnalyticsScreen(viewModel = viewModel)
                     }
@@ -287,14 +250,8 @@ fun AppNavigation(
                     composable(Screen.Profile.route) {
                         ProfileScreen(viewModel = viewModel)
                     }
-                    composable(Screen.Backend.route) {
-                        BackendScreen(viewModel = viewModel)
-                    }
                     composable(Screen.AiIntegration.route) {
                         AiIntegrationScreen(viewModel = viewModel)
-                    }
-                    composable(Screen.ProductionReadiness.route) {
-                        ProductionReadinessScreen(viewModel = viewModel)
                     }
                     composable(Screen.Assistant.route) {
                         AiAssistantScreen(viewModel = viewModel)

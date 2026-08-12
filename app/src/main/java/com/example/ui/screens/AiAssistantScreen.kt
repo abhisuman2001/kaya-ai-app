@@ -417,6 +417,16 @@ fun AiAssistantScreen(
                     )
                 }
 
+                // AI API Fallback Alert (when API key is invalid/expired)
+                if (liveResult.isApiError) {
+                    item {
+                        AiApiFallbackAlertCard(
+                            errorMessage = liveResult.apiErrorMessage,
+                            onRetry = { viewModel.runAiQuery("Test Gemini API token status") }
+                        )
+                    }
+                }
+
 
 
                 // 3. Empty State (When no messages yet)

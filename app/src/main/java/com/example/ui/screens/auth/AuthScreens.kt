@@ -623,7 +623,7 @@ fun RegisterScreen(
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var selectedRole by remember { mutableStateOf(UserRole.SAFETY_INSPECTOR) }
+    var selectedRole by remember { mutableStateOf(UserRole.SUPERVISOR) }
 
     val authLoading by viewModel.authLoading.collectAsStateWithLifecycle()
     val authError by viewModel.authError.collectAsStateWithLifecycle()
@@ -1094,13 +1094,11 @@ fun RoleSelectionScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            UserRole.values().forEach { role ->
+            UserRole.entries.forEach { role ->
                 val isSelected = selectedRole == role
                 val icon = when (role) {
-                    UserRole.SAFETY_INSPECTOR -> Icons.Default.Shield
-                    UserRole.SITE_ENGINEER -> Icons.Default.Architecture
-                    UserRole.PROJECT_MANAGER -> Icons.Default.Assignment
-                    UserRole.FIELD_WORKER -> Icons.Default.Psychology
+                    UserRole.SUPERVISOR -> Icons.Default.Shield
+                    UserRole.WORKER -> Icons.Default.Psychology
                 }
 
                 Card(

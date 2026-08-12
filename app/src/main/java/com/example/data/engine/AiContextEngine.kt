@@ -32,194 +32,33 @@ class AiContextEngine {
     private val timeFormatter = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
     private val displayTimeFormatter = SimpleDateFormat("hh:mm a", Locale.getDefault())
 
-    private val initialEvents = listOf(
-        ContextEvent(
-            id = "evt_init_1",
-            timestampMs = System.currentTimeMillis() - 20 * 60 * 1000,
-            formattedTime = formatTime(System.currentTimeMillis() - 20 * 60 * 1000),
-            type = ContextEventType.SESSION_STATE_CHANGED,
-            source = ContextEventSource.SMART_GLASSES,
-            title = "Ray-Ban Meta Glasses Connected",
-            description = "Smart Glasses paired via BLE. Live AI session started on Zone B-4 Level 3.",
-            location = "Zone B-4 Level 3"
-        ),
-        ContextEvent(
-            id = "evt_init_2",
-            timestampMs = System.currentTimeMillis() - 16 * 60 * 1000,
-            formattedTime = formatTime(System.currentTimeMillis() - 16 * 60 * 1000),
-            type = ContextEventType.VISION_OBSERVATION,
-            source = ContextEventSource.LIVE_VISION,
-            title = "Initial Vision Scan Complete",
-            description = "3 structural steel workers observed operating near tower crane. High-visibility vest compliance 100%.",
-            location = "Zone B-4 Level 3",
-            metadata = mapOf("workerCount" to "3", "craneActive" to "true")
-        ),
-        ContextEvent(
-            id = "evt_init_3",
-            timestampMs = System.currentTimeMillis() - 12 * 60 * 1000,
-            formattedTime = formatTime(System.currentTimeMillis() - 12 * 60 * 1000),
-            type = ContextEventType.HAZARD_DETECTED,
-            source = ContextEventSource.HAZARD_DETECTION,
-            title = "Missing Helmet Near Crane Swing Zone",
-            description = "Worker #1 identified near grid B-4 without an approved safety helmet while crane arm is active.",
-            severity = "CRITICAL",
-            location = "Grid B-4 near Crane #2",
-            metadata = mapOf("category" to "PPE", "riskScore" to "92")
-        ),
-        ContextEvent(
-            id = "evt_init_4",
-            timestampMs = System.currentTimeMillis() - 8 * 60 * 1000,
-            formattedTime = formatTime(System.currentTimeMillis() - 8 * 60 * 1000),
-            type = ContextEventType.BLUEPRINT_DEVIATION,
-            source = ContextEventSource.BLUEPRINT_COMPARISON,
-            title = "Beam B-12 Elevation Discrepancy",
-            description = "Steel Beam B-12 shows +14mm upward elevation offset against CAD Spec S-204 Rev C.",
-            severity = "MEDIUM",
-            location = "Level 3 Frame B-12",
-            metadata = mapOf("cadModel" to "S-204", "deviationMm" to "14")
-        ),
-        ContextEvent(
-            id = "evt_init_5",
-            timestampMs = System.currentTimeMillis() - 4 * 60 * 1000,
-            formattedTime = formatTime(System.currentTimeMillis() - 4 * 60 * 1000),
-            type = ContextEventType.REPORT_SUBMITTED,
-            source = ContextEventSource.REPORTS_MODULE,
-            title = "Safety Infraction Report #402 Filed",
-            description = "Field report filed for PPE non-compliance in crane swing radius.",
-            severity = "HIGH",
-            location = "Grid B-4 Crane Zone"
-        )
-    )
+    private val initialEvents = emptyList<ContextEvent>()
 
     private val _eventTimeline = MutableStateFlow<List<ContextEvent>>(initialEvents)
     val eventTimeline: StateFlow<List<ContextEvent>> = _eventTimeline.asStateFlow()
 
-    private val initialReports = listOf(
-        AiGeneratedReport(
-            reportId = "REP-3081",
-            workerId = "WRK-8821",
-            workerName = "Alex Rivera",
-            projectId = "PRJ-METRO-01",
-            projectName = "Metro Tower Construction",
-            zone = "Level 18 - Zone B-4",
-            timestamp = "10:42 AM",
-            issueType = "Safety Hazard",
-            title = "Damaged Scaffold Platform B-4",
-            severity = "High",
-            description = "Loose scaffolding board on platform 3 presenting a tripping hazard.",
-            detectedObjects = listOf("Scaffold", "Wood Plank", "Safety Rail"),
-            aiObservation = "AI Vision detected unanchored timber board on outer edge of scaffold Level 3.",
-            sceneSummary = "Elevated scaffold work area near exterior perimeter.",
-            hasCameraSnapshot = true,
-            status = "Open"
-        )
-    )
+    private val initialReports = emptyList<AiGeneratedReport>()
 
     private val _submittedReports = MutableStateFlow<List<AiGeneratedReport>>(initialReports)
     val submittedReports: StateFlow<List<AiGeneratedReport>> = _submittedReports.asStateFlow()
 
-    private val initialTasks = listOf(
-        ConstructionTask(
-            taskId = "TSK-101",
-            zone = "Level 12",
-            title = "Install Steel Beam B12",
-            description = "Rig and position heavy I-beam B12 onto Level 12 column seats. Secure with temporary drift pins prior to full bolt-up.",
-            priority = TaskPriority.HIGH,
-            status = TaskStatus.IN_PROGRESS,
-            estimatedDuration = "3 Hours",
-            dueTime = "11:30 AM",
-            assignedSupervisor = "Marcus Vance (Site Director)",
-            requiredPpe = listOf("Safety Helmet", "High-Vis Vest", "Safety Harness", "Steel-toe Boots"),
-            safetyRequirements = listOf(
-                "Anchor fall protection harness to 100% perimeter lifeline.",
-                "Verify crane signalman has clear line-of-sight.",
-                "Barricade ground exclusion zone below lift area."
-            ),
-            aiRecommendations = listOf(
-                "Wear helmet and reflective vest.",
-                "Inspect beam alignment before installation.",
-                "Use crane communication protocol."
-            )
-        ),
-        ConstructionTask(
-            taskId = "TSK-102",
-            zone = "West Wing",
-            title = "Inspect Scaffold",
-            description = "Audit perimeter modular scaffolding for plank anchoring, toe-board attachment, and structural ties.",
-            priority = TaskPriority.MEDIUM,
-            status = TaskStatus.IN_PROGRESS,
-            estimatedDuration = "45 Minutes",
-            dueTime = "01:15 PM",
-            assignedSupervisor = "Sarah Jenkins (Safety Officer)",
-            requiredPpe = listOf("Safety Helmet", "High-Vis Vest", "Safety Gloves", "Steel-toe Boots"),
-            safetyRequirements = listOf(
-                "Check green scaffold inspection tag before mounting.",
-                "Report loose timber planks immediately."
-            ),
-            aiRecommendations = listOf(
-                "Verify scaffold load rating tag matches current live load.",
-                "Take AI camera snapshot of platform joints for instant audit log."
-            )
-        ),
-        ConstructionTask(
-            taskId = "TSK-103",
-            zone = "Level 18 Deck",
-            title = "Concrete Surface Inspection",
-            description = "Perform optical surface audit on poured slab for hairline cracking and edge spalling.",
-            priority = TaskPriority.LOW,
-            status = TaskStatus.COMPLETED,
-            estimatedDuration = "1 Hour",
-            dueTime = "09:30 AM",
-            assignedSupervisor = "Marcus Vance (Site Director)",
-            requiredPpe = listOf("Safety Helmet", "High-Vis Vest", "Safety Glasses"),
-            safetyRequirements = listOf(
-                "Maintain 2-meter standoff from unprotected slab edges."
-            ),
-            aiRecommendations = listOf(
-                "Surface micro-crack tolerance verified under 0.2mm standard."
-            )
-        ),
-        ConstructionTask(
-            taskId = "TSK-104",
-            zone = "Level 12 Frame B-12",
-            title = "Torque Test Flange Fasteners",
-            description = "Apply calibrated digital torque wrench to high-strength bolts on structural steel splices.",
-            priority = TaskPriority.HIGH,
-            status = TaskStatus.PENDING,
-            estimatedDuration = "1.5 Hours",
-            dueTime = "03:00 PM",
-            assignedSupervisor = "Marcus Vance (Site Director)",
-            requiredPpe = listOf("Safety Helmet", "Impact Gloves", "High-Vis Vest", "Ear Protection"),
-            safetyRequirements = listOf(
-                "Verify torque wrench calibration sticker date."
-            ),
-            aiRecommendations = listOf(
-                "Calibrate digital wrench to 450 Nm target specification.",
-                "Record torque log directly to AI Context Engine."
-            )
-        ),
-        ConstructionTask(
-            taskId = "TSK-105",
-            zone = "Grid Line C-2 Level 12",
-            title = "Electrical Conduit Clearance",
-            description = "Verify temporary 480V electrical cable routing clears active movement paths and moisture zones.",
-            priority = TaskPriority.MEDIUM,
-            status = TaskStatus.PENDING,
-            estimatedDuration = "1 Hour",
-            dueTime = "04:30 PM",
-            assignedSupervisor = "Dave Miller (Electrical Lead)",
-            requiredPpe = listOf("Safety Helmet", "Insulated Gloves", "High-Vis Vest"),
-            safetyRequirements = listOf(
-                "Confirm zero-energy lockout tagout status before touching conduit."
-            ),
-            aiRecommendations = listOf(
-                "Scan conduit with Live AI Vision for thermal hot spots."
-            )
-        )
-    )
+    private val initialTasks = emptyList<ConstructionTask>()
 
     private val _assignedTasks = MutableStateFlow<List<ConstructionTask>>(initialTasks)
     val assignedTasks: StateFlow<List<ConstructionTask>> = _assignedTasks.asStateFlow()
+
+    fun setTasks(tasks: List<ConstructionTask>) {
+        _assignedTasks.value = tasks
+    }
+
+    fun setReports(reports: List<AiGeneratedReport>) {
+        _submittedReports.value = reports
+    }
+
+    fun addTask(task: ConstructionTask) {
+        _assignedTasks.update { it + task }
+    }
+
 
     fun getShiftTaskSummary(): ShiftTaskSummary {
         val tasks = _assignedTasks.value

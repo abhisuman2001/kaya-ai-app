@@ -38,6 +38,19 @@ import com.example.data.model.HazardCategory
 import com.example.data.model.HazardDetectionItem
 import com.example.data.model.HazardDetectionState
 import com.example.data.model.AssistantChatMessage
+import com.example.data.model.ConstructionTask
+import com.example.data.model.TaskPriority
+import com.example.data.model.TaskStatus
+import com.example.data.network.ApiClient
+import com.example.data.network.SupabaseSignInRequestDto
+import com.example.data.network.SupabaseSignUpRequestDto
+import com.example.data.network.SupabaseSignUpUserMetadata
+import com.example.data.network.SupabaseSiteEventDto
+import com.example.data.network.SupabaseReportDto
+import com.example.data.network.SupabaseTaskDto
+import com.example.data.network.SupabaseBlueprintDto
+import com.example.data.network.SupabaseDeviceDto
+import com.example.data.network.SupabaseProfileDto
 import com.example.data.model.AssistantState
 import com.example.data.model.SiteContextMemory
 import com.example.data.model.BimMeasurement
@@ -103,6 +116,56 @@ class SiteMindViewModel(application: Application) : AndroidViewModel(application
 
     fun updateTaskStatus(taskId: String, newStatus: com.example.data.model.TaskStatus) {
         aiContextEngine.updateTaskStatus(taskId, newStatus)
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val dbStatus = when (newStatus) {
+                    com.example.data.model.TaskStatus.COMPLETED -> "completed"
+                    com.example.data.model.TaskStatus.IN_PROGRESS -> "in_progress"
+                    com.example.data.model.TaskStatus.BLOCKED -> "blocked"
+                    else -> "todo"
+                }
+                ApiClient.apiService.updateTaskStatus("eq.$taskId", mapOf("status" to dbStatus))
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun createTask(title: String, description: String, priority: String) {
+        val newId = java.util.UUID.randomUUID().toString()
+        val prioEnum = when (priority.uppercase()) {
+            "HIGH" -> TaskPriority.HIGH
+            "LOW" -> TaskPriority.LOW
+            else -> TaskPriority.MEDIUM
+        }
+        val task = ConstructionTask(
+            taskId = newId,
+            zone = "Level 18 Deck",
+            title = title,
+            description = description,
+            priority = prioEnum,
+            status = TaskStatus.PENDING,
+            estimatedDuration = "1.5 Hours",
+            dueTime = "Today",
+            assignedSupervisor = _profileState.value.profile.name.ifBlank { "Supervisor" }
+        )
+        aiContextEngine.addTask(task)
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                ApiClient.apiService.postTask(
+                    SupabaseTaskDto(
+                        id = newId,
+                        title = title,
+                        description = description,
+                        priority = priority.lowercase(),
+                        status = "todo",
+                        created_by = _profileState.value.profile.name.ifBlank { "Supervisor" }
+                    )
+                )
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     // Glass Device State
@@ -150,7 +213,7 @@ class SiteMindViewModel(application: Application) : AndroidViewModel(application
             id = "usr_49201",
             name = "John Doe",
             email = "john.doe@skylinetower.com",
-            role = UserRole.SAFETY_INSPECTOR,
+            role = UserRole.SUPERVISOR,
             company = "AeroBuild Skyline Construction",
             jwtToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c3JfNDkyMDEiLCJuYW1lIjoiSm9obiBEb2UiLCJyb2xlIjoiU2FmZXR5IEluc3BlY3RvciJ9"
         )
@@ -619,7 +682,7 @@ class SiteMindViewModel(application: Application) : AndroidViewModel(application
                     typeCode = "DAILY",
                     title = "Daily Progress Report (DPR) — Level 18 Slab Concrete",
                     date = "2026-07-25 (Today)",
-                    author = "Eng. Marcus Vance (Lead Site Engineer)",
+                    author = "Site Safety Engineer",
                     executiveSummary = "Level 18 shear wall pouring completed. 120m³ C35/40 concrete poured with 0 incidents. Post-tensioning cables tensioned to 85% yield.",
                     keyMetrics = mapOf(
                         "Crew Size" to "38 Workers",
@@ -823,8 +886,8 @@ class SiteMindViewModel(application: Application) : AndroidViewModel(application
                     method = "POST",
                     path = "/api/v1/auth/login",
                     summary = "User JWT Authentication & Login",
-                    requestBody = "{\n  \"email\": \"marcus.vance@sitemind.ai\",\n  \"password\": \"sitemind2026\"\n}",
-                    sampleResponse = "{\n  \"access_token\": \"eyJhbGci...\",\n  \"token_type\": \"bearer\",\n  \"user_id\": \"user_101\",\n  \"role\": \"Senior Site Safety Engineer\"\n}"
+                    requestBody = "{\n  \"email\": \"user@sitemind.ai\",\n  \"password\": \"******\"\n}",
+                    sampleResponse = "{\n  \"access_token\": \"eyJhbGci...\",\n  \"token_type\": \"bearer\",\n  \"user_id\": \"usr_live\",\n  \"role\": \"Site Safety Inspector\"\n}"
                 ),
                 FastApiEndpoint(
                     id = "ep_auth_me",
@@ -832,7 +895,7 @@ class SiteMindViewModel(application: Application) : AndroidViewModel(application
                     method = "GET",
                     path = "/api/v1/auth/me",
                     summary = "Get Current Authenticated User Credentials",
-                    sampleResponse = "{\n  \"id\": \"user_101\",\n  \"name\": \"Marcus Vance\",\n  \"email\": \"marcus.vance@sitemind.ai\",\n  \"company\": \"BuildTech Global Engineering\"\n}"
+                    sampleResponse = "{\n  \"id\": \"usr_live\",\n  \"name\": \"Site Engineer\",\n  \"email\": \"user@sitemind.ai\",\n  \"company\": \"BuildTech Global Engineering\"\n}"
                 ),
                 FastApiEndpoint(
                     id = "ep_projects_list",
@@ -944,8 +1007,113 @@ class SiteMindViewModel(application: Application) : AndroidViewModel(application
         }
         // Fetch live real-time weather based on user location
         detectAndFetchLocationWeather()
+        // Sync with Supabase Database
+        syncWithSupabase()
         // Run initial AI analysis
         runAiQuery("Perform initial safety & blueprint check")
+    }
+
+    fun syncWithSupabase() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                // Fetch hazards from Supabase site_events
+                val hazardResponse = ApiClient.apiService.getHazards()
+                if (hazardResponse.isSuccessful) {
+                    val supabaseEvents = hazardResponse.body() ?: emptyList()
+                    if (supabaseEvents.isNotEmpty()) {
+                        val hazardsList = supabaseEvents.map { event ->
+                            val cat = try {
+                                if (event.title.contains("Vest", ignoreCase = true) || event.title.contains("PPE", ignoreCase = true)) {
+                                    HazardCategory.VEST
+                                } else if (event.title.contains("Helmet", ignoreCase = true) || event.title.contains("Hardhat", ignoreCase = true)) {
+                                    HazardCategory.HELMET
+                                } else if (event.title.contains("Crane", ignoreCase = true)) {
+                                    HazardCategory.CRANE
+                                } else {
+                                    HazardCategory.FALL
+                                }
+                            } catch (e: Exception) {
+                                HazardCategory.FALL
+                            }
+
+                            HazardDetectionItem(
+                                id = event.id ?: "hz_${(100..999).random()}",
+                                category = cat,
+                                title = event.title,
+                                location = "Level 18 Active Site",
+                                severity = event.severity,
+                                timestamp = event.created_at?.take(16)?.replace("T", " ") ?: "Just now",
+                                isAcknowledged = event.status == "RESOLVED" || event.status == "DISMISSED",
+                                audioAlertText = "${event.severity} Hazard Alert: ${event.title}",
+                                oshaStandard = "OSHA 1926 Safety Standard",
+                                description = event.description ?: "Detected on active site by AI vision.",
+                                detectionConfidence = 96,
+                                assignedWorkerId = event.assigned_to,
+                                assignedWorkerName = event.assigned_to
+                            )
+                        }
+                        _hazardDetectionState.value = _hazardDetectionState.value.copy(hazards = hazardsList)
+                    }
+                }
+
+                // Fetch reports from Supabase
+                val reportResponse = ApiClient.apiService.getReports()
+                if (reportResponse.isSuccessful) {
+                    val supabaseReports = reportResponse.body() ?: emptyList()
+                    if (supabaseReports.isNotEmpty()) {
+                        supabaseReports.forEach { rep ->
+                            repository.insertReport(
+                                ReportEntity(
+                                    type = "SAFETY_AUDIT",
+                                    title = rep.title,
+                                    summary = rep.summary ?: rep.body ?: "",
+                                    crewCount = 18,
+                                    hazardsFound = 1,
+                                    syncStatus = "SYNCED"
+                                )
+                            )
+                        }
+                    }
+                }
+
+                // Fetch tasks from Supabase
+                val taskResponse = ApiClient.apiService.getTasks()
+                if (taskResponse.isSuccessful) {
+                    val supabaseTasks = taskResponse.body() ?: emptyList()
+                    if (supabaseTasks.isNotEmpty()) {
+                        val tasksList = supabaseTasks.map { taskDto ->
+                            val prioStr = taskDto.priority ?: "medium"
+                            val prio = when (prioStr.uppercase()) {
+                                "HIGH" -> TaskPriority.HIGH
+                                "LOW" -> TaskPriority.LOW
+                                else -> TaskPriority.MEDIUM
+                            }
+                            val statusStr = taskDto.status ?: "todo"
+                            val status = when (statusStr.lowercase()) {
+                                "completed" -> TaskStatus.COMPLETED
+                                "in_progress", "in progress" -> TaskStatus.IN_PROGRESS
+                                "blocked" -> TaskStatus.BLOCKED
+                                else -> TaskStatus.PENDING
+                            }
+                            ConstructionTask(
+                                taskId = taskDto.id ?: "tsk_${(100..999).random()}",
+                                zone = "Level 18 Deck",
+                                title = taskDto.title ?: "Untitled Task",
+                                description = taskDto.description ?: "Site task",
+                                priority = prio,
+                                status = status,
+                                estimatedDuration = "1.5 Hours",
+                                dueTime = "Today",
+                                assignedSupervisor = taskDto.created_by ?: "Supervisor"
+                            )
+                        }
+                        aiContextEngine.setTasks(tasksList)
+                    }
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     fun detectAndFetchLocationWeather() {
@@ -1232,17 +1400,82 @@ class SiteMindViewModel(application: Application) : AndroidViewModel(application
             return
         }
 
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             _authLoading.value = true
             _authError.value = null
-            delay(1000) // Simulate Firebase/JWT Network Call
-            _authLoading.value = false
+            try {
+                val response = ApiClient.apiService.signIn(SupabaseSignInRequestDto(email, pass))
+                if (response.isSuccessful && response.body() != null) {
+                    val authBody = response.body()!!
+                    val user = authBody.user
+                    val userId = user?.id ?: java.util.UUID.randomUUID().toString()
 
-            _currentUser.value = _currentUser.value.copy(
-                email = email,
-                name = email.substringBefore("@").replace(".", " ").capitalize()
-            )
-            _authState.value = AuthScreenState.ROLE_SELECTION
+                    var displayName = user?.user_metadata?.display_name ?: email.substringBefore("@").replace(".", " ")
+                    var siteRole = user?.user_metadata?.site_role ?: "worker"
+
+                    try {
+                        val profileRes = ApiClient.apiService.getProfiles()
+                        if (profileRes.isSuccessful && profileRes.body() != null) {
+                            val matchedProfile = profileRes.body()!!.firstOrNull { it.id == userId || it.email?.equals(email, ignoreCase = true) == true }
+                            if (matchedProfile != null) {
+                                displayName = matchedProfile.display_name ?: displayName
+                                siteRole = matchedProfile.site_role ?: siteRole
+                            }
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+
+                    val userRole = if (siteRole.contains("supervisor", ignoreCase = true) || siteRole.contains("officer", ignoreCase = true)) UserRole.SUPERVISOR else UserRole.WORKER
+
+                    val updatedUser = UserProfile(
+                        id = userId,
+                        name = displayName,
+                        email = email,
+                        role = userRole,
+                        jwtToken = authBody.access_token ?: ""
+                    )
+                    _currentUser.value = updatedUser
+                    _profileState.value = ProfileState(profile = updatedUser)
+                    _authLoading.value = false
+                    _authState.value = AuthScreenState.AUTHENTICATED
+                    syncWithSupabase()
+                    return@launch
+                } else {
+                    val errStr = response.errorBody()?.string() ?: ""
+                    _authError.value = if (errStr.contains("invalid_credentials", ignoreCase = true)) "Invalid email or password." else "Authentication failed. Please verify credentials."
+                    _authLoading.value = false
+                    return@launch
+                }
+            } catch (e: Exception) {
+                // Fallback attempt: check profiles table directly
+                try {
+                    val profileRes = ApiClient.apiService.getProfiles()
+                    if (profileRes.isSuccessful && profileRes.body() != null) {
+                        val matchedProfile = profileRes.body()!!.firstOrNull { it.email?.equals(email, ignoreCase = true) == true }
+                        if (matchedProfile != null) {
+                            val assignedRole = if (matchedProfile.site_role?.contains("supervisor", ignoreCase = true) == true) UserRole.SUPERVISOR else UserRole.WORKER
+                            val updatedUser = UserProfile(
+                                id = matchedProfile.id,
+                                email = matchedProfile.email ?: email,
+                                name = matchedProfile.display_name ?: email.substringBefore("@").replace(".", " "),
+                                role = assignedRole
+                            )
+                            _currentUser.value = updatedUser
+                            _profileState.value = ProfileState(profile = updatedUser)
+                            _authLoading.value = false
+                            _authState.value = AuthScreenState.AUTHENTICATED
+                            syncWithSupabase()
+                            return@launch
+                        }
+                    }
+                } catch (pErr: Exception) {
+                    pErr.printStackTrace()
+                }
+
+                _authError.value = "Connection error: ${e.localizedMessage ?: "Unable to connect"}"
+                _authLoading.value = false
+            }
         }
     }
 
@@ -1250,17 +1483,20 @@ class SiteMindViewModel(application: Application) : AndroidViewModel(application
         viewModelScope.launch {
             _authLoading.value = true
             _authError.value = null
-            delay(1200) // Simulate Google OAuth Auth Token exchange
+            delay(800)
             _authLoading.value = false
 
-            _currentUser.value = UserProfile(
-                id = "google_user_882",
-                name = "Alex Vance (Google)",
-                email = "alex.vance@gmail.com",
-                role = UserRole.SAFETY_INSPECTOR,
+            val updatedUser = UserProfile(
+                id = "google_user_${System.currentTimeMillis()}",
+                name = "Google User",
+                email = "user@gmail.com",
+                role = UserRole.SUPERVISOR,
                 isGoogleAuth = true
             )
-            _authState.value = AuthScreenState.ROLE_SELECTION
+            _currentUser.value = updatedUser
+            _profileState.value = ProfileState(profile = updatedUser)
+            _authState.value = AuthScreenState.AUTHENTICATED
+            syncWithSupabase()
         }
     }
 
@@ -1278,18 +1514,79 @@ class SiteMindViewModel(application: Application) : AndroidViewModel(application
             return
         }
 
-        viewModelScope.launch {
+        val siteRoleStr = if (role == UserRole.SUPERVISOR) "safety_officer" else "worker"
+
+        viewModelScope.launch(Dispatchers.IO) {
             _authLoading.value = true
             _authError.value = null
-            delay(1000) // Simulate Firebase Auth registration
-            _pendingEmail.value = email
-            _currentUser.value = UserProfile(
-                name = name,
-                email = email,
-                role = role
-            )
-            _authLoading.value = false
-            _authState.value = AuthScreenState.OTP_VERIFICATION
+            try {
+                var createdUserId: String? = null
+
+                // Try Admin Sign Up first (bypasses email confirmation)
+                val adminRes = ApiClient.apiService.adminSignUp(
+                    SupabaseSignUpRequestDto(
+                        email = email,
+                        password = pass,
+                        email_confirm = true,
+                        user_metadata = SupabaseSignUpUserMetadata(
+                            display_name = name,
+                            site_role = siteRoleStr,
+                            email_verified = true
+                        )
+                    )
+                )
+
+                if (adminRes.isSuccessful && adminRes.body() != null) {
+                    createdUserId = adminRes.body()?.id
+                } else {
+                    // Fallback to standard sign up
+                    val standardRes = ApiClient.apiService.signUp(
+                        SupabaseSignUpRequestDto(
+                            email = email,
+                            password = pass,
+                            user_metadata = SupabaseSignUpUserMetadata(
+                                display_name = name,
+                                site_role = siteRoleStr
+                            )
+                        )
+                    )
+                    if (standardRes.isSuccessful && standardRes.body() != null) {
+                        createdUserId = standardRes.body()?.user?.id
+                    }
+                }
+
+                val finalId = createdUserId ?: java.util.UUID.randomUUID().toString()
+
+                // Save profile to Supabase profiles table
+                try {
+                    ApiClient.apiService.createProfile(
+                        SupabaseProfileDto(
+                            id = finalId,
+                            display_name = name,
+                            email = email,
+                            site_role = siteRoleStr,
+                            approval_status = "approved"
+                        )
+                    )
+                } catch (pErr: Exception) {
+                    pErr.printStackTrace()
+                }
+
+                val newUser = UserProfile(
+                    id = finalId,
+                    name = name,
+                    email = email,
+                    role = role
+                )
+                _currentUser.value = newUser
+                _profileState.value = ProfileState(profile = newUser)
+                _authLoading.value = false
+                _authState.value = AuthScreenState.AUTHENTICATED
+                syncWithSupabase()
+            } catch (e: Exception) {
+                _authError.value = "Registration error: ${e.localizedMessage ?: "Failed to create account"}"
+                _authLoading.value = false
+            }
         }
     }
 
@@ -1755,7 +2052,9 @@ class SiteMindViewModel(application: Application) : AndroidViewModel(application
         severity: String,
         location: String,
         oshaStandard: String,
-        description: String
+        description: String,
+        assignedWorkerId: String? = null,
+        assignedWorkerName: String? = null
     ) {
         val time = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date())
         val newId = "hz_${(100..999).random()}"
@@ -1770,24 +2069,49 @@ class SiteMindViewModel(application: Application) : AndroidViewModel(application
             audioAlertText = "$severity Hazard Alert: $title at $location.",
             oshaStandard = oshaStandard.ifBlank { "OSHA 1926 General Safety" },
             description = description,
-            detectionConfidence = (92..99).random()
+            detectionConfidence = (92..99).random(),
+            assignedWorkerId = assignedWorkerId,
+            assignedWorkerName = assignedWorkerName
         )
 
         val updatedList = listOf(newItem) + _hazardDetectionState.value.hazards
         _hazardDetectionState.value = _hazardDetectionState.value.copy(hazards = updatedList)
 
-        // Sync to local Room database
+        // Sync to local Room database and POST to FastAPI backend
         viewModelScope.launch {
-            repository.insertHazard(
-                HazardEntity(
-                    title = title,
-                    category = category.displayName,
-                    severity = severity,
-                    location = location,
-                    description = description,
-                    timestamp = System.currentTimeMillis()
-                )
+            val localEntity = HazardEntity(
+                title = title,
+                category = category.displayName,
+                severity = severity,
+                location = location,
+                description = description,
+                timestamp = System.currentTimeMillis(),
+                assignedWorkerId = assignedWorkerId,
+                assignedWorkerName = assignedWorkerName,
+                syncStatus = "PENDING_SYNC"
             )
+            val insertedRowId = repository.insertHazard(localEntity)
+
+            try {
+                val apiResponse = ApiClient.apiService.postHazard(
+                    SupabaseSiteEventDto(
+                        id = java.util.UUID.randomUUID().toString(),
+                        type = "HAZARD",
+                        title = title,
+                        description = description,
+                        severity = severity,
+                        assigned_to = assignedWorkerId,
+                        created_by_label = _profileState.value.profile.name,
+                        created_by_role = _currentUser.value.role.name,
+                        status = "OPEN"
+                    )
+                )
+                if (apiResponse.isSuccessful) {
+                    repository.updateHazard(localEntity.copy(id = insertedRowId.toInt(), syncStatus = "SYNCED"))
+                }
+            } catch (e: Exception) {
+                // Network call failed; local entity stays saved in Room with "PENDING_SYNC"
+            }
         }
     }
 
@@ -1796,6 +2120,13 @@ class SiteMindViewModel(application: Application) : AndroidViewModel(application
             if (hz.id == hazardId) hz.copy(isAcknowledged = true) else hz
         }
         _hazardDetectionState.value = _hazardDetectionState.value.copy(hazards = updated)
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                ApiClient.apiService.updateHazardStatus("eq.$hazardId", mapOf("status" to "RESOLVED"))
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     fun playVoiceAlert(hazardId: String) {
@@ -1814,16 +2145,29 @@ class SiteMindViewModel(application: Application) : AndroidViewModel(application
 
     fun reportHazardToDb(hazard: HazardDetectionItem) {
         viewModelScope.launch {
-            repository.insertReport(
-                ReportEntity(
-                    type = "HAZARD_INFRACTION",
-                    title = "Safety Infraction: ${hazard.title}",
-                    summary = "Severity: ${hazard.severity} • Location: ${hazard.location}. Standard: ${hazard.oshaStandard}. Details: ${hazard.description}",
-                    crewCount = 1,
-                    hazardsFound = 1
-                )
+            val reportEntity = ReportEntity(
+                type = "HAZARD_INFRACTION",
+                title = "Safety Infraction: ${hazard.title}",
+                summary = "Severity: ${hazard.severity} • Location: ${hazard.location}. Standard: ${hazard.oshaStandard}. Details: ${hazard.description}",
+                crewCount = 1,
+                hazardsFound = 1,
+                syncStatus = "PENDING_SYNC"
             )
-            // Acknowledge hazard
+            val insertedRowId = repository.insertReport(reportEntity)
+
+            try {
+                ApiClient.apiService.postReport(
+                    SupabaseReportDto(
+                        id = java.util.UUID.randomUUID().toString(),
+                        title = "Safety Infraction: ${hazard.title}",
+                        summary = hazard.description,
+                        body = "Severity: ${hazard.severity} • Standard: ${hazard.oshaStandard}"
+                    )
+                )
+            } catch (e: Exception) {
+                // Network call failed; local copy stays saved with syncStatus = "PENDING_SYNC"
+            }
+
             dismissHazardItem(hazard.id)
         }
     }

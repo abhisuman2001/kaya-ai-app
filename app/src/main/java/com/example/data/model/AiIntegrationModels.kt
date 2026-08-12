@@ -77,7 +77,7 @@ data class AiIntegrationState(
         QdrantVectorRecord("vec_8821", "sitemind_osha_regulations", 1536, 0.921f, "100% tie-off mandatory for elevated work surfaces without perimeter netting.")
     ),
     val memoryLogs: List<MemorySessionItem> = listOf(
-        MemorySessionItem("mem_01", "08:15 AM", "Site Location", "Superintendent Marcus Vance checked in at Level 18 West Deck."),
+        MemorySessionItem("mem_01", "08:15 AM", "Site Location", "Site Supervisor checked in at Level 18 West Deck."),
         MemorySessionItem("mem_02", "08:42 AM", "Hardware Connection", "Ray-Ban Meta Smart Glasses paired with 88% battery & low-latency HUD stream.")
     )
 )

@@ -48,5 +48,7 @@ data class LiveAiAnalysisResult(
     val ppeCompliancePercent: Int = 94,
     val blueprintDeviationMm: Float = 0f,
     val materialSpecs: String = "C35 Concrete with Grade 500 Rebar",
-    val agentSteps: List<AgentExecutionStep> = emptyList()
+    val agentSteps: List<AgentExecutionStep> = emptyList(),
+    val isApiError: Boolean = false,
+    val apiErrorMessage: String? = null
 )

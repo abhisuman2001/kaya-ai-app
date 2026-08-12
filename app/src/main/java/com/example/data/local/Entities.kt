@@ -13,7 +13,10 @@ data class HazardEntity(
     val description: String,
     val timestamp: Long = System.currentTimeMillis(),
     val isResolved: Boolean = false,
-    val actionTaken: String = ""
+    val actionTaken: String = "",
+    val assignedWorkerId: String? = null,
+    val assignedWorkerName: String? = null,
+    val syncStatus: String = "SYNCED" // "SYNCED", "PENDING_SYNC"
 )
 
 @Entity(tableName = "reports")
@@ -25,7 +28,8 @@ data class ReportEntity(
     val crewCount: Int = 18,
     val hazardsFound: Int = 0,
     val timestamp: Long = System.currentTimeMillis(),
-    val status: String = "SUBMITTED"
+    val status: String = "SUBMITTED",
+    val syncStatus: String = "SYNCED"
 )
 
 @Entity(tableName = "blueprints")

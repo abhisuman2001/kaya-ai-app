@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
         BlueprintEntity::class,
         KnowledgeItemEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class SiteMindDatabase : RoomDatabase() {
@@ -36,6 +36,7 @@ abstract class SiteMindDatabase : RoomDatabase() {
                     SiteMindDatabase::class.java,
                     "sitemind_database"
                 )
+                .fallbackToDestructiveMigration()
                 .addCallback(DatabaseCallback(context.applicationContext))
                 .build()
                 INSTANCE = instance

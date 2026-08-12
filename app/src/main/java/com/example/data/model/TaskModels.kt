@@ -34,7 +34,7 @@ data class ConstructionTask(
     val status: TaskStatus = TaskStatus.PENDING,
     val estimatedDuration: String,
     val dueTime: String,
-    val assignedSupervisor: String = "Marcus Vance (Site Director)",
+    val assignedSupervisor: String = "Site Supervisor",
     val requiredPpe: List<String> = listOf("Safety Helmet", "High-Vis Vest", "Steel-toe Boots"),
     val safetyRequirements: List<String> = listOf("Ensure work area is perimeter barricaded.", "Check 100% tie-off fall protection harness."),
     val aiRecommendations: List<String> = listOf("Inspect beam alignment before installation.", "Use crane communication protocol."),

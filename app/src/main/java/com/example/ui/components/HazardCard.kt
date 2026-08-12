@@ -22,6 +22,7 @@ import androidx.compose.material.icons.filled.ElectricBolt
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.PanTool
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material.icons.filled.Warning
@@ -58,6 +59,7 @@ fun HazardCard(
     onVoiceAlertClick: () -> Unit,
     onDismissClick: () -> Unit,
     onReportClick: () -> Unit,
+    isSupervisor: Boolean = true,
     modifier: Modifier = Modifier
 ) {
     val sevColor = when (hazard.severity) {
@@ -174,6 +176,23 @@ fun HazardCard(
                 )
             }
 
+            if (!hazard.assignedWorkerName.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.testTag("hazard_assigned_worker_${hazard.id}")
+                ) {
+                    Icon(imageVector = Icons.Default.Person, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(13.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "Assigned Worker: ${hazard.assignedWorkerName}",
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = MetaBlue
+                    )
+                }
+            }
+
             Spacer(modifier = Modifier.height(8.dp))
 
             // Description & OSHA Reference Box
@@ -232,50 +251,52 @@ fun HazardCard(
                     )
                 }
 
-                // Dismiss Button
-                OutlinedButton(
-                    onClick = onDismissClick,
-                    enabled = !hazard.isAcknowledged,
-                    shape = RoundedCornerShape(10.dp),
-                    modifier = Modifier
-                        .weight(1f)
-                        .testTag("dismiss_hazard_button_${hazard.id}")
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Check,
-                        contentDescription = "Dismiss",
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = if (hazard.isAcknowledged) "DISMISSED" else "DISMISS",
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                if (isSupervisor) {
+                    // Dismiss Button
+                    OutlinedButton(
+                        onClick = onDismissClick,
+                        enabled = !hazard.isAcknowledged,
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag("dismiss_hazard_button_${hazard.id}")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Check,
+                            contentDescription = "Dismiss",
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = if (hazard.isAcknowledged) "DISMISSED" else "DISMISS",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
 
-                // Report Button
-                Button(
-                    onClick = onReportClick,
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                    shape = RoundedCornerShape(10.dp),
-                    modifier = Modifier
-                        .weight(1f)
-                        .testTag("report_hazard_button_${hazard.id}")
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Description,
-                        contentDescription = "Report",
-                        tint = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "REPORT",
-                        fontSize = 10.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
+                    // Report Button
+                    Button(
+                        onClick = onReportClick,
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                        shape = RoundedCornerShape(10.dp),
+                        modifier = Modifier
+                            .weight(1f)
+                            .testTag("report_hazard_button_${hazard.id}")
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Description,
+                            contentDescription = "Report",
+                            tint = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = "REPORT",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
                 }
             }
         }

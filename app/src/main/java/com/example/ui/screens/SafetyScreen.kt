@@ -46,6 +46,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.data.model.UserRole
 import com.example.data.local.HazardEntity
 import com.example.ui.theme.BorderDark
 import com.example.ui.theme.MetaBlue
@@ -61,6 +62,7 @@ fun SafetyScreen(
 ) {
     val activeHazards by viewModel.activeHazards.collectAsStateWithLifecycle()
     val allHazards by viewModel.allHazards.collectAsStateWithLifecycle()
+    val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
 
     var showAddModal by remember { mutableStateOf(false) }
     var titleInput by remember { mutableStateOf("") }
@@ -99,15 +101,17 @@ fun SafetyScreen(
                     )
                 }
 
-                Button(
-                    onClick = { showAddModal = !showAddModal },
-                    colors = ButtonDefaults.buttonColors(containerColor = MetaBlue),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.testTag("log_hazard_button")
-                ) {
-                    Icon(imageVector = Icons.Default.Add, contentDescription = "Add", modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("Report Hazard", fontSize = 11.sp)
+                if (currentUser.role == UserRole.SUPERVISOR) {
+                    Button(
+                        onClick = { showAddModal = !showAddModal },
+                        colors = ButtonDefaults.buttonColors(containerColor = MetaBlue),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.testTag("log_hazard_button")
+                    ) {
+                        Icon(imageVector = Icons.Default.Add, contentDescription = "Add", modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("Report Hazard", fontSize = 11.sp)
+                    }
                 }
             }
         }
@@ -236,7 +240,8 @@ fun SafetyScreen(
         items(allHazards) { hazard ->
             HazardDetailCard(
                 hazard = hazard,
-                onResolve = { viewModel.resolveHazard(hazard) }
+                onResolve = { viewModel.resolveHazard(hazard) },
+                isSupervisor = currentUser.role == UserRole.SUPERVISOR
             )
         }
 
@@ -247,7 +252,8 @@ fun SafetyScreen(
 @Composable
 fun HazardDetailCard(
     hazard: HazardEntity,
-    onResolve: () -> Unit
+    onResolve: () -> Unit,
+    isSupervisor: Boolean = true
 ) {
     val isCritical = hazard.severity == "CRITICAL"
     val isResolved = hazard.isResolved
@@ -316,31 +322,33 @@ fun HazardDetailCard(
             )
 
             if (!isResolved) {
-                Spacer(modifier = Modifier.height(14.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Button(
-                        onClick = onResolve,
-                        colors = ButtonDefaults.buttonColors(containerColor = StatusSuccess),
-                        shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier.weight(1f)
+                if (isSupervisor) {
+                    Spacer(modifier = Modifier.height(14.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(14.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Resolve", fontSize = 11.sp)
-                    }
+                        Button(
+                            onClick = onResolve,
+                            colors = ButtonDefaults.buttonColors(containerColor = StatusSuccess),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(14.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Resolve", fontSize = 11.sp)
+                        }
 
-                    Button(
-                        onClick = { },
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                        shape = RoundedCornerShape(10.dp),
-                        modifier = Modifier.weight(1f)
-                    ) {
-                        Icon(imageVector = Icons.Default.NotificationsActive, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(14.dp))
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text("Notify Team", fontSize = 11.sp, color = MetaBlue)
+                        Button(
+                            onClick = { },
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                            shape = RoundedCornerShape(10.dp),
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(imageVector = Icons.Default.NotificationsActive, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(14.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Notify Team", fontSize = 11.sp, color = MetaBlue)
+                        }
                     }
                 }
             } else if (hazard.actionTaken.isNotBlank()) {

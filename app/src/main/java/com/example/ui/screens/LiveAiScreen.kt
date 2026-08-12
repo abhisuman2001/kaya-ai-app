@@ -68,6 +68,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -159,6 +160,8 @@ fun LiveAiScreen(
     modifier: Modifier = Modifier
 ) {
     val glassState by viewModel.glassState.collectAsStateWithLifecycle()
+    val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
+    val isSupervisor = currentUser.role == com.example.data.model.UserRole.SUPERVISOR
     val isSessionActive = glassState.isLiveStreaming
 
     // In-memory active hazard state initialized from rule engine
@@ -330,6 +333,17 @@ fun LiveAiScreen(
                 )
             }
 
+            // AI API Fallback Alert (when API token is expired or failing)
+            item {
+                val liveResult by viewModel.liveResult.collectAsStateWithLifecycle()
+                if (liveResult.isApiError) {
+                    AiApiFallbackAlertCard(
+                        errorMessage = liveResult.apiErrorMessage,
+                        onRetry = { viewModel.runAiQuery("Test Gemini API token status") }
+                    )
+                }
+            }
+
             // 3. Hazard Alert Card (Dynamic) - Directly below Live Camera Preview and above Current Observation
             item {
                 HazardAlertCard(
@@ -479,7 +493,8 @@ fun LiveAiScreen(
                         )
                     )
                 )
-            }
+            },
+            isSupervisor = isSupervisor
         )
     }
 }
@@ -844,7 +859,8 @@ fun AllHazardsBottomSheet(
     hazards: List<HazardItem>,
     onDismissRequest: () -> Unit,
     onResolveHazard: (String) -> Unit,
-    onRestoreAll: () -> Unit
+    onRestoreAll: () -> Unit,
+    isSupervisor: Boolean = true
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
@@ -945,7 +961,8 @@ fun AllHazardsBottomSheet(
                     items(hazards, key = { it.id }) { item ->
                         HazardBottomSheetItemCard(
                             hazard = item,
-                            onResolve = { onResolveHazard(item.id) }
+                            onResolve = { onResolveHazard(item.id) },
+                            isSupervisor = isSupervisor
                         )
                     }
                 }
@@ -957,7 +974,8 @@ fun AllHazardsBottomSheet(
 @Composable
 private fun HazardBottomSheetItemCard(
     hazard: HazardItem,
-    onResolve: () -> Unit
+    onResolve: () -> Unit,
+    isSupervisor: Boolean = true
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -1049,30 +1067,32 @@ private fun HazardBottomSheetItemCard(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End
-            ) {
-                Button(
-                    onClick = onResolve,
-                    shape = RoundedCornerShape(10.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = StatusSuccess,
-                        contentColor = Color.White
-                    ),
-                    modifier = Modifier.height(34.dp)
+            if (isSupervisor) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
                 ) {
-                    Icon(
-                        imageVector = Icons.Default.CheckCircle,
-                        contentDescription = null,
-                        modifier = Modifier.size(14.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = "Mark Resolved",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Button(
+                        onClick = onResolve,
+                        shape = RoundedCornerShape(10.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = StatusSuccess,
+                            contentColor = Color.White
+                        ),
+                        modifier = Modifier.height(34.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.CheckCircle,
+                            contentDescription = null,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Mark Resolved",
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
         }
@@ -1743,6 +1763,80 @@ fun EmptyLiveAISession(
                     fontWeight = FontWeight.Bold
                 )
             }
+        }
+    }
+}
+
+@Composable
+fun AiApiFallbackAlertCard(
+    errorMessage: String?,
+    onRetry: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .border(1.dp, Color(0xFFFFB74D), RoundedCornerShape(16.dp)),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = Color(0xFFFFF8E1)
+        )
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFFF57C00).copy(alpha = 0.15f)),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Warning,
+                            contentDescription = null,
+                            tint = Color(0xFFE65100),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Column {
+                        Text(
+                            text = "⚠️ AI Service Notice (Fallback Active)",
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = Color(0xFFE65100)
+                        )
+                        Text(
+                            text = "Gemini API key is invalid or failing",
+                            fontSize = 11.sp,
+                            color = Color(0xFFBF360C)
+                        )
+                    }
+                }
+
+                TextButton(
+                    onClick = onRetry,
+                    modifier = Modifier.testTag("retry_ai_api_button")
+                ) {
+                    Text("Retry", fontWeight = FontWeight.Bold, color = Color(0xFFE65100))
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = errorMessage ?: "Gemini API token is expired or unauthorized. The application has automatically switched to local edge fallback logic so all functions remain fully operable.",
+                fontSize = 12.sp,
+                color = Color(0xFF3E2723),
+                lineHeight = 17.sp
+            )
         }
     }
 }

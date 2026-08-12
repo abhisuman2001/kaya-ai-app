@@ -5,11 +5,18 @@ enum class UserRole(
     val description: String,
     val iconName: String
 ) {
-    SAFETY_INSPECTOR("Safety Inspector", "Enforce OSHA compliance & log active site hazards", "Shield"),
-    SITE_ENGINEER("Site Engineer", "Verify BIM specs & spatial CAD alignment via AR", "Architecture"),
-    PROJECT_MANAGER("Project Manager", "Review daily shift logs, crew stats & auto reports", "Assignment"),
-    FIELD_WORKER("Field Worker", "Hands-free voice queries & instant SOP lookup", "Psychology")
+    WORKER("Site Worker", "Execute site tasks & view assigned hazard warnings", "Psychology"),
+    SUPERVISOR("Site Supervisor", "File hazard observations & assign to site workers", "Shield")
 }
+
+data class WorkerItem(
+    val id: String,
+    val name: String,
+    val jobTitle: String,
+    val currentZone: String
+)
+
+val sampleWorkerRoster = emptyList<WorkerItem>()
 
 enum class AuthScreenState {
     SPLASH,
@@ -23,17 +30,18 @@ enum class AuthScreenState {
 }
 
 data class UserProfile(
-    val id: String = "user_101",
-    val name: String = "Marcus Vance",
-    val email: String = "marcus.vance@sitemind.ai",
-    val role: UserRole = UserRole.SAFETY_INSPECTOR,
-    val company: String = "BuildTech Global Engineering",
-    val jwtToken: String = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ",
+    val id: String = "",
+    val name: String = "",
+    val email: String = "",
+    val role: UserRole = UserRole.WORKER,
+    val jobTitle: String = "Site Engineer & Inspector",
+    val company: String = "BuildTech Construction",
+    val jwtToken: String = "",
     val isGoogleAuth: Boolean = false,
     val avatarUrl: String = "",
-    val siteLocation: String = "Metro Tower Construction — Level 18",
+    val siteLocation: String = "Metro Tower Construction — Active Site",
     val connectedGlassesModel: String = "Ray-Ban Meta Smart Glasses (Gen 2)",
-    val glassesBattery: Int = 88,
+    val glassesBattery: Int = 100,
     val glassesStatus: String = "Connected & Active",
     val language: String = "English (US)",
     val theme: String = "Dark Mode",
@@ -42,3 +50,4 @@ data class UserProfile(
     val isLocationTrackingEnabled: Boolean = true,
     val isLoggedOut: Boolean = false
 )
+

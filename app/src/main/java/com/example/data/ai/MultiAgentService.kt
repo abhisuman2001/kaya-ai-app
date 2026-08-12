@@ -100,11 +100,8 @@ class MultiAgentService {
             )
         )
 
-        val geminiResponse = if (apiKey.isNotBlank() && apiKey != "MY_GEMINI_API_KEY") {
-            callGeminiApi(apiKey, query, siteZone)
-        } else null
-
-        val responseText = geminiResponse ?: generateSmartFallbackResponse(query, siteZone)
+        val geminiResult = callGeminiApi(apiKey, query, siteZone)
+        val responseText = geminiResult.text ?: generateSmartFallbackResponse(query, siteZone)
 
         val boxes = if (hasPpeIssue) {
             listOf(
@@ -131,11 +128,26 @@ class MultiAgentService {
             ppeCompliancePercent = if (hasPpeIssue) 88 else 98,
             blueprintDeviationMm = if (isBlueprintQuery) 14.2f else 0.8f,
             materialSpecs = "C35/45 Reinforced Concrete & Grade 8.8 Structural Steel",
-            agentSteps = steps
+            agentSteps = steps,
+            isApiError = geminiResult.isError,
+            apiErrorMessage = geminiResult.errorMessage
         )
     }
 
-    private fun callGeminiApi(apiKey: String, query: String, zone: String): String? {
+    private data class GeminiApiCallResult(
+        val text: String?,
+        val isError: Boolean,
+        val errorMessage: String?
+    )
+
+    private fun callGeminiApi(apiKey: String, query: String, zone: String): GeminiApiCallResult {
+        if (apiKey.isBlank() || apiKey == "MY_GEMINI_API_KEY") {
+            return GeminiApiCallResult(
+                text = null,
+                isError = true,
+                errorMessage = "Gemini API Key is missing or invalid placeholder. Please check secrets."
+            )
+        }
         return try {
             val systemPrompt = "You are SiteMind AI, an expert construction intelligence assistant running on Ray-Ban Meta Smart Glasses. Answer concisely, professionally, and prioritize safety, OSHA rules, and quality standards for location: $zone."
             val fullPrompt = "$systemPrompt\n\nWorker query: $query"
@@ -160,16 +172,38 @@ class MultiAgentService {
 
             client.newCall(httpRequest).execute().use { response ->
                 if (response.isSuccessful) {
-                    val respString = response.body?.string() ?: return null
+                    val respString = response.body?.string()
+                    if (respString.isNullOrBlank()) {
+                        return GeminiApiCallResult(null, true, "Empty response received from Gemini API.")
+                    }
                     val jsonObj = JSONObject(respString)
                     val candidates = jsonObj.optJSONArray("candidates")
                     val content = candidates?.optJSONObject(0)?.optJSONObject("content")
                     val parts = content?.optJSONArray("parts")
-                    parts?.optJSONObject(0)?.optString("text")
-                } else null
+                    val text = parts?.optJSONObject(0)?.optString("text")
+                    if (!text.isNullOrBlank()) {
+                        GeminiApiCallResult(text = text, isError = false, errorMessage = null)
+                    } else {
+                        GeminiApiCallResult(text = null, isError = true, errorMessage = "Gemini API response contained no valid output text.")
+                    }
+                } else {
+                    val errorMsg = when (response.code) {
+                        400 -> "API Key is invalid or request malformed (HTTP 400)."
+                        401 -> "API Key expired or unauthorized (HTTP 401)."
+                        403 -> "API Key permission denied or quota exceeded (HTTP 403)."
+                        404 -> "Gemini API model endpoint not found (HTTP 404)."
+                        429 -> "Gemini API quota rate limit exceeded (HTTP 429)."
+                        else -> "Gemini API call failed with HTTP status ${response.code}."
+                    }
+                    GeminiApiCallResult(text = null, isError = true, errorMessage = errorMsg)
+                }
             }
         } catch (e: Exception) {
-            null
+            GeminiApiCallResult(
+                text = null,
+                isError = true,
+                errorMessage = "Gemini API connection error: ${e.localizedMessage ?: "Network connection issue"}"
+            )
         }
     }
 

@@ -876,7 +876,8 @@ private fun RecentReportCard(
 @Composable
 fun HazardItemCard(
     hazard: HazardEntity,
-    onResolve: () -> Unit
+    onResolve: () -> Unit,
+    isSupervisor: Boolean = true
 ) {
     Card(
         modifier = Modifier
@@ -916,15 +917,17 @@ fun HazardItemCard(
                 Text(text = "${hazard.category} • ${hazard.location}", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
 
-            Button(
-                onClick = onResolve,
-                colors = ButtonDefaults.buttonColors(containerColor = StatusSuccess),
-                shape = RoundedCornerShape(10.dp),
-                modifier = Modifier.testTag("resolve_hazard_button_${hazard.id}")
-            ) {
-                Icon(imageVector = Icons.Default.CheckCircle, contentDescription = "Resolve", modifier = Modifier.size(14.dp))
-                Spacer(modifier = Modifier.width(4.dp))
-                Text("Resolve", fontSize = 11.sp)
+            if (isSupervisor) {
+                Button(
+                    onClick = onResolve,
+                    colors = ButtonDefaults.buttonColors(containerColor = StatusSuccess),
+                    shape = RoundedCornerShape(10.dp),
+                    modifier = Modifier.testTag("resolve_hazard_button_${hazard.id}")
+                ) {
+                    Icon(imageVector = Icons.Default.CheckCircle, contentDescription = "Resolve", modifier = Modifier.size(14.dp))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text("Resolve", fontSize = 11.sp)
+                }
             }
         }
     }

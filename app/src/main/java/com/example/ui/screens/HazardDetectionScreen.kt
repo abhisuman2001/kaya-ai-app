@@ -47,6 +47,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.data.model.UserRole
 import com.example.ui.components.CreateHazardDialog
 import com.example.ui.components.HazardCard
 import com.example.ui.components.HazardCategoryFilterChips
@@ -61,7 +62,10 @@ fun HazardDetectionScreen(
     modifier: Modifier = Modifier
 ) {
     val hazardState by viewModel.hazardDetectionState.collectAsStateWithLifecycle()
+    val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
     var showCreateDialog by remember { mutableStateOf(false) }
+
+    val isSupervisor = currentUser.role == UserRole.SUPERVISOR
 
     val filteredHazards = hazardState.hazards.filter { hazard ->
         val catMatch = hazardState.selectedCategoryFilter == null || hazard.category == hazardState.selectedCategoryFilter
@@ -105,15 +109,17 @@ fun HazardDetectionScreen(
                     )
                 }
 
-                Button(
-                    onClick = { showCreateDialog = true },
-                    colors = ButtonDefaults.buttonColors(containerColor = StatusError),
-                    shape = RoundedCornerShape(12.dp),
-                    modifier = Modifier.testTag("create_hazard_button")
-                ) {
-                    Icon(imageVector = Icons.Default.Add, contentDescription = "Add Hazard", tint = Color.White, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text("CREATE", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                if (isSupervisor) {
+                    Button(
+                        onClick = { showCreateDialog = true },
+                        colors = ButtonDefaults.buttonColors(containerColor = StatusError),
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.testTag("create_hazard_button")
+                    ) {
+                        Icon(imageVector = Icons.Default.Add, contentDescription = "Add Hazard", tint = Color.White, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text("FILE HAZARD", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
                 }
             }
         }
@@ -270,7 +276,8 @@ fun HazardDetectionScreen(
                     isVoicePlaying = hazardState.activeVoicePlayingId == hazard.id,
                     onVoiceAlertClick = { viewModel.playVoiceAlert(hazard.id) },
                     onDismissClick = { viewModel.dismissHazardItem(hazard.id) },
-                    onReportClick = { viewModel.reportHazardToDb(hazard) }
+                    onReportClick = { viewModel.reportHazardToDb(hazard) },
+                    isSupervisor = isSupervisor
                 )
             }
         }
@@ -278,12 +285,13 @@ fun HazardDetectionScreen(
         item { Spacer(modifier = Modifier.height(24.dp)) }
     }
 
-    // Modal Create Hazard Observation Dialog
-    if (showCreateDialog) {
+    // Modal Create Hazard Observation Dialog - Strictly restricted to Supervisor
+    if (showCreateDialog && isSupervisor) {
         CreateHazardDialog(
             onDismiss = { showCreateDialog = false },
-            onCreate = { title, cat, sev, loc, osha, desc ->
-                viewModel.createHazardItem(title, cat, sev, loc, osha, desc)
+            isSupervisor = true,
+            onCreate = { title, cat, sev, loc, osha, desc, workerId, workerName ->
+                viewModel.createHazardItem(title, cat, sev, loc, osha, desc, workerId, workerName)
             }
         )
     }
