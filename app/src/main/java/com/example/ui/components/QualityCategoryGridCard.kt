@@ -40,7 +40,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.QualityCategory
-import com.example.ui.theme.MetaBlue
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun QualityCategoryGridCard(
@@ -63,26 +63,26 @@ fun QualityCategoryGridCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(imageVector = Icons.Default.Category, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(18.dp))
+                    Icon(imageVector = Icons.Default.Category, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "INSPECTION CATEGORIES",
                         fontSize = 11.sp,
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold,
-                        color = MetaBlue
+                        color = LocalKayaColors.current.accent
                     )
                 }
 
                 Surface(
                     shape = RoundedCornerShape(6.dp),
-                    color = MetaBlue.copy(0.12f)
+                    color = LocalKayaColors.current.accent.copy(0.12f)
                 ) {
                     Text(
                         text = selectedCategory.displayName.uppercase(),
                         fontSize = 9.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MetaBlue,
+                        color = LocalKayaColors.current.accent,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                     )
                 }
@@ -101,7 +101,7 @@ fun QualityCategoryGridCard(
 
                     Surface(
                         shape = RoundedCornerShape(12.dp),
-                        color = if (isSelected) MetaBlue else MaterialTheme.colorScheme.surfaceVariant,
+                        color = if (isSelected) LocalKayaColors.current.accent else MaterialTheme.colorScheme.surfaceVariant,
                         modifier = Modifier
                             .clickable { onCategorySelected(category) }
                             .testTag("quality_cat_${category.name}")

@@ -29,9 +29,8 @@ import com.example.ui.components.AnalyticsChartsCard
 import com.example.ui.components.AnalyticsFilterCard
 import com.example.ui.components.AnalyticsHeaderCard
 import com.example.ui.components.AnalyticsMetricsGrid
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusSuccess
 import com.example.ui.viewmodel.SiteMindViewModel
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun AnalyticsScreen(
@@ -45,7 +44,7 @@ fun AnalyticsScreen(
         AlertDialog(
             onDismissRequest = { viewModel.dismissAnalyticsSimulationResult() },
             title = {
-                Text("AI PREDICTIVE SIMULATION", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MetaBlue)
+                Text("AI PREDICTIVE SIMULATION", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = LocalKayaColors.current.accent)
             },
             text = {
                 Text(result, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurface, lineHeight = 18.sp)
@@ -55,7 +54,7 @@ fun AnalyticsScreen(
                     onClick = { viewModel.dismissAnalyticsSimulationResult() },
                     modifier = Modifier.testTag("dismiss_sim_dialog_btn")
                 ) {
-                    Text("DONE", fontWeight = FontWeight.Bold, color = MetaBlue)
+                    Text("DONE", fontWeight = FontWeight.Bold, color = LocalKayaColors.current.accent)
                 }
             }
         )
@@ -65,7 +64,7 @@ fun AnalyticsScreen(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = 24.dp)
             .testTag("analytics_screen_list"),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -75,11 +74,11 @@ fun AnalyticsScreen(
         item {
             Column {
                 Text(
-                    text = "PHASE 13 — SITE MIND ANALYTICS",
+                    text = "ANALYTICS",
                     fontSize = 11.sp,
                     fontFamily = FontFamily.Monospace,
                     fontWeight = FontWeight.Bold,
-                    color = MetaBlue,
+                    color = LocalKayaColors.current.accent,
                     letterSpacing = 1.sp
                 )
                 Text(

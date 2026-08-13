@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
@@ -40,7 +39,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -48,11 +46,10 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.data.model.UserRole
 import com.example.data.local.HazardEntity
-import com.example.ui.theme.BorderDark
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusError
-import com.example.ui.theme.StatusSuccess
-import com.example.ui.theme.StatusWarning
+import com.example.ui.theme.LocalKayaColors
+import com.example.ui.theme.ShapeMedium
+import com.example.ui.theme.ShapeSmall
+import com.example.ui.theme.ShapeXLarge
 import com.example.ui.viewmodel.SiteMindViewModel
 
 @Composable
@@ -74,7 +71,7 @@ fun SafetyScreen(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = 24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item { Spacer(modifier = Modifier.height(8.dp)) }
@@ -90,7 +87,7 @@ fun SafetyScreen(
                         text = "AUTOMATED SITE SAFETY & HAZARDS",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MetaBlue,
+                        color = MaterialTheme.colorScheme.primary,
                         letterSpacing = 1.sp
                     )
                     Text(
@@ -104,8 +101,8 @@ fun SafetyScreen(
                 if (currentUser.role == UserRole.SUPERVISOR) {
                     Button(
                         onClick = { showAddModal = !showAddModal },
-                        colors = ButtonDefaults.buttonColors(containerColor = MetaBlue),
-                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                        shape = ShapeMedium,
                         modifier = Modifier.testTag("log_hazard_button")
                     ) {
                         Icon(imageVector = Icons.Default.Add, contentDescription = "Add", modifier = Modifier.size(16.dp))
@@ -121,8 +118,8 @@ fun SafetyScreen(
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .border(1.dp, BorderDark, RoundedCornerShape(20.dp)),
-                shape = RoundedCornerShape(20.dp),
+                    .border(1.dp, MaterialTheme.colorScheme.outline, ShapeXLarge),
+                shape = ShapeXLarge,
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Row(
@@ -135,12 +132,12 @@ fun SafetyScreen(
                         modifier = Modifier
                             .size(64.dp)
                             .clip(CircleShape)
-                            .background(StatusSuccess.copy(alpha = 0.15f)),
+                            .background(LocalKayaColors.current.status.success.copy(alpha = 0.15f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(text = "96%", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = StatusSuccess)
-                            Text(text = "OSHA", fontSize = 9.sp, color = StatusSuccess, fontWeight = FontWeight.Bold)
+                            Text(text = "96%", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = LocalKayaColors.current.status.success)
+                            Text(text = "OSHA", fontSize = 9.sp, color = LocalKayaColors.current.status.success, fontWeight = FontWeight.Bold)
                         }
                     }
 
@@ -163,11 +160,11 @@ fun SafetyScreen(
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(20.dp),
+                    shape = ShapeXLarge,
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text(text = "REPORT NEW SAFETY HAZARD", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MetaBlue)
+                        Text(text = "REPORT NEW SAFETY HAZARD", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                         Spacer(modifier = Modifier.height(10.dp))
 
                         OutlinedTextField(
@@ -206,15 +203,15 @@ fun SafetyScreen(
                                         category = categoryInput,
                                         severity = "HIGH",
                                         location = locationInput,
-                                        description = descInput.ifBlank { "Manually reported hazard from SiteMind app." }
+                                        description = descInput.ifBlank { "Manually reported hazard from Kaya AI app." }
                                     )
                                     showAddModal = false
                                     titleInput = ""
                                     descInput = ""
                                 }
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor = MetaBlue),
-                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                            shape = ShapeMedium,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .testTag("save_hazard_button")
@@ -253,7 +250,7 @@ fun SafetyScreen(
 fun HazardDetailCard(
     hazard: HazardEntity,
     onResolve: () -> Unit,
-    isSupervisor: Boolean = true
+    isSupervisor: Boolean
 ) {
     val isCritical = hazard.severity == "CRITICAL"
     val isResolved = hazard.isResolved
@@ -261,8 +258,8 @@ fun HazardDetailCard(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .border(1.dp, BorderDark, RoundedCornerShape(18.dp)),
-        shape = RoundedCornerShape(18.dp),
+            .border(1.dp, MaterialTheme.colorScheme.outline, ShapeXLarge),
+        shape = ShapeXLarge,
         colors = CardDefaults.cardColors(
             containerColor = if (isResolved) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f) else MaterialTheme.colorScheme.surface
         ),
@@ -275,11 +272,11 @@ fun HazardDetailCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Surface(
-                    shape = RoundedCornerShape(8.dp),
+                    shape = ShapeSmall,
                     color = when {
-                        isResolved -> StatusSuccess.copy(alpha = 0.15f)
-                        isCritical -> StatusError.copy(alpha = 0.15f)
-                        else -> StatusWarning.copy(alpha = 0.15f)
+                        isResolved -> LocalKayaColors.current.status.success.copy(alpha = 0.15f)
+                        isCritical -> LocalKayaColors.current.status.error.copy(alpha = 0.15f)
+                        else -> LocalKayaColors.current.status.warning.copy(alpha = 0.15f)
                     }
                 ) {
                     Text(
@@ -287,9 +284,9 @@ fun HazardDetailCard(
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
                         color = when {
-                            isResolved -> StatusSuccess
-                            isCritical -> StatusError
-                            else -> StatusWarning
+                            isResolved -> LocalKayaColors.current.status.success
+                            isCritical -> LocalKayaColors.current.status.error
+                            else -> LocalKayaColors.current.status.warning
                         },
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
@@ -330,8 +327,8 @@ fun HazardDetailCard(
                     ) {
                         Button(
                             onClick = onResolve,
-                            colors = ButtonDefaults.buttonColors(containerColor = StatusSuccess),
-                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = LocalKayaColors.current.status.success),
+                            shape = ShapeSmall,
                             modifier = Modifier.weight(1f)
                         ) {
                             Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, modifier = Modifier.size(14.dp))
@@ -342,12 +339,12 @@ fun HazardDetailCard(
                         Button(
                             onClick = { },
                             colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                            shape = RoundedCornerShape(10.dp),
+                            shape = ShapeSmall,
                             modifier = Modifier.weight(1f)
                         ) {
-                            Icon(imageVector = Icons.Default.NotificationsActive, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(14.dp))
+                            Icon(imageVector = Icons.Default.NotificationsActive, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(14.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Notify Team", fontSize = 11.sp, color = MetaBlue)
+                            Text("Notify Team", fontSize = 11.sp, color = MaterialTheme.colorScheme.primary)
                         }
                     }
                 }
@@ -356,7 +353,7 @@ fun HazardDetailCard(
                 Text(
                     text = "Resolution: ${hazard.actionTaken}",
                     fontSize = 11.sp,
-                    color = StatusSuccess,
+                    color = LocalKayaColors.current.status.success,
                     fontWeight = FontWeight.Medium
                 )
             }

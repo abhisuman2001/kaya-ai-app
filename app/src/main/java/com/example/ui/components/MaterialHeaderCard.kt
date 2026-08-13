@@ -38,10 +38,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusError
-import com.example.ui.theme.StatusSuccess
-import com.example.ui.theme.StatusWarning
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun MaterialHeaderCard(
@@ -56,7 +53,7 @@ fun MaterialHeaderCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .border(1.dp, MetaBlue.copy(0.4f), RoundedCornerShape(24.dp))
+            .border(1.dp, LocalKayaColors.current.accent.copy(0.4f), RoundedCornerShape(24.dp))
             .testTag("material_header_card"),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
@@ -73,10 +70,10 @@ fun MaterialHeaderCard(
                         modifier = Modifier
                             .size(36.dp)
                             .clip(CircleShape)
-                            .background(MetaBlue.copy(0.15f)),
+                            .background(LocalKayaColors.current.accent.copy(0.15f)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(imageVector = Icons.Default.Inventory2, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(20.dp))
+                        Icon(imageVector = Icons.Default.Inventory2, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(20.dp))
                     }
                     Spacer(modifier = Modifier.width(10.dp))
                     Column {
@@ -85,7 +82,7 @@ fun MaterialHeaderCard(
                             fontSize = 11.sp,
                             fontFamily = FontFamily.Monospace,
                             fontWeight = FontWeight.Bold,
-                            color = MetaBlue
+                            color = LocalKayaColors.current.accent
                         )
                         Text(
                             text = "Brand, Spec, Expiry & Batch AI Audit",
@@ -98,19 +95,19 @@ fun MaterialHeaderCard(
 
                 Surface(
                     shape = RoundedCornerShape(10.dp),
-                    color = StatusSuccess.copy(0.15f)
+                    color = LocalKayaColors.current.status.success.copy(0.15f)
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, tint = StatusSuccess, modifier = Modifier.size(14.dp))
+                        Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, tint = LocalKayaColors.current.status.success, modifier = Modifier.size(14.dp))
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = "$complianceRate% COMPLIANT",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
-                            color = StatusSuccess
+                            color = LocalKayaColors.current.status.success
                         )
                     }
                 }
@@ -134,7 +131,7 @@ fun MaterialHeaderCard(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(text = "TOTAL AUDITED", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text(text = "$totalMaterials", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, color = MetaBlue)
+                        Text(text = "$totalMaterials", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, color = LocalKayaColors.current.accent)
                         Text(text = "Materials Logged", fontSize = 9.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
@@ -142,23 +139,23 @@ fun MaterialHeaderCard(
                 // Stat 2: Compliant
                 Surface(
                     shape = RoundedCornerShape(14.dp),
-                    color = StatusSuccess.copy(0.12f),
+                    color = LocalKayaColors.current.status.success.copy(0.12f),
                     modifier = Modifier.weight(1f)
                 ) {
                     Column(
                         modifier = Modifier.padding(12.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(text = "VERIFIED PASS", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = StatusSuccess)
-                        Text(text = "$compliantCount", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, color = StatusSuccess)
-                        Text(text = "Spec Compliant", fontSize = 9.sp, color = StatusSuccess)
+                        Text(text = "VERIFIED PASS", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = LocalKayaColors.current.status.success)
+                        Text(text = "$compliantCount", fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, color = LocalKayaColors.current.status.success)
+                        Text(text = "Spec Compliant", fontSize = 9.sp, color = LocalKayaColors.current.status.success)
                     }
                 }
 
                 // Stat 3: Expired / Alerts
                 Surface(
                     shape = RoundedCornerShape(14.dp),
-                    color = if (nonCompliantCount > 0) StatusError.copy(0.12f) else MaterialTheme.colorScheme.surfaceVariant,
+                    color = if (nonCompliantCount > 0) LocalKayaColors.current.status.error.copy(0.12f) else MaterialTheme.colorScheme.surfaceVariant,
                     modifier = Modifier.weight(1f)
                 ) {
                     Column(
@@ -169,18 +166,18 @@ fun MaterialHeaderCard(
                             text = "ALERTS / REJECTS",
                             fontSize = 9.sp,
                             fontWeight = FontWeight.Bold,
-                            color = if (nonCompliantCount > 0) StatusError else MaterialTheme.colorScheme.onSurfaceVariant
+                            color = if (nonCompliantCount > 0) LocalKayaColors.current.status.error else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
                             text = "$nonCompliantCount",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.ExtraBold,
-                            color = if (nonCompliantCount > 0) StatusError else MaterialTheme.colorScheme.onSurface
+                            color = if (nonCompliantCount > 0) LocalKayaColors.current.status.error else MaterialTheme.colorScheme.onSurface
                         )
                         Text(
                             text = "Non-Compliant",
                             fontSize = 9.sp,
-                            color = if (nonCompliantCount > 0) StatusError else MaterialTheme.colorScheme.onSurfaceVariant
+                            color = if (nonCompliantCount > 0) LocalKayaColors.current.status.error else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -191,7 +188,7 @@ fun MaterialHeaderCard(
             // AI Vision Scan Trigger Button
             Button(
                 onClick = onScanMaterials,
-                colors = ButtonDefaults.buttonColors(containerColor = MetaBlue),
+                colors = ButtonDefaults.buttonColors(containerColor = LocalKayaColors.current.accent),
                 shape = RoundedCornerShape(14.dp),
                 modifier = Modifier
                     .fillMaxWidth()

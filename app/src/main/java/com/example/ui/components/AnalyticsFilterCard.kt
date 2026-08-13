@@ -36,7 +36,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.AnalyticsTimeframe
 import com.example.data.model.TradeCategory
-import com.example.ui.theme.MetaBlue
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun AnalyticsFilterCard(
@@ -62,14 +62,14 @@ fun AnalyticsFilterCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(imageVector = Icons.Default.FilterList, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(18.dp))
+                    Icon(imageVector = Icons.Default.FilterList, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "ANALYTICS TIMEFRAME & TRADE FILTERS",
                         fontSize = 11.sp,
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold,
-                        color = MetaBlue
+                        color = LocalKayaColors.current.accent
                     )
                 }
             }
@@ -87,7 +87,7 @@ fun AnalyticsFilterCard(
                     val isSelected = selectedTimeframe == tf
                     Surface(
                         shape = RoundedCornerShape(12.dp),
-                        color = if (isSelected) MetaBlue else MaterialTheme.colorScheme.surfaceVariant,
+                        color = if (isSelected) LocalKayaColors.current.accent else MaterialTheme.colorScheme.surfaceVariant,
                         modifier = Modifier
                             .clickable { onTimeframeSelected(tf) }
                             .testTag("tf_${tf.name}")
@@ -116,7 +116,7 @@ fun AnalyticsFilterCard(
                     val isSelected = selectedTrade == trade
                     Surface(
                         shape = RoundedCornerShape(12.dp),
-                        color = if (isSelected) MetaBlue else MaterialTheme.colorScheme.surfaceVariant,
+                        color = if (isSelected) LocalKayaColors.current.accent else MaterialTheme.colorScheme.surfaceVariant,
                         modifier = Modifier
                             .clickable { onTradeSelected(trade) }
                             .testTag("trade_${trade.name}")

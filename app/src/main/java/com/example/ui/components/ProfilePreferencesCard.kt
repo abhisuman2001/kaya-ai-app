@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Language
@@ -42,7 +41,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.UserProfile
-import com.example.ui.theme.MetaBlue
+import com.example.ui.theme.ShapeSmall
+import com.example.ui.theme.ShapeXLarge
 
 @Composable
 fun ProfilePreferencesCard(
@@ -62,9 +62,9 @@ fun ProfilePreferencesCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(20.dp))
+            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, ShapeXLarge)
             .testTag("profile_preferences_card"),
-        shape = RoundedCornerShape(20.dp),
+        shape = ShapeXLarge,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(modifier = Modifier.padding(18.dp)) {
@@ -73,7 +73,7 @@ fun ProfilePreferencesCard(
                 fontSize = 11.sp,
                 fontFamily = FontFamily.Monospace,
                 fontWeight = FontWeight.Bold,
-                color = MetaBlue
+                color = MaterialTheme.colorScheme.primary
             )
 
             Spacer(modifier = Modifier.height(14.dp))
@@ -85,7 +85,7 @@ fun ProfilePreferencesCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(imageVector = Icons.Default.Language, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(18.dp))
+                    Icon(imageVector = Icons.Default.Language, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
                         Text("App & HUD Language", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
@@ -94,7 +94,7 @@ fun ProfilePreferencesCard(
                 }
 
                 Surface(
-                    shape = RoundedCornerShape(10.dp),
+                    shape = ShapeSmall,
                     color = MaterialTheme.colorScheme.surfaceVariant,
                     modifier = Modifier
                         .clickable { languageExpanded = true }
@@ -104,8 +104,8 @@ fun ProfilePreferencesCard(
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(profile.language, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MetaBlue)
-                        Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(16.dp))
+                        Text(profile.language, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                        Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
                     }
 
                     DropdownMenu(
@@ -135,7 +135,7 @@ fun ProfilePreferencesCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(imageVector = Icons.Default.Palette, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(18.dp))
+                    Icon(imageVector = Icons.Default.Palette, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
                         Text("Dark Mode Theme", fontSize = 13.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
@@ -145,7 +145,7 @@ fun ProfilePreferencesCard(
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Surface(
-                        shape = RoundedCornerShape(10.dp),
+                        shape = ShapeSmall,
                         color = MaterialTheme.colorScheme.surfaceVariant,
                         modifier = Modifier
                             .clickable { themeExpanded = true }
@@ -155,8 +155,8 @@ fun ProfilePreferencesCard(
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(if (isDarkMode) "Dark" else "Light", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MetaBlue)
-                            Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(16.dp))
+                            Text(if (isDarkMode) "Dark" else "Light", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                            Icon(imageVector = Icons.Default.ArrowDropDown, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
                         }
 
                         DropdownMenu(
@@ -182,7 +182,7 @@ fun ProfilePreferencesCard(
                         onCheckedChange = { checked ->
                             onThemeSelected(if (checked) "Dark Mode" else "Light Mode")
                         },
-                        colors = SwitchDefaults.colors(checkedThumbColor = MetaBlue, checkedTrackColor = MetaBlue.copy(0.3f)),
+                        colors = SwitchDefaults.colors(checkedThumbColor = MaterialTheme.colorScheme.primary, checkedTrackColor = MaterialTheme.colorScheme.primary.copy(0.3f)),
                         modifier = Modifier.testTag("toggle_dark_mode")
                     )
                 }
@@ -194,7 +194,7 @@ fun ProfilePreferencesCard(
             PreferenceToggleRow(
                 icon = Icons.Default.Lock,
                 title = "Biometric Lock (Face/Fingerprint)",
-                subtitle = "Require authentication to launch SiteMind HUD",
+                subtitle = "Require authentication to launch Kaya AI HUD",
                 isChecked = profile.isBiometricEnabled,
                 onCheckedChange = onBiometricToggled,
                 testTag = "toggle_biometric"
@@ -242,7 +242,7 @@ private fun PreferenceToggleRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
-            Icon(imageVector = icon, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(18.dp))
+            Icon(imageVector = icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
             Spacer(modifier = Modifier.width(8.dp))
             Column {
                 Text(text = title, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
@@ -253,7 +253,7 @@ private fun PreferenceToggleRow(
         Switch(
             checked = isChecked,
             onCheckedChange = onCheckedChange,
-            colors = SwitchDefaults.colors(checkedThumbColor = MetaBlue, checkedTrackColor = MetaBlue.copy(0.3f)),
+            colors = SwitchDefaults.colors(checkedThumbColor = MaterialTheme.colorScheme.primary, checkedTrackColor = MaterialTheme.colorScheme.primary.copy(0.3f)),
             modifier = Modifier.testTag(testTag)
         )
     }

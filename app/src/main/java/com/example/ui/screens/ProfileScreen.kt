@@ -22,7 +22,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.ui.components.ProfileHeaderCard
 import com.example.ui.components.ProfileLogoutCard
 import com.example.ui.components.ProfilePreferencesCard
-import com.example.ui.theme.MetaBlue
 import com.example.ui.viewmodel.SiteMindViewModel
 
 @Composable
@@ -37,7 +36,7 @@ fun ProfileScreen(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = 24.dp)
             .testTag("profile_screen_list"),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -51,7 +50,7 @@ fun ProfileScreen(
                     fontSize = 11.sp,
                     fontFamily = FontFamily.Monospace,
                     fontWeight = FontWeight.Bold,
-                    color = MetaBlue,
+                    color = MaterialTheme.colorScheme.primary,
                     letterSpacing = 1.sp
                 )
                 Text(

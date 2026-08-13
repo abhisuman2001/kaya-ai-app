@@ -114,9 +114,16 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.data.model.GlassAiState
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusError
-import com.example.ui.theme.StatusSuccess
+import com.example.ui.components.Eyebrow
+import com.example.ui.components.KayaPrimaryButton
+import com.example.ui.components.KayaSecondaryButton
+import com.example.ui.theme.LocalKayaColors
+import com.example.ui.theme.ShapeCircle
+import com.example.ui.theme.ShapeLarge
+import com.example.ui.theme.ShapeMedium
+import com.example.ui.theme.ShapeSmall
+import com.example.ui.theme.ShapeXLarge
+import com.example.ui.theme.ShapeXXLarge
 import com.example.ui.viewmodel.SiteMindViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -231,32 +238,27 @@ fun LiveAiScreen(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = 24.dp)
             .testTag("live_ai_screen"),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item { Spacer(modifier = Modifier.height(8.dp)) }
 
-        // 1. Header Section
+        // 1. Header — v1's eyebrow + display pattern
         item {
             Column {
+                Eyebrow(text = "Live AI")
+                Spacer(modifier = Modifier.height(6.dp))
                 Text(
-                    text = "LIVE AI",
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MetaBlue,
-                    letterSpacing = 1.sp
-                )
-                Text(
-                    text = "Live AI Stream & Vision",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold,
+                    text = "See the site",
+                    style = MaterialTheme.typography.displaySmall,
                     color = MaterialTheme.colorScheme.onBackground
                 )
                 Text(
-                    text = "Real-time scene understanding",
-                    fontSize = 12.sp,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    text = "Real-time scene understanding through your glasses.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 6.dp)
                 )
             }
         }
@@ -270,8 +272,8 @@ fun LiveAiScreen(
                         .fillMaxWidth()
                         .testTag("live_ai_glass_disconnected_card"),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, StatusError.copy(alpha = 0.5f)),
-                    shape = RoundedCornerShape(20.dp)
+                    border = androidx.compose.foundation.BorderStroke(1.dp, LocalKayaColors.current.status.error.copy(alpha = 0.5f)),
+                    shape = ShapeXLarge
                 ) {
                     Column(
                         modifier = Modifier
@@ -286,7 +288,7 @@ fun LiveAiScreen(
                             Icon(
                                 imageVector = Icons.Default.BluetoothDisabled,
                                 contentDescription = null,
-                                tint = StatusError,
+                                tint = LocalKayaColors.current.status.error,
                                 modifier = Modifier.size(28.dp)
                             )
                             Text(
@@ -307,8 +309,8 @@ fun LiveAiScreen(
                         Spacer(modifier = Modifier.height(16.dp))
                         Button(
                             onClick = { viewModel.connectGlass() },
-                            colors = ButtonDefaults.buttonColors(containerColor = MetaBlue),
-                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                            shape = ShapeMedium,
                             modifier = Modifier
                                 .fillMaxWidth(0.85f)
                                 .testTag("connect_glass_from_live_ai_button")
@@ -435,9 +437,9 @@ fun LiveAiScreen(
                         .fillMaxWidth()
                         .height(52.dp)
                         .testTag("stop_ai_session_button"),
-                    shape = RoundedCornerShape(16.dp),
+                    shape = ShapeLarge,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = StatusError,
+                        containerColor = LocalKayaColors.current.status.error,
                         contentColor = Color.White
                     )
                 ) {
@@ -558,11 +560,11 @@ private fun CompactSafeStatusCard(
         modifier = Modifier
             .fillMaxWidth()
             .testTag("safe_status_card"),
-        shape = RoundedCornerShape(20.dp),
+        shape = ShapeXLarge,
         colors = CardDefaults.cardColors(
-            containerColor = StatusSuccess.copy(alpha = 0.08f)
+            containerColor = LocalKayaColors.current.status.success.copy(alpha = 0.08f)
         ),
-        border = androidx.compose.foundation.BorderStroke(1.dp, StatusSuccess.copy(alpha = 0.35f))
+        border = androidx.compose.foundation.BorderStroke(1.dp, LocalKayaColors.current.status.success.copy(alpha = 0.35f))
     ) {
         Row(
             modifier = Modifier
@@ -579,13 +581,13 @@ private fun CompactSafeStatusCard(
                     modifier = Modifier
                         .size(36.dp)
                         .clip(CircleShape)
-                        .background(StatusSuccess.copy(alpha = 0.2f)),
+                        .background(LocalKayaColors.current.status.success.copy(alpha = 0.2f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.Shield,
                         contentDescription = "Safe",
-                        tint = StatusSuccess,
+                        tint = LocalKayaColors.current.status.success,
                         modifier = Modifier.size(20.dp)
                     )
                 }
@@ -596,14 +598,14 @@ private fun CompactSafeStatusCard(
                             modifier = Modifier
                                 .size(8.dp)
                                 .clip(CircleShape)
-                                .background(StatusSuccess)
+                                .background(LocalKayaColors.current.status.success)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = "Site Status",
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
-                            color = StatusSuccess
+                            color = LocalKayaColors.current.status.success
                         )
                     }
                     Spacer(modifier = Modifier.height(2.dp))
@@ -668,7 +670,7 @@ private fun ActiveHazardWarningCard(
             .fillMaxWidth()
             .clickable { onOpenBottomSheet() }
             .testTag("active_hazard_card"),
-        shape = RoundedCornerShape(20.dp),
+        shape = ShapeXLarge,
         colors = CardDefaults.cardColors(
             containerColor = hazard.severity.containerColor
         ),
@@ -689,7 +691,7 @@ private fun ActiveHazardWarningCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
+                    shape = ShapeMedium,
                     color = hazard.severity.color,
                     shadowElevation = if (isCritical) 2.dp else 0.dp
                 ) {
@@ -755,7 +757,7 @@ private fun ActiveHazardWarningCard(
 
             // Reasoning Section: Why this is risky
             Surface(
-                shape = RoundedCornerShape(12.dp),
+                shape = ShapeMedium,
                 color = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
                 border = androidx.compose.foundation.BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(0.4f)),
                 modifier = Modifier.fillMaxWidth()
@@ -790,7 +792,7 @@ private fun ActiveHazardWarningCard(
 
             // Recommended Action Section
             Surface(
-                shape = RoundedCornerShape(12.dp),
+                shape = ShapeMedium,
                 color = MaterialTheme.colorScheme.surface.copy(alpha = 0.7f),
                 border = androidx.compose.foundation.BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(0.4f)),
                 modifier = Modifier.fillMaxWidth()
@@ -800,7 +802,7 @@ private fun ActiveHazardWarningCard(
                         Icon(
                             imageVector = Icons.Default.Lightbulb,
                             contentDescription = null,
-                            tint = MetaBlue,
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(16.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
@@ -808,7 +810,7 @@ private fun ActiveHazardWarningCard(
                             text = "Recommended action:",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MetaBlue
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
                     Spacer(modifier = Modifier.height(4.dp))
@@ -826,7 +828,7 @@ private fun ActiveHazardWarningCard(
             if (totalActiveCount > 1) {
                 Spacer(modifier = Modifier.height(12.dp))
                 Surface(
-                    shape = RoundedCornerShape(12.dp),
+                    shape = ShapeMedium,
                     color = MaterialTheme.colorScheme.surface,
                     border = androidx.compose.foundation.BorderStroke(1.dp, hazard.severity.color.copy(0.3f)),
                     modifier = Modifier.fillMaxWidth()
@@ -876,7 +878,7 @@ fun AllHazardsBottomSheet(
     onDismissRequest: () -> Unit,
     onResolveHazard: (String) -> Unit,
     onRestoreAll: () -> Unit,
-    isSupervisor: Boolean = true
+    isSupervisor: Boolean
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
@@ -940,7 +942,7 @@ fun AllHazardsBottomSheet(
                         Icon(
                             imageVector = Icons.Default.CheckCircle,
                             contentDescription = null,
-                            tint = StatusSuccess,
+                            tint = LocalKayaColors.current.status.success,
                             modifier = Modifier.size(48.dp)
                         )
                         Spacer(modifier = Modifier.height(12.dp))
@@ -959,7 +961,7 @@ fun AllHazardsBottomSheet(
                         Spacer(modifier = Modifier.height(16.dp))
                         OutlinedButton(
                             onClick = onRestoreAll,
-                            shape = RoundedCornerShape(12.dp)
+                            shape = ShapeMedium
                         ) {
                             Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
@@ -991,11 +993,11 @@ fun AllHazardsBottomSheet(
 private fun HazardBottomSheetItemCard(
     hazard: HazardItem,
     onResolve: () -> Unit,
-    isSupervisor: Boolean = true
+    isSupervisor: Boolean
 ) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = ShapeLarge,
         colors = CardDefaults.cardColors(
             containerColor = hazard.severity.containerColor
         ),
@@ -1012,7 +1014,7 @@ private fun HazardBottomSheetItemCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Surface(
-                    shape = RoundedCornerShape(8.dp),
+                    shape = ShapeSmall,
                     color = hazard.severity.color
                 ) {
                     Text(
@@ -1072,7 +1074,7 @@ private fun HazardBottomSheetItemCard(
                 text = "Recommended action:",
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold,
-                color = MetaBlue
+                color = MaterialTheme.colorScheme.primary
             )
             Text(
                 text = hazard.recommendation,
@@ -1090,9 +1092,9 @@ private fun HazardBottomSheetItemCard(
                 ) {
                     Button(
                         onClick = onResolve,
-                        shape = RoundedCornerShape(10.dp),
+                        shape = ShapeSmall,
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = StatusSuccess,
+                            containerColor = LocalKayaColors.current.status.success,
                             contentColor = Color.White
                         ),
                         modifier = Modifier.height(34.dp)
@@ -1266,7 +1268,7 @@ fun LiveCameraView(
         modifier = modifier
             .fillMaxWidth()
             .testTag("live_camera_view"),
-        shape = RoundedCornerShape(24.dp),
+        shape = ShapeXXLarge,
         colors = CardDefaults.cardColors(containerColor = Color(0xFF0F172A)),
         border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.15f))
     ) {
@@ -1459,7 +1461,7 @@ fun LiveCameraView(
                         )
                         Text(
                             text = if (cameraPermissionState.status.isGranted) "HARDWARE CAM ACTIVE" else "HUD SIMULATED",
-                            color = StatusSuccess,
+                            color = LocalKayaColors.current.status.success,
                             fontSize = 10.sp,
                             fontFamily = FontFamily.Monospace,
                             fontWeight = FontWeight.Bold
@@ -1468,98 +1470,61 @@ fun LiveCameraView(
                 }
             }
 
-            // Interactive Controls for Speech, Camera Permission, AI Boxes & Speaker Speech Output
+            // Control strip below the viewfinder. Two rows, not three-across: at 11sp with
+            // long labels the old single row forced one character per line.
             Surface(
-                color = Color(0xFF1E293B),
+                color = MaterialTheme.colorScheme.surface,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(12.dp)
+                        .padding(14.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
+                    if (!cameraPermissionState.status.isGranted) {
+                        KayaPrimaryButton(
+                            text = "Enable camera",
+                            onClick = { cameraPermissionState.launchPermissionRequest() },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    } else {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .background(LocalKayaColors.current.status.success, ShapeCircle)
+                            )
+                            Text(
+                                text = "Camera stream active",
+                                style = MaterialTheme.typography.titleSmall,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                maxLines = 1
+                            )
+                        }
+                    }
+
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
-                        // Mic Speech-to-Text Button
-                        Button(
+                        KayaSecondaryButton(
+                            text = "Test speaker",
                             onClick = {
-                                if (!audioPermissionState.status.isGranted) {
-                                    audioPermissionState.launchPermissionRequest()
-                                } else {
-                                    if (isListeningSpeech) {
-                                        try { speechRecognizer?.stopListening() } catch (e: Exception) { e.printStackTrace() }
-                                        isListeningSpeech = false
-                                    } else {
-                                        try {
-                                            val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
-                                                putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-                                                putExtra(RecognizerIntent.EXTRA_PARTIAL_RESULTS, true)
-                                                putExtra(RecognizerIntent.EXTRA_LANGUAGE, java.util.Locale.getDefault())
-                                            }
-                                            speechRecognizer?.startListening(intent)
-                                            isListeningSpeech = true
-                                            speechStatusMessage = "Listening for query..."
-                                        } catch (e: Exception) {
-                                            speechStatusMessage = "Speech recognizer unavailable"
-                                            isListeningSpeech = false
-                                        }
-                                    }
-                                }
+                                val speechText = "Kaya AI online. Site assessment active. Camera and microphone feed clean."
+                                tts?.speak(speechText, TextToSpeech.QUEUE_FLUSH, null, "hud_voice")
                             },
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = if (isListeningSpeech) StatusError else MetaBlue
-                            ),
-                            shape = RoundedCornerShape(12.dp),
-                            modifier = Modifier.weight(1f).testTag("speech_mic_button")
-                        ) {
-                            Icon(
-                                imageVector = if (isListeningSpeech) Icons.Default.MicOff else Icons.Default.Mic,
-                                contentDescription = "Mic STT",
-                                tint = Color.White,
-                                modifier = Modifier.size(16.dp)
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = if (isListeningSpeech) "🔴 Stop Rec" else "🎤 Talk to AI",
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = Color.White
-                            )
-                        }
-
-                        if (!cameraPermissionState.status.isGranted) {
-                            Button(
-                                onClick = { cameraPermissionState.launchPermissionRequest() },
-                                colors = ButtonDefaults.buttonColors(containerColor = MetaBlue),
-                                shape = RoundedCornerShape(12.dp),
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Text("📷 Cam Perm", fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                            }
-                        } else {
-                            OutlinedButton(
-                                onClick = { /* Camera Active */ },
-                                shape = RoundedCornerShape(12.dp),
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Text("✅ Cam Active", fontSize = 11.sp, color = StatusSuccess)
-                            }
-                        }
-
-                        OutlinedButton(
+                            modifier = Modifier.weight(1f)
+                        )
+                        KayaSecondaryButton(
+                            text = if (showBoundingBoxes) "Boxes on" else "Boxes off",
                             onClick = { showBoundingBoxes = !showBoundingBoxes },
-                            shape = RoundedCornerShape(12.dp),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, if (showBoundingBoxes) MetaBlue else Color.Gray.copy(alpha = 0.5f))
-                        ) {
-                            Text(
-                                text = if (showBoundingBoxes) "🔲 Boxes ON" else "🔲 Boxes OFF",
-                                fontSize = 11.sp,
-                                color = if (showBoundingBoxes) MetaBlue else Color.White.copy(alpha = 0.7f)
-                            )
-                        }
+                            modifier = Modifier.weight(1f)
+                        )
                     }
                 }
             }
@@ -1718,7 +1683,7 @@ fun AIStatusChip(
 ) {
     Surface(
         modifier = modifier,
-        shape = RoundedCornerShape(20.dp),
+        shape = ShapeXLarge,
         color = Color.Black.copy(alpha = 0.75f),
         border = androidx.compose.foundation.BorderStroke(1.dp, Color.White.copy(alpha = 0.2f))
     ) {
@@ -1730,7 +1695,7 @@ fun AIStatusChip(
                 modifier = Modifier
                     .size(8.dp)
                     .clip(CircleShape)
-                    .background(if (isActive) StatusSuccess else StatusError)
+                    .background(if (isActive) LocalKayaColors.current.status.success else LocalKayaColors.current.status.error)
             )
             Spacer(modifier = Modifier.width(6.dp))
             Text(
@@ -1757,7 +1722,7 @@ fun LiveIndicatorBadge() {
     )
 
     Surface(
-        shape = RoundedCornerShape(20.dp),
+        shape = ShapeXLarge,
         color = Color.Red.copy(alpha = 0.85f),
         shadowElevation = 4.dp
     ) {
@@ -1812,7 +1777,7 @@ fun CurrentObservationCard(
         modifier = modifier
             .fillMaxWidth()
             .testTag("current_observation_card"),
-        shape = RoundedCornerShape(20.dp),
+        shape = ShapeXLarge,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
@@ -1828,13 +1793,13 @@ fun CurrentObservationCard(
                     modifier = Modifier
                         .size(32.dp)
                         .clip(CircleShape)
-                        .background(MetaBlue.copy(alpha = 0.12f)),
+                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.Visibility,
                         contentDescription = null,
-                        tint = MetaBlue,
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -1863,7 +1828,7 @@ fun CurrentObservationCard(
             ) {
                 observations.forEach { item ->
                     Surface(
-                        shape = RoundedCornerShape(12.dp),
+                        shape = ShapeMedium,
                         color = MaterialTheme.colorScheme.surfaceVariant,
                         border = androidx.compose.foundation.BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant.copy(0.5f))
                     ) {
@@ -1892,7 +1857,7 @@ fun SceneSummaryCard(
         modifier = modifier
             .fillMaxWidth()
             .testTag("scene_summary_card"),
-        shape = RoundedCornerShape(20.dp),
+        shape = ShapeXLarge,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
@@ -1911,13 +1876,13 @@ fun SceneSummaryCard(
                         modifier = Modifier
                             .size(32.dp)
                             .clip(CircleShape)
-                            .background(MetaBlue.copy(alpha = 0.12f)),
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.AutoAwesome,
                             contentDescription = null,
-                            tint = MetaBlue,
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -1946,7 +1911,7 @@ fun SceneSummaryCard(
                     Icon(
                         imageVector = Icons.Default.Refresh,
                         contentDescription = "Re-analyze scene",
-                        tint = MetaBlue,
+                        tint = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -1955,7 +1920,7 @@ fun SceneSummaryCard(
             Spacer(modifier = Modifier.height(12.dp))
 
             Surface(
-                shape = RoundedCornerShape(14.dp),
+                shape = ShapeMedium,
                 color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -1965,7 +1930,7 @@ fun SceneSummaryCard(
                             Text(
                                 text = "✨ Gemini AI analyzing live camera feed...",
                                 fontSize = 13.sp,
-                                color = MetaBlue,
+                                color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.Bold
                             )
                         }
@@ -2005,7 +1970,7 @@ fun EmptyLiveAISession(
             .fillMaxWidth()
             .padding(vertical = 12.dp)
             .testTag("empty_live_ai_session"),
-        shape = RoundedCornerShape(24.dp),
+        shape = ShapeXXLarge,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
@@ -2020,13 +1985,13 @@ fun EmptyLiveAISession(
                 modifier = Modifier
                     .size(64.dp)
                     .clip(CircleShape)
-                    .background(MetaBlue.copy(alpha = 0.12f)),
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.CenterFocusWeak,
                     contentDescription = null,
-                    tint = MetaBlue,
+                    tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(32.dp)
                 )
             }
@@ -2058,9 +2023,9 @@ fun EmptyLiveAISession(
                     .fillMaxWidth()
                     .height(50.dp)
                     .testTag("start_ai_session_button"),
-                shape = RoundedCornerShape(16.dp),
+                shape = ShapeLarge,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MetaBlue,
+                    containerColor = MaterialTheme.colorScheme.primary,
                     contentColor = Color.White
                 )
             ) {
@@ -2089,8 +2054,8 @@ fun AiApiFallbackAlertCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .border(1.dp, Color(0xFFFFB74D), RoundedCornerShape(16.dp)),
-        shape = RoundedCornerShape(16.dp),
+            .border(1.dp, Color(0xFFFFB74D), ShapeLarge),
+        shape = ShapeLarge,
         colors = CardDefaults.cardColors(
             containerColor = Color(0xFFFFF8E1)
         )

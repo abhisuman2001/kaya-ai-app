@@ -38,8 +38,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusSuccess
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun AnalyticsHeaderCard(
@@ -51,7 +50,7 @@ fun AnalyticsHeaderCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .border(1.dp, MetaBlue.copy(0.4f), RoundedCornerShape(24.dp))
+            .border(1.dp, LocalKayaColors.current.accent.copy(0.4f), RoundedCornerShape(24.dp))
             .testTag("analytics_header_card"),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
@@ -67,13 +66,13 @@ fun AnalyticsHeaderCard(
                         modifier = Modifier
                             .size(38.dp)
                             .clip(CircleShape)
-                            .background(MetaBlue.copy(0.15f)),
+                            .background(LocalKayaColors.current.accent.copy(0.15f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.BarChart,
                             contentDescription = null,
-                            tint = MetaBlue,
+                            tint = LocalKayaColors.current.accent,
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -84,7 +83,7 @@ fun AnalyticsHeaderCard(
                             fontSize = 11.sp,
                             fontFamily = FontFamily.Monospace,
                             fontWeight = FontWeight.Bold,
-                            color = MetaBlue
+                            color = LocalKayaColors.current.accent
                         )
                         Text(
                             text = "Productivity, Hazards & Quality Intelligence",
@@ -97,19 +96,19 @@ fun AnalyticsHeaderCard(
 
                 Surface(
                     shape = RoundedCornerShape(10.dp),
-                    color = StatusSuccess.copy(0.15f)
+                    color = LocalKayaColors.current.status.success.copy(0.15f)
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, tint = StatusSuccess, modifier = Modifier.size(12.dp))
+                        Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, tint = LocalKayaColors.current.status.success, modifier = Modifier.size(12.dp))
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = timeframeName.uppercase(),
                             fontSize = 9.sp,
                             fontWeight = FontWeight.Bold,
-                            color = StatusSuccess
+                            color = LocalKayaColors.current.status.success
                         )
                     }
                 }
@@ -119,14 +118,14 @@ fun AnalyticsHeaderCard(
 
             Surface(
                 shape = RoundedCornerShape(14.dp),
-                color = MetaBlue.copy(0.08f),
+                color = LocalKayaColors.current.accent.copy(0.08f),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(
                     modifier = Modifier.padding(12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(imageVector = Icons.Default.Psychology, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(20.dp))
+                    Icon(imageVector = Icons.Default.Psychology, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(20.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "SiteMind AI continuously analyzes 410+ video streams & BIM telemetry to forecast milestone bottlenecks.",
@@ -141,7 +140,7 @@ fun AnalyticsHeaderCard(
 
             Button(
                 onClick = onRunPredictiveSim,
-                colors = ButtonDefaults.buttonColors(containerColor = MetaBlue),
+                colors = ButtonDefaults.buttonColors(containerColor = LocalKayaColors.current.accent),
                 shape = RoundedCornerShape(14.dp),
                 modifier = Modifier
                     .fillMaxWidth()

@@ -38,8 +38,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusSuccess
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun ReportHeaderCard(
@@ -52,7 +51,7 @@ fun ReportHeaderCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .border(1.dp, MetaBlue.copy(0.4f), RoundedCornerShape(24.dp))
+            .border(1.dp, LocalKayaColors.current.accent.copy(0.4f), RoundedCornerShape(24.dp))
             .testTag("report_header_card"),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
@@ -69,10 +68,10 @@ fun ReportHeaderCard(
                         modifier = Modifier
                             .size(36.dp)
                             .clip(CircleShape)
-                            .background(MetaBlue.copy(0.15f)),
+                            .background(LocalKayaColors.current.accent.copy(0.15f)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(imageVector = Icons.Default.Assignment, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(20.dp))
+                        Icon(imageVector = Icons.Default.Assignment, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(20.dp))
                     }
                     Spacer(modifier = Modifier.width(10.dp))
                     Column {
@@ -81,7 +80,7 @@ fun ReportHeaderCard(
                             fontSize = 11.sp,
                             fontFamily = FontFamily.Monospace,
                             fontWeight = FontWeight.Bold,
-                            color = MetaBlue
+                            color = LocalKayaColors.current.accent
                         )
                         Text(
                             text = "Daily, Weekly, Incident & Safety AI Audits",
@@ -94,19 +93,19 @@ fun ReportHeaderCard(
 
                 Surface(
                     shape = RoundedCornerShape(10.dp),
-                    color = StatusSuccess.copy(0.15f)
+                    color = LocalKayaColors.current.status.success.copy(0.15f)
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, tint = StatusSuccess, modifier = Modifier.size(14.dp))
+                        Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, tint = LocalKayaColors.current.status.success, modifier = Modifier.size(14.dp))
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = "AUTO-SYNC ACTIVE",
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
-                            color = StatusSuccess
+                            color = LocalKayaColors.current.status.success
                         )
                     }
                 }
@@ -129,38 +128,38 @@ fun ReportHeaderCard(
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(text = "TOTAL ARCHIVED", fontSize = 8.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text(text = "$totalReportsCount", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = MetaBlue)
+                        Text(text = "$totalReportsCount", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = LocalKayaColors.current.accent)
                         Text(text = "History Logs", fontSize = 8.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
 
                 Surface(
                     shape = RoundedCornerShape(14.dp),
-                    color = MetaBlue.copy(0.12f),
+                    color = LocalKayaColors.current.accent.copy(0.12f),
                     modifier = Modifier.weight(1f)
                 ) {
                     Column(
                         modifier = Modifier.padding(10.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(text = "AI SYNTHESIS", fontSize = 8.sp, fontWeight = FontWeight.Bold, color = MetaBlue)
-                        Text(text = "100%", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = MetaBlue)
-                        Text(text = "Hands-Free Log", fontSize = 8.sp, color = MetaBlue)
+                        Text(text = "AI SYNTHESIS", fontSize = 8.sp, fontWeight = FontWeight.Bold, color = LocalKayaColors.current.accent)
+                        Text(text = "100%", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = LocalKayaColors.current.accent)
+                        Text(text = "Hands-Free Log", fontSize = 8.sp, color = LocalKayaColors.current.accent)
                     }
                 }
 
                 Surface(
                     shape = RoundedCornerShape(14.dp),
-                    color = StatusSuccess.copy(0.12f),
+                    color = LocalKayaColors.current.status.success.copy(0.12f),
                     modifier = Modifier.weight(1f)
                 ) {
                     Column(
                         modifier = Modifier.padding(10.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Text(text = "OSHA & BIM", fontSize = 8.sp, fontWeight = FontWeight.Bold, color = StatusSuccess)
-                        Text(text = "VERIFIED", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = StatusSuccess)
-                        Text(text = "Compliance PASS", fontSize = 8.sp, color = StatusSuccess)
+                        Text(text = "OSHA & BIM", fontSize = 8.sp, fontWeight = FontWeight.Bold, color = LocalKayaColors.current.status.success)
+                        Text(text = "VERIFIED", fontSize = 18.sp, fontWeight = FontWeight.ExtraBold, color = LocalKayaColors.current.status.success)
+                        Text(text = "Compliance PASS", fontSize = 8.sp, color = LocalKayaColors.current.status.success)
                     }
                 }
             }
@@ -174,7 +173,7 @@ fun ReportHeaderCard(
             ) {
                 Button(
                     onClick = onGenerateAiDpr,
-                    colors = ButtonDefaults.buttonColors(containerColor = MetaBlue),
+                    colors = ButtonDefaults.buttonColors(containerColor = LocalKayaColors.current.accent),
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier
                         .weight(1f)
@@ -198,9 +197,9 @@ fun ReportHeaderCard(
                         .height(42.dp)
                         .testTag("generate_ai_weekly_btn")
                 ) {
-                    Icon(imageVector = Icons.Default.Assignment, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(14.dp))
+                    Icon(imageVector = Icons.Default.Assignment, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(14.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("GENERATE WEEKLY WPR", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = MetaBlue)
+                    Text("GENERATE WEEKLY WPR", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = LocalKayaColors.current.accent)
                 }
             }
         }

@@ -44,7 +44,9 @@ data class UserProfile(
     val glassesBattery: Int = 100,
     val glassesStatus: String = "Connected & Active",
     val language: String = "English (US)",
-    val theme: String = "Dark Mode",
+    // Light-first, matching the v1 design system. The literal strings are load-bearing:
+    // MainActivity does profile.theme.contains("Dark", ignoreCase = true). Do not rename.
+    val theme: String = "Light Mode",
     val isBiometricEnabled: Boolean = true,
     val isTelemetryShared: Boolean = true,
     val isLocationTrackingEnabled: Boolean = true,

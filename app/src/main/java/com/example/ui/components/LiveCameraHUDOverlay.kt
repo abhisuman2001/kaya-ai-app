@@ -48,9 +48,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.LiveAiAnalysisResult
 import com.example.data.model.VisionBoundingBox
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusError
-import com.example.ui.theme.StatusSuccess
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun LiveCameraHUDOverlay(
@@ -80,6 +78,10 @@ fun LiveCameraHUDOverlay(
     ) {
         val overlayWidthDp = maxWidth
         val overlayHeightDp = maxHeight
+        // Hoisted: a DrawScope is not a composable scope, so LocalKayaColors cannot be
+        // read inside the draw block below.
+        val hazardColor = LocalKayaColors.current.status.error
+        val safeColor = LocalKayaColors.current.status.success
         // Construction Site Camera Simulation Background Canvas
         Canvas(modifier = Modifier.fillMaxSize()) {
             val w = size.width
@@ -123,7 +125,7 @@ fun LiveCameraHUDOverlay(
                 val boxW = box.normWidth * w
                 val boxH = box.normHeight * h
 
-                val boxColor = if (box.isHazard) StatusError else StatusSuccess
+                val boxColor = if (box.isHazard) hazardColor else safeColor
 
                 drawRect(
                     color = boxColor.copy(alpha = 0.15f),
@@ -177,7 +179,7 @@ fun LiveCameraHUDOverlay(
             ) {
                 Surface(
                     shape = RoundedCornerShape(4.dp),
-                    color = if (box.isHazard) StatusError else StatusSuccess
+                    color = if (box.isHazard) LocalKayaColors.current.status.error else LocalKayaColors.current.status.success
                 ) {
                     Text(
                         text = "${box.label} (${(box.confidence * 100).toInt()}%)",
@@ -210,7 +212,7 @@ fun LiveCameraHUDOverlay(
                         modifier = Modifier
                             .size(8.dp)
                             .clip(CircleShape)
-                            .background(StatusError)
+                            .background(LocalKayaColors.current.status.error)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
@@ -225,7 +227,7 @@ fun LiveCameraHUDOverlay(
 
             Surface(
                 shape = RoundedCornerShape(12.dp),
-                color = MetaBlue.copy(alpha = 0.8f)
+                color = LocalKayaColors.current.accent.copy(alpha = 0.8f)
             ) {
                 Text(
                     text = "ZONE B-4 • LEVEL 3",
@@ -254,7 +256,7 @@ fun LiveCameraHUDOverlay(
             Column {
                 Text(
                     text = "PPE COMPLIANCE: ${analysisResult.ppeCompliancePercent}%",
-                    color = if (analysisResult.ppeCompliancePercent > 90) StatusSuccess else StatusError,
+                    color = if (analysisResult.ppeCompliancePercent > 90) LocalKayaColors.current.status.success else LocalKayaColors.current.status.error,
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold
                 )
@@ -267,7 +269,7 @@ fun LiveCameraHUDOverlay(
 
             Button(
                 onClick = onCaptureSnapshot,
-                colors = ButtonDefaults.buttonColors(containerColor = MetaBlue),
+                colors = ButtonDefaults.buttonColors(containerColor = LocalKayaColors.current.accent),
                 shape = RoundedCornerShape(10.dp),
                 modifier = Modifier.testTag("capture_frame_button")
             ) {

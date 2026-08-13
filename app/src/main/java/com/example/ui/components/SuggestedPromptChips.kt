@@ -27,7 +27,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.ui.theme.MetaBlue
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun SuggestedPromptChips(
@@ -40,7 +40,7 @@ fun SuggestedPromptChips(
             Icon(
                 imageVector = Icons.Default.TipsAndUpdates,
                 contentDescription = null,
-                tint = MetaBlue,
+                tint = LocalKayaColors.current.accent,
                 modifier = Modifier.size(14.dp)
             )
             Spacer(modifier = Modifier.width(6.dp))
@@ -76,7 +76,7 @@ fun SuggestedPromptChips(
                         Icon(
                             imageVector = Icons.Default.Mic,
                             contentDescription = null,
-                            tint = MetaBlue,
+                            tint = LocalKayaColors.current.accent,
                             modifier = Modifier.size(14.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))

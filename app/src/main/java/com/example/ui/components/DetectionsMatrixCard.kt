@@ -37,10 +37,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.VisionBoundingBox
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusError
-import com.example.ui.theme.StatusSuccess
-import com.example.ui.theme.StatusWarning
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun DetectionsMatrixCard(
@@ -66,7 +63,7 @@ fun DetectionsMatrixCard(
                     Icon(
                         imageVector = Icons.Default.Visibility,
                         contentDescription = null,
-                        tint = MetaBlue,
+                        tint = LocalKayaColors.current.accent,
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -82,13 +79,13 @@ fun DetectionsMatrixCard(
                 val hazardCount = detectedObjects.count { it.isHazard }
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = if (hazardCount > 0) StatusError.copy(0.15f) else StatusSuccess.copy(0.15f)
+                    color = if (hazardCount > 0) LocalKayaColors.current.status.error.copy(0.15f) else LocalKayaColors.current.status.success.copy(0.15f)
                 ) {
                     Text(
                         text = if (hazardCount > 0) "$hazardCount Hazards Detected" else "Zero Critical Hazards",
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
-                        color = if (hazardCount > 0) StatusError else StatusSuccess,
+                        color = if (hazardCount > 0) LocalKayaColors.current.status.error else LocalKayaColors.current.status.success,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                     )
                 }
@@ -122,10 +119,10 @@ private fun DetectionItemRow(
     onClick: () -> Unit
 ) {
     val riskColor = when (objectBox.riskLevel) {
-        "CRITICAL" -> StatusError
-        "HIGH" -> StatusError
-        "MEDIUM" -> StatusWarning
-        else -> StatusSuccess
+        "CRITICAL" -> LocalKayaColors.current.status.error
+        "HIGH" -> LocalKayaColors.current.status.error
+        "MEDIUM" -> LocalKayaColors.current.status.warning
+        else -> LocalKayaColors.current.status.success
     }
 
     Box(

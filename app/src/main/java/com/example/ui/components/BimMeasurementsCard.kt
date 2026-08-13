@@ -30,9 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.BimMeasurement
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusError
-import com.example.ui.theme.StatusSuccess
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun BimMeasurementsCard(
@@ -55,26 +53,26 @@ fun BimMeasurementsCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(imageVector = Icons.Default.Straighten, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(18.dp))
+                    Icon(imageVector = Icons.Default.Straighten, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "REAL-TIME LASER & AR MEASUREMENTS",
                         fontSize = 11.sp,
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold,
-                        color = MetaBlue
+                        color = LocalKayaColors.current.accent
                     )
                 }
 
                 Surface(
                     shape = RoundedCornerShape(6.dp),
-                    color = StatusSuccess.copy(0.12f)
+                    color = LocalKayaColors.current.status.success.copy(0.12f)
                 ) {
                     Text(
                         text = "ACCURACY ±1.0mm",
                         fontSize = 9.sp,
                         fontWeight = FontWeight.Bold,
-                        color = StatusSuccess,
+                        color = LocalKayaColors.current.status.success,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                     )
                 }
@@ -107,7 +105,7 @@ fun BimMeasurementsCard(
 
                                 Surface(
                                     shape = RoundedCornerShape(6.dp),
-                                    color = if (m.isWithinTolerance) StatusSuccess.copy(0.15f) else StatusError.copy(0.15f)
+                                    color = if (m.isWithinTolerance) LocalKayaColors.current.status.success.copy(0.15f) else LocalKayaColors.current.status.error.copy(0.15f)
                                 ) {
                                     Row(
                                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
@@ -116,7 +114,7 @@ fun BimMeasurementsCard(
                                         Icon(
                                             imageVector = if (m.isWithinTolerance) Icons.Default.CheckCircle else Icons.Default.Cancel,
                                             contentDescription = null,
-                                            tint = if (m.isWithinTolerance) StatusSuccess else StatusError,
+                                            tint = if (m.isWithinTolerance) LocalKayaColors.current.status.success else LocalKayaColors.current.status.error,
                                             modifier = Modifier.size(12.dp)
                                         )
                                         Spacer(modifier = Modifier.width(4.dp))
@@ -124,7 +122,7 @@ fun BimMeasurementsCard(
                                             text = if (m.isWithinTolerance) "IN TOLERANCE" else "OUT OF SPEC",
                                             fontSize = 9.sp,
                                             fontWeight = FontWeight.Bold,
-                                            color = if (m.isWithinTolerance) StatusSuccess else StatusError
+                                            color = if (m.isWithinTolerance) LocalKayaColors.current.status.success else LocalKayaColors.current.status.error
                                         )
                                     }
                                 }
@@ -138,7 +136,7 @@ fun BimMeasurementsCard(
                             ) {
                                 Column {
                                     Text(text = "CAD SPEC", fontSize = 8.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                    Text(text = m.cadValue, fontSize = 11.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, color = MetaBlue)
+                                    Text(text = m.cadValue, fontSize = 11.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, color = LocalKayaColors.current.accent)
                                 }
 
                                 Column {
@@ -153,7 +151,7 @@ fun BimMeasurementsCard(
                                         fontSize = 11.sp,
                                         fontFamily = FontFamily.Monospace,
                                         fontWeight = FontWeight.Bold,
-                                        color = if (m.isWithinTolerance) StatusSuccess else StatusError
+                                        color = if (m.isWithinTolerance) LocalKayaColors.current.status.success else LocalKayaColors.current.status.error
                                     )
                                 }
                             }

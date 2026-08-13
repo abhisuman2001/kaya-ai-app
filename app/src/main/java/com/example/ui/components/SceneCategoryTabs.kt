@@ -43,10 +43,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.SceneAnalysisData
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusError
-import com.example.ui.theme.StatusSuccess
-import com.example.ui.theme.StatusWarning
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun SceneCategoryTabs(
@@ -133,7 +130,7 @@ private fun TabChip(
 ) {
     Surface(
         shape = RoundedCornerShape(10.dp),
-        color = if (isSelected) MetaBlue else MaterialTheme.colorScheme.surfaceVariant,
+        color = if (isSelected) LocalKayaColors.current.accent else MaterialTheme.colorScheme.surfaceVariant,
         modifier = modifier
             .clickable { onClick() }
             .testTag("scene_tab_${title.take(6).lowercase()}")
@@ -173,7 +170,7 @@ private fun MaterialsTabContent(sceneData: SceneAnalysisData, onInspect: (String
                         modifier = Modifier.weight(1f),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(imageVector = Icons.Default.Category, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(20.dp))
+                        Icon(imageVector = Icons.Default.Category, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(20.dp))
                         Spacer(modifier = Modifier.width(10.dp))
                         Column {
                             Text(text = mat.name, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
@@ -182,8 +179,8 @@ private fun MaterialsTabContent(sceneData: SceneAnalysisData, onInspect: (String
                     }
 
                     Column(horizontalAlignment = Alignment.End) {
-                        Surface(shape = RoundedCornerShape(6.dp), color = StatusSuccess.copy(0.15f)) {
-                            Text(text = mat.specCompliance, fontSize = 9.sp, fontWeight = FontWeight.Bold, color = StatusSuccess, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                        Surface(shape = RoundedCornerShape(6.dp), color = LocalKayaColors.current.status.success.copy(0.15f)) {
+                            Text(text = mat.specCompliance, fontSize = 9.sp, fontWeight = FontWeight.Bold, color = LocalKayaColors.current.status.success, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
                         }
                         Text(text = "${mat.confidencePercent}% Conf.", fontSize = 9.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
@@ -197,7 +194,7 @@ private fun MaterialsTabContent(sceneData: SceneAnalysisData, onInspect: (String
 private fun WorkersTabContent(sceneData: SceneAnalysisData, onInspect: (String) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         sceneData.workers.forEach { wrk ->
-            val statusColor = if (wrk.isCompliant) StatusSuccess else StatusError
+            val statusColor = if (wrk.isCompliant) LocalKayaColors.current.status.success else LocalKayaColors.current.status.error
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -253,7 +250,7 @@ private fun EquipmentTabContent(sceneData: SceneAnalysisData, onInspect: (String
                         modifier = Modifier.weight(1f),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(imageVector = Icons.Default.PrecisionManufacturing, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(20.dp))
+                        Icon(imageVector = Icons.Default.PrecisionManufacturing, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(20.dp))
                         Spacer(modifier = Modifier.width(10.dp))
                         Column {
                             Text(text = eq.equipmentName, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
@@ -261,8 +258,8 @@ private fun EquipmentTabContent(sceneData: SceneAnalysisData, onInspect: (String
                         }
                     }
 
-                    Surface(shape = RoundedCornerShape(6.dp), color = StatusSuccess.copy(0.15f)) {
-                        Text(text = eq.status, fontSize = 9.sp, fontWeight = FontWeight.Bold, color = StatusSuccess, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
+                    Surface(shape = RoundedCornerShape(6.dp), color = LocalKayaColors.current.status.success.copy(0.15f)) {
+                        Text(text = eq.status, fontSize = 9.sp, fontWeight = FontWeight.Bold, color = LocalKayaColors.current.status.success, modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp))
                     }
                 }
             }
@@ -275,9 +272,9 @@ private fun HazardsTabContent(sceneData: SceneAnalysisData, onInspect: (String) 
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         sceneData.hazards.forEach { hz ->
             val sevColor = when (hz.severity) {
-                "CRITICAL" -> StatusError
-                "HIGH" -> StatusError
-                else -> StatusWarning
+                "CRITICAL" -> LocalKayaColors.current.status.error
+                "HIGH" -> LocalKayaColors.current.status.error
+                else -> LocalKayaColors.current.status.warning
             }
             Box(
                 modifier = Modifier
@@ -326,7 +323,7 @@ private fun SuggestionsTabContent(sceneData: SceneAnalysisData) {
                     .padding(10.dp),
                 verticalAlignment = Alignment.Top
             ) {
-                Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(16.dp))
+                Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(16.dp))
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "${idx + 1}. $sug",

@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Business
 import androidx.compose.material.icons.filled.CheckCircle
@@ -43,15 +42,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.UserProfile
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusSuccess
+import com.example.ui.theme.LocalKayaColors
+import com.example.ui.theme.ShapeSmall
+import com.example.ui.theme.ShapeXXLarge
 
 @Composable
 fun ProfileHeaderCard(
@@ -151,9 +150,9 @@ fun ProfileHeaderCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .border(1.dp, MetaBlue.copy(0.4f), RoundedCornerShape(24.dp))
+            .border(1.dp, MaterialTheme.colorScheme.primary.copy(0.4f), ShapeXXLarge)
             .testTag("profile_header_card"),
-        shape = RoundedCornerShape(24.dp),
+        shape = ShapeXXLarge,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
@@ -232,8 +231,8 @@ fun ProfileHeaderCard(
                     Spacer(modifier = Modifier.height(6.dp))
 
                     Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = StatusSuccess.copy(0.15f)
+                        shape = ShapeSmall,
+                        color = LocalKayaColors.current.status.success.copy(0.15f)
                     ) {
                         Row(
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
@@ -243,14 +242,14 @@ fun ProfileHeaderCard(
                                 modifier = Modifier
                                     .size(6.dp)
                                     .clip(CircleShape)
-                                    .background(StatusSuccess)
+                                    .background(LocalKayaColors.current.status.success)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 text = "ACTIVE ${profile.role.title.uppercase()}",
                                 fontSize = 9.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = StatusSuccess
+                                color = LocalKayaColors.current.status.success
                             )
                         }
                     }
@@ -283,7 +282,7 @@ private fun DetailRow(
         Icon(
             imageVector = icon,
             contentDescription = null,
-            tint = MetaBlue,
+            tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.size(14.dp)
         )
         Spacer(modifier = Modifier.width(8.dp))
@@ -292,7 +291,7 @@ private fun DetailRow(
             fontSize = 10.sp,
             fontFamily = FontFamily.Monospace,
             fontWeight = FontWeight.Bold,
-            color = MetaBlue
+            color = MaterialTheme.colorScheme.primary
         )
         Spacer(modifier = Modifier.width(6.dp))
         Text(

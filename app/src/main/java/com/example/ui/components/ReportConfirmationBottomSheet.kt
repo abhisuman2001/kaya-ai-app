@@ -56,9 +56,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.AiGeneratedReport
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusSuccess
 import kotlinx.coroutines.delay
+import com.example.ui.theme.LocalKayaColors
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -96,13 +95,13 @@ fun ReportConfirmationBottomSheet(
                         modifier = Modifier
                             .size(36.dp)
                             .clip(CircleShape)
-                            .background(MetaBlue.copy(alpha = 0.15f)),
+                            .background(LocalKayaColors.current.accent.copy(alpha = 0.15f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.AutoAwesome,
                             contentDescription = null,
-                            tint = MetaBlue,
+                            tint = LocalKayaColors.current.accent,
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -112,7 +111,7 @@ fun ReportConfirmationBottomSheet(
                             text = "AI GENERATED REPORT",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MetaBlue,
+                            color = LocalKayaColors.current.accent,
                             letterSpacing = 1.sp
                         )
                         Text(
@@ -156,13 +155,13 @@ fun ReportConfirmationBottomSheet(
                         // Category Badge
                         Surface(
                             shape = RoundedCornerShape(8.dp),
-                            color = MetaBlue.copy(alpha = 0.12f)
+                            color = LocalKayaColors.current.accent.copy(alpha = 0.12f)
                         ) {
                             Text(
                                 text = report.issueType,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MetaBlue,
+                                color = LocalKayaColors.current.accent,
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                             )
                         }
@@ -282,9 +281,9 @@ fun ReportConfirmationBottomSheet(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor = StatusSuccess.copy(alpha = 0.15f)
+                        containerColor = LocalKayaColors.current.status.success.copy(alpha = 0.15f)
                     ),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, StatusSuccess)
+                    border = androidx.compose.foundation.BorderStroke(1.dp, LocalKayaColors.current.status.success)
                 ) {
                     Row(
                         modifier = Modifier.padding(16.dp),
@@ -293,7 +292,7 @@ fun ReportConfirmationBottomSheet(
                         Icon(
                             imageVector = Icons.Default.CheckCircle,
                             contentDescription = null,
-                            tint = StatusSuccess,
+                            tint = LocalKayaColors.current.status.success,
                             modifier = Modifier.size(24.dp)
                         )
                         Spacer(modifier = Modifier.width(12.dp))
@@ -302,7 +301,7 @@ fun ReportConfirmationBottomSheet(
                                 text = "✓ Report Submitted Successfully",
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = StatusSuccess
+                                color = LocalKayaColors.current.status.success
                             )
                             Text(
                                 text = "Logged in AI Context Engine & notified supervisor.",
@@ -338,7 +337,7 @@ fun ReportConfirmationBottomSheet(
                             .height(48.dp)
                             .testTag("submit_report_button"),
                         shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = MetaBlue)
+                        colors = ButtonDefaults.buttonColors(containerColor = LocalKayaColors.current.accent)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Send,
@@ -363,7 +362,7 @@ private fun EvidenceCheckItem(label: String) {
         Icon(
             imageVector = Icons.Default.Check,
             contentDescription = null,
-            tint = StatusSuccess,
+            tint = LocalKayaColors.current.status.success,
             modifier = Modifier.size(14.dp)
         )
         Spacer(modifier = Modifier.width(6.dp))

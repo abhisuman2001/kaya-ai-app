@@ -30,7 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.NotificationSettings
-import com.example.ui.theme.MetaBlue
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun NotificationSettingsCard(
@@ -48,14 +48,14 @@ fun NotificationSettingsCard(
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(imageVector = Icons.Default.Settings, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(18.dp))
+                Icon(imageVector = Icons.Default.Settings, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "DISPATCH & HUD NOTIFICATION PREFERENCES",
                     fontSize = 11.sp,
                     fontFamily = FontFamily.Monospace,
                     fontWeight = FontWeight.Bold,
-                    color = MetaBlue
+                    color = LocalKayaColors.current.accent
                 )
             }
 
@@ -149,7 +149,7 @@ private fun SettingToggleRow(
         Switch(
             checked = isChecked,
             onCheckedChange = onCheckedChange,
-            colors = SwitchDefaults.colors(checkedThumbColor = MetaBlue, checkedTrackColor = MetaBlue.copy(0.3f)),
+            colors = SwitchDefaults.colors(checkedThumbColor = LocalKayaColors.current.accent, checkedTrackColor = LocalKayaColors.current.accent.copy(0.3f)),
             modifier = Modifier.testTag(testTag)
         )
     }

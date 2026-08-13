@@ -31,7 +31,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.ui.theme.MetaBlue
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun ImageAttachmentPreview(
@@ -41,10 +41,10 @@ fun ImageAttachmentPreview(
 ) {
     Surface(
         shape = RoundedCornerShape(12.dp),
-        color = MetaBlue.copy(0.12f),
+        color = LocalKayaColors.current.accent.copy(0.12f),
         modifier = modifier
             .fillMaxWidth()
-            .border(1.dp, MetaBlue.copy(0.4f), RoundedCornerShape(12.dp))
+            .border(1.dp, LocalKayaColors.current.accent.copy(0.4f), RoundedCornerShape(12.dp))
             .testTag("image_attachment_preview")
     ) {
         Row(
@@ -59,13 +59,13 @@ fun ImageAttachmentPreview(
                     modifier = Modifier
                         .size(32.dp)
                         .clip(CircleShape)
-                        .background(MetaBlue.copy(0.2f)),
+                        .background(LocalKayaColors.current.accent.copy(0.2f)),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.Image,
                         contentDescription = null,
-                        tint = MetaBlue,
+                        tint = LocalKayaColors.current.accent,
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -78,7 +78,7 @@ fun ImageAttachmentPreview(
                         fontSize = 9.sp,
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold,
-                        color = MetaBlue
+                        color = LocalKayaColors.current.accent
                     )
                     Text(
                         text = imageName,

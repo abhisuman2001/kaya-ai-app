@@ -38,9 +38,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.SiteContextMemory
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusError
-import com.example.ui.theme.StatusWarning
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun ContextMemoryBar(
@@ -50,7 +48,7 @@ fun ContextMemoryBar(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .border(1.dp, MetaBlue.copy(0.4f), RoundedCornerShape(20.dp))
+            .border(1.dp, LocalKayaColors.current.accent.copy(0.4f), RoundedCornerShape(20.dp))
             .testTag("context_memory_card"),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
@@ -67,13 +65,13 @@ fun ContextMemoryBar(
                         modifier = Modifier
                             .size(28.dp)
                             .clip(CircleShape)
-                            .background(MetaBlue.copy(0.15f)),
+                            .background(LocalKayaColors.current.accent.copy(0.15f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Memory,
                             contentDescription = null,
-                            tint = MetaBlue,
+                            tint = LocalKayaColors.current.accent,
                             modifier = Modifier.size(16.dp)
                         )
                     }
@@ -83,14 +81,14 @@ fun ContextMemoryBar(
                         fontSize = 11.sp,
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold,
-                        color = MetaBlue,
+                        color = LocalKayaColors.current.accent,
                         letterSpacing = 0.5.sp
                     )
                 }
 
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = MetaBlue.copy(0.15f)
+                    color = LocalKayaColors.current.accent.copy(0.15f)
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
@@ -100,14 +98,14 @@ fun ContextMemoryBar(
                             modifier = Modifier
                                 .size(6.dp)
                                 .clip(CircleShape)
-                                .background(MetaBlue)
+                                .background(LocalKayaColors.current.accent)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = "LIVE SYNC",
                             fontSize = 9.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MetaBlue
+                            color = LocalKayaColors.current.accent
                         )
                     }
                 }
@@ -130,7 +128,7 @@ fun ContextMemoryBar(
                         modifier = Modifier.padding(10.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(imageVector = Icons.Default.LocationOn, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(14.dp))
+                        Icon(imageVector = Icons.Default.LocationOn, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(14.dp))
                         Spacer(modifier = Modifier.width(6.dp))
                         Column {
                             Text(text = "LOCATION", fontSize = 8.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -149,7 +147,7 @@ fun ContextMemoryBar(
                         modifier = Modifier.padding(10.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(imageVector = Icons.Default.Group, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(14.dp))
+                        Icon(imageVector = Icons.Default.Group, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(14.dp))
                         Spacer(modifier = Modifier.width(6.dp))
                         Column {
                             Text(text = "CREW CONTEXT", fontSize = 8.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -175,7 +173,7 @@ fun ContextMemoryBar(
                         modifier = Modifier.padding(10.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(imageVector = Icons.Default.WbSunny, contentDescription = null, tint = StatusWarning, modifier = Modifier.size(14.dp))
+                        Icon(imageVector = Icons.Default.WbSunny, contentDescription = null, tint = LocalKayaColors.current.status.warning, modifier = Modifier.size(14.dp))
                         Spacer(modifier = Modifier.width(6.dp))
                         Column {
                             Text(text = "WEATHER RISK", fontSize = 8.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -194,7 +192,7 @@ fun ContextMemoryBar(
                         modifier = Modifier.padding(10.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(imageVector = Icons.Default.Architecture, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(14.dp))
+                        Icon(imageVector = Icons.Default.Architecture, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(14.dp))
                         Spacer(modifier = Modifier.width(6.dp))
                         Column {
                             Text(text = "BIM SPECIFICATION", fontSize = 8.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)

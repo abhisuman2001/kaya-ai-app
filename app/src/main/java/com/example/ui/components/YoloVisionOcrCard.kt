@@ -35,9 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.OcrExtractedSpec
 import com.example.data.model.YoloSpatialBoundingBox
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusError
-import com.example.ui.theme.StatusSuccess
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun YoloVisionOcrCard(
@@ -61,26 +59,26 @@ fun YoloVisionOcrCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(imageVector = Icons.Default.CenterFocusStrong, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(18.dp))
+                    Icon(imageVector = Icons.Default.CenterFocusStrong, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "YOLO SPATIAL VISION & OCR DRAWING PARSER",
                         fontSize = 11.sp,
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold,
-                        color = MetaBlue
+                        color = LocalKayaColors.current.accent
                     )
                 }
 
                 Surface(
                     shape = RoundedCornerShape(6.dp),
-                    color = StatusSuccess.copy(0.15f)
+                    color = LocalKayaColors.current.status.success.copy(0.15f)
                 ) {
                     Text(
                         text = "30 FPS HUD STREAM",
                         fontSize = 9.sp,
                         fontWeight = FontWeight.Bold,
-                        color = StatusSuccess,
+                        color = LocalKayaColors.current.status.success,
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                     )
                 }
@@ -115,7 +113,7 @@ fun YoloVisionOcrCard(
 
             Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 yoloDetections.forEach { bbox ->
-                    val statusColor = if (bbox.isHazard) StatusError else StatusSuccess
+                    val statusColor = if (bbox.isHazard) LocalKayaColors.current.status.error else LocalKayaColors.current.status.success
                     Surface(
                         shape = RoundedCornerShape(10.dp),
                         color = statusColor.copy(0.1f),
@@ -165,14 +163,14 @@ fun YoloVisionOcrCard(
 
             // OCR Blueprint Extraction Result
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(imageVector = Icons.Default.Description, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(16.dp))
+                Icon(imageVector = Icons.Default.Description, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(16.dp))
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
                     text = "OCR PARSED DRAWING SPECIFICATION",
                     fontSize = 10.sp,
                     fontFamily = FontFamily.Monospace,
                     fontWeight = FontWeight.Bold,
-                    color = MetaBlue
+                    color = LocalKayaColors.current.accent
                 )
             }
 

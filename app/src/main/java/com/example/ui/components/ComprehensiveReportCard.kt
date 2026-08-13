@@ -41,10 +41,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.ComprehensiveReportItem
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusError
-import com.example.ui.theme.StatusSuccess
-import com.example.ui.theme.StatusWarning
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun ComprehensiveReportCard(
@@ -54,12 +51,12 @@ fun ComprehensiveReportCard(
     modifier: Modifier = Modifier
 ) {
     val categoryColor = when (report.typeCode) {
-        "DAILY" -> MetaBlue
-        "WEEKLY" -> MetaBlue
-        "INCIDENT" -> StatusError
-        "SAFETY" -> StatusWarning
-        "QUALITY" -> StatusSuccess
-        else -> MetaBlue
+        "DAILY" -> LocalKayaColors.current.accent
+        "WEEKLY" -> LocalKayaColors.current.accent
+        "INCIDENT" -> LocalKayaColors.current.status.error
+        "SAFETY" -> LocalKayaColors.current.status.warning
+        "QUALITY" -> LocalKayaColors.current.status.success
+        else -> LocalKayaColors.current.accent
     }
 
     Card(
@@ -92,19 +89,19 @@ fun ComprehensiveReportCard(
 
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = StatusSuccess.copy(0.12f)
+                    color = LocalKayaColors.current.status.success.copy(0.12f)
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, tint = StatusSuccess, modifier = Modifier.size(12.dp))
+                        Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, tint = LocalKayaColors.current.status.success, modifier = Modifier.size(12.dp))
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = report.status,
                             fontSize = 9.sp,
                             fontWeight = FontWeight.Bold,
-                            color = StatusSuccess
+                            color = LocalKayaColors.current.status.success
                         )
                     }
                 }
@@ -152,7 +149,7 @@ fun ComprehensiveReportCard(
                         fontSize = 9.sp,
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold,
-                        color = MetaBlue
+                        color = LocalKayaColors.current.accent
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
@@ -169,7 +166,7 @@ fun ComprehensiveReportCard(
             // Key Metrics Grid
             Surface(
                 shape = RoundedCornerShape(12.dp),
-                color = MetaBlue.copy(0.06f),
+                color = LocalKayaColors.current.accent.copy(0.06f),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -178,7 +175,7 @@ fun ComprehensiveReportCard(
                         fontSize = 8.sp,
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold,
-                        color = MetaBlue
+                        color = LocalKayaColors.current.accent
                     )
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -187,7 +184,7 @@ fun ComprehensiveReportCard(
                         report.keyMetrics.entries.take(3).forEach { entry ->
                             Column {
                                 Text(text = entry.key.uppercase(), fontSize = 8.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                Text(text = entry.value, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MetaBlue)
+                                Text(text = entry.value, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = LocalKayaColors.current.accent)
                             }
                         }
                     }
@@ -200,14 +197,14 @@ fun ComprehensiveReportCard(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(StatusSuccess.copy(0.08f), RoundedCornerShape(12.dp))
+                        .background(LocalKayaColors.current.status.success.copy(0.08f), RoundedCornerShape(12.dp))
                         .padding(10.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null, tint = StatusSuccess, modifier = Modifier.size(12.dp))
+                        Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null, tint = LocalKayaColors.current.status.success, modifier = Modifier.size(12.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(text = "AI VISION TELEMETRY INSIGHTS", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = StatusSuccess)
+                        Text(text = "AI VISION TELEMETRY INSIGHTS", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = LocalKayaColors.current.status.success)
                     }
                     report.aiGeneratedInsights.forEach { insight ->
                         Text(text = "• $insight", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurface)
@@ -237,14 +234,14 @@ fun ComprehensiveReportCard(
                             .height(34.dp)
                             .testTag("export_pdf_${report.id}")
                     ) {
-                        Icon(imageVector = Icons.Default.PictureAsPdf, contentDescription = "PDF", tint = MetaBlue, modifier = Modifier.size(14.dp))
+                        Icon(imageVector = Icons.Default.PictureAsPdf, contentDescription = "PDF", tint = LocalKayaColors.current.accent, modifier = Modifier.size(14.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("PDF EXPORT", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = MetaBlue)
+                        Text("PDF EXPORT", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = LocalKayaColors.current.accent)
                     }
 
                     Button(
                         onClick = onShare,
-                        colors = ButtonDefaults.buttonColors(containerColor = MetaBlue),
+                        colors = ButtonDefaults.buttonColors(containerColor = LocalKayaColors.current.accent),
                         shape = RoundedCornerShape(10.dp),
                         modifier = Modifier
                             .height(34.dp)

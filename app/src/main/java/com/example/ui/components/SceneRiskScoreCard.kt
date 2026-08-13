@@ -38,10 +38,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.SceneAnalysisData
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusError
-import com.example.ui.theme.StatusSuccess
-import com.example.ui.theme.StatusWarning
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun SceneRiskScoreCard(
@@ -51,9 +48,9 @@ fun SceneRiskScoreCard(
     modifier: Modifier = Modifier
 ) {
     val riskColor = when {
-        sceneData.riskScore > 70 -> StatusError
-        sceneData.riskScore > 30 -> StatusWarning
-        else -> StatusSuccess
+        sceneData.riskScore > 70 -> LocalKayaColors.current.status.error
+        sceneData.riskScore > 30 -> LocalKayaColors.current.status.warning
+        else -> LocalKayaColors.current.status.success
     }
 
     Card(
@@ -72,7 +69,7 @@ fun SceneRiskScoreCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(imageVector = Icons.Default.LocationOn, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(16.dp))
+                    Icon(imageVector = Icons.Default.LocationOn, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
                         text = sceneData.locationTag,
@@ -150,7 +147,7 @@ fun SceneRiskScoreCard(
                     onClick = onSaveClick,
                     enabled = !isSaved,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isSaved) StatusSuccess else MetaBlue
+                        containerColor = if (isSaved) LocalKayaColors.current.status.success else LocalKayaColors.current.accent
                     ),
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.testTag("save_scene_analysis_button")

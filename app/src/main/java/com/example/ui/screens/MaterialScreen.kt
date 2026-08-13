@@ -27,9 +27,8 @@ import com.example.ui.components.MaterialCategoryFilterCard
 import com.example.ui.components.MaterialHeaderCard
 import com.example.ui.components.MaterialInventoryAuditCard
 import com.example.ui.components.MaterialItemCard
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusSuccess
 import com.example.ui.viewmodel.SiteMindViewModel
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun MaterialScreen(
@@ -48,7 +47,7 @@ fun MaterialScreen(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = 24.dp)
             .testTag("material_screen_list"),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -58,10 +57,10 @@ fun MaterialScreen(
         item {
             Column {
                 Text(
-                    text = "PHASE 11 — MATERIAL VERIFICATION",
+                    text = "MATERIALS",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MetaBlue,
+                    color = LocalKayaColors.current.accent,
                     letterSpacing = 1.sp
                 )
                 Text(
@@ -78,14 +77,14 @@ fun MaterialScreen(
             item {
                 Surface(
                     shape = RoundedCornerShape(12.dp),
-                    color = StatusSuccess.copy(0.15f),
+                    color = LocalKayaColors.current.status.success.copy(0.15f),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
                         text = msg,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
-                        color = StatusSuccess,
+                        color = LocalKayaColors.current.status.success,
                         modifier = Modifier.padding(12.dp)
                     )
                 }

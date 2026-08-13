@@ -25,8 +25,8 @@ import com.example.ui.components.NotificationCategoryFilterCard
 import com.example.ui.components.NotificationHeaderCard
 import com.example.ui.components.NotificationItemCard
 import com.example.ui.components.NotificationSettingsCard
-import com.example.ui.theme.MetaBlue
 import com.example.ui.viewmodel.SiteMindViewModel
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun NotificationsScreen(
@@ -46,7 +46,7 @@ fun NotificationsScreen(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = 24.dp)
             .testTag("notifications_screen_list"),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -56,11 +56,11 @@ fun NotificationsScreen(
         item {
             Column {
                 Text(
-                    text = "PHASE 14 — DISPATCH & HUD NOTIFICATIONS",
+                    text = "ALERTS",
                     fontSize = 11.sp,
                     fontFamily = FontFamily.Monospace,
                     fontWeight = FontWeight.Bold,
-                    color = MetaBlue,
+                    color = LocalKayaColors.current.accent,
                     letterSpacing = 1.sp
                 )
                 Text(

@@ -29,13 +29,7 @@ class MultiAgentService {
         siteZone: String = "Grid B-4 Level 3"
     ): LiveAiAnalysisResult = withContext(Dispatchers.Default) {
 
-        val apiKey = try {
-            val single = try { BuildConfig::class.java.getField("GEMINI_API_KEY").get(null) as? String } catch (e: Exception) { null }
-            val plural = try { BuildConfig::class.java.getField("GEMINI_API_KEYS").get(null) as? String } catch (e: Exception) { null }
-            listOfNotNull(single, plural).filter { it.isNotBlank() }.joinToString(",")
-        } catch (e: Exception) { "" }
-
-        val geminiResult = callGeminiApi(apiKey, query, base64Frame, siteZone)
+        val steps = mutableListOf<AgentExecutionStep>()
 
         var aiResponseText = ""
         var ppeCompliancePercent = 95
@@ -137,6 +131,27 @@ class MultiAgentService {
             )
         )
 
+        val geminiResult = callGeminiApi(query, siteZone)
+        val responseText = geminiResult.text ?: generateSmartFallbackResponse(query, siteZone)
+
+        val boxes = if (hasPpeIssue) {
+            listOf(
+                VisionBoundingBox("Worker #1 (PPE OK)", 0.98f, false, 0.15f, 0.25f, 0.25f, 0.55f, riskLevel = "LOW", category = "Personnel"),
+                VisionBoundingBox("Missing Glasses & Vest ⚠️", 0.94f, true, 0.52f, 0.28f, 0.30f, 0.58f, riskLevel = "HIGH", category = "Safety PPE"),
+                VisionBoundingBox("Scaffolding Guardrail", 0.91f, false, 0.05f, 0.10f, 0.88f, 0.20f, riskLevel = "LOW", category = "Perimeter Safety")
+            )
+        } else if (isBlueprintQuery) {
+            listOf(
+                VisionBoundingBox("Beam B-12 (+14mm Dev)", 0.96f, true, 0.25f, 0.35f, 0.50f, 0.30f, riskLevel = "CRITICAL", category = "CAD Tolerance"),
+                VisionBoundingBox("Anchor Bolt Group", 0.98f, false, 0.20f, 0.68f, 0.22f, 0.22f, riskLevel = "LOW", category = "Fasteners")
+            )
+        } else {
+            listOf(
+                VisionBoundingBox("C35 Concrete Rebar", 0.99f, false, 0.18f, 0.22f, 0.65f, 0.60f, riskLevel = "LOW", category = "Reinforcement"),
+                VisionBoundingBox("Safety Helmet", 0.97f, false, 0.42f, 0.12f, 0.18f, 0.18f, riskLevel = "LOW", category = "PPE Gear")
+            )
+        }
+
         LiveAiAnalysisResult(
             queryText = query,
             aiResponseText = aiResponseText,
@@ -156,21 +171,71 @@ class MultiAgentService {
         val errorMessage: String?
     )
 
-    private fun callGeminiApi(apiKeyConfig: String, query: String, base64Frame: String?, zone: String): GeminiApiCallResult {
-        val keys: List<String> = apiKeyConfig.split(",", ";", "\n")
+    /**
+     * All usable Gemini keys, in rotation order. Free-tier keys each carry their own
+     * per-minute and per-day quota, so spreading calls across several multiplies the
+     * usable budget. Falls back to the single-key field when the plural one is absent.
+     */
+    private val geminiKeys: List<String> by lazy {
+        val multi = try { BuildConfig.GEMINI_API_KEYS } catch (e: Throwable) { "" }
+        val single = try { BuildConfig.GEMINI_API_KEY } catch (e: Throwable) { "" }
+        (multi.split(",") + single)
             .map { it.trim() }
-            .filter { it.isNotBlank() && it != "YOUR_GEMINI_API_KEY" && it != "MY_GEMINI_API_KEY" }
+            .filter { it.isNotBlank() && it != "MY_GEMINI_API_KEY" }
+            .distinct()
+    }
 
-        val maskedKeys = keys.map { if (it.length > 8) it.take(4) + "..." + it.takeLast(4) else "short_key" }
-        Log.d("MultiAgentService", "Loaded ${keys.size} keys: $maskedKeys")
+    /**
+     * Round-robin cursor. Starting each request where the last one left off spreads load
+     * evenly instead of hammering key #1 until it 429s.
+     */
+    private val keyCursor = java.util.concurrent.atomic.AtomicInteger(0)
 
-        if (keys.isEmpty()) {
+    /** HTTP codes where a *different* key might succeed. A 404 is the model id being wrong,
+     *  which every key would hit identically, so it is deliberately not in this set. */
+    private fun isKeyExhaustedCode(code: Int) = code == 429 || code == 403 || code == 401
+
+    /**
+     * Tries each key in turn until one answers or all are exhausted. Only quota/auth
+     * failures advance the cursor — a network blip retries nothing, because the next key
+     * would fail the same way and burn quota for no reason.
+     */
+    private fun callGeminiApi(query: String, zone: String): GeminiApiCallResult {
+        if (geminiKeys.isEmpty()) {
             return GeminiApiCallResult(
                 text = null,
                 isError = true,
-                errorMessage = "Gemini API Key is missing or invalid placeholder. Please check secrets."
+                errorMessage = "No Gemini API key configured. Add GEMINI_API_KEYS to .env."
             )
         }
+
+        var lastError: GeminiApiCallResult? = null
+        val start = keyCursor.getAndIncrement()
+
+        for (offset in geminiKeys.indices) {
+            val key = geminiKeys[((start + offset) % geminiKeys.size + geminiKeys.size) % geminiKeys.size]
+            val result = callGeminiWithKey(key, query, zone)
+            if (!result.isError) return result
+            lastError = result
+            // Only worth trying another key when this one is rate-limited or rejected.
+            if (result.errorMessage?.contains("quota", ignoreCase = true) != true &&
+                result.errorMessage?.contains("unauthorized", ignoreCase = true) != true &&
+                result.errorMessage?.contains("permission denied", ignoreCase = true) != true
+            ) {
+                return result
+            }
+        }
+        return lastError ?: GeminiApiCallResult(null, true, "All Gemini API keys failed.")
+    }
+
+    private fun callGeminiWithKey(apiKey: String, query: String, zone: String): GeminiApiCallResult {
+        return try {
+            // Kept deliberately short: every token here is billed against the free-tier
+            // budget on each request, and the answer is read on a HUD, not a page.
+            val fullPrompt =
+                "You are Kaya AI, a construction safety assistant on Ray-Ban Meta glasses. " +
+                    "Zone: $zone. Answer in under 60 words, prioritising safety and OSHA rules.\n\n" +
+                    "Worker: $query"
 
         var lastErrorMsg = ""
         for ((index, key) in keys.withIndex()) {
@@ -252,9 +317,14 @@ class MultiAgentService {
                 put("generationConfig", JSONObject().apply {
                     put("responseMimeType", "application/json")
                 })
+                // Hard cap on output so a runaway answer cannot drain the daily token budget.
+                put("generationConfig", JSONObject().apply {
+                    put("maxOutputTokens", 200)
+                    put("temperature", 0.4)
+                })
             }
 
-            val url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=$apiKey"
+            val url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$apiKey"
             val httpRequest = Request.Builder()
                 .url(url)
                 .post(jsonBody.toString().toRequestBody("application/json".toMediaType()))
@@ -317,7 +387,7 @@ class MultiAgentService {
                 "Overlapping BIM Model S-204 against current frame. 2 structural penetrations aligned. Electrical riser conduit in MEP-302 offset by 25mm."
 
             else ->
-                "SiteMind AI active in $zone. Camera feed analyzed: Work area clear of critical hazards. PPE compliance at 96%. All crew members operating in safe zones."
+                "Kaya AI active in $zone. Camera feed analyzed: Work area clear of critical hazards. PPE compliance at 96%. All crew members operating in safe zones."
         }
     }
 }

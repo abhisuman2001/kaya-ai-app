@@ -59,7 +59,7 @@ import androidx.compose.ui.res.painterResource
 import com.example.R
 import com.example.data.model.GlassAiState
 import com.example.data.model.GlassDeviceState
-import com.example.ui.theme.BorderDark
+import com.example.ui.theme.LocalKayaColors
 import com.example.ui.theme.GlassAnalyzing
 import com.example.ui.theme.GlassCharging
 import com.example.ui.theme.GlassConnected
@@ -68,10 +68,7 @@ import com.example.ui.theme.GlassListening
 import com.example.ui.theme.GlassOffline
 import com.example.ui.theme.GlassSpeaking
 import com.example.ui.theme.GlassThinking
-import com.example.ui.theme.MetaBlue
 import com.example.ui.theme.SiteSurfaceDark
-import com.example.ui.theme.StatusError
-import com.example.ui.theme.StatusSuccess
 
 @Composable
 fun RayBanGlassesHero(
@@ -342,7 +339,7 @@ fun RayBanGlassesHero(
                             text = if (isConnected) "GLASSES LINK ACTIVE" else "GLASSES DISCONNECTED",
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
-                            color = if (isConnected) StatusSuccess else StatusError
+                            color = if (isConnected) LocalKayaColors.current.status.success else LocalKayaColors.current.status.error
                         )
                         Text(
                             text = if (isConnected) "Paired to Meta Wayfarer" else "Tap button to pair glasses",
@@ -354,11 +351,11 @@ fun RayBanGlassesHero(
                     Button(
                         onClick = { onToggleConnection() },
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isConnected) StatusError.copy(alpha = 0.2f) else MetaBlue,
-                            contentColor = if (isConnected) StatusError else Color.White
+                            containerColor = if (isConnected) LocalKayaColors.current.status.error.copy(alpha = 0.2f) else LocalKayaColors.current.accent,
+                            contentColor = if (isConnected) LocalKayaColors.current.status.error else Color.White
                         ),
                         shape = RoundedCornerShape(12.dp),
-                        border = if (isConnected) androidx.compose.foundation.BorderStroke(1.dp, StatusError) else null,
+                        border = if (isConnected) androidx.compose.foundation.BorderStroke(1.dp, LocalKayaColors.current.status.error) else null,
                         modifier = Modifier.testTag("toggle_glass_connection_button")
                     ) {
                         Icon(
@@ -401,7 +398,7 @@ private fun InfoChip(
             Icon(
                 imageVector = icon,
                 contentDescription = label,
-                tint = MetaBlue,
+                tint = LocalKayaColors.current.accent,
                 modifier = Modifier.size(14.dp)
             )
             Spacer(modifier = Modifier.width(6.dp))
@@ -436,7 +433,7 @@ private fun StatePill(
     Surface(
         modifier = modifier.clickable { onClick() },
         shape = RoundedCornerShape(10.dp),
-        color = if (isSelected) MetaBlue else MaterialTheme.colorScheme.surfaceVariant,
+        color = if (isSelected) LocalKayaColors.current.accent else MaterialTheme.colorScheme.surfaceVariant,
         border = if (isSelected) null else androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
     ) {
         Box(

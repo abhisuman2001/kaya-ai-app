@@ -39,8 +39,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.data.local.KnowledgeItemEntity
-import com.example.ui.theme.MetaBlue
 import com.example.ui.viewmodel.SiteMindViewModel
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun KnowledgeScreen(
@@ -61,7 +61,7 @@ fun KnowledgeScreen(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = 24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item { Spacer(modifier = Modifier.height(8.dp)) }
@@ -71,7 +71,7 @@ fun KnowledgeScreen(
                 text = "RETRIEVAL-AUGMENTED GENERATION (RAG)",
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
-                color = MetaBlue,
+                color = LocalKayaColors.current.accent,
                 letterSpacing = 1.sp
             )
             Text(
@@ -91,11 +91,11 @@ fun KnowledgeScreen(
                     .fillMaxWidth()
                     .testTag("knowledge_search_input"),
                 placeholder = { Text("Search SOPs, OSHA rules, BIM specs, BOQs...") },
-                leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = null, tint = MetaBlue) },
+                leadingIcon = { Icon(imageVector = Icons.Default.Search, contentDescription = null, tint = LocalKayaColors.current.accent) },
                 singleLine = true,
                 shape = RoundedCornerShape(16.dp),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MetaBlue,
+                    focusedBorderColor = LocalKayaColors.current.accent,
                     unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
                     focusedContainerColor = MaterialTheme.colorScheme.surface,
                     unfocusedContainerColor = MaterialTheme.colorScheme.surface
@@ -112,7 +112,7 @@ fun KnowledgeScreen(
                         viewModel.runAiQuery("How do I install this structural steel beam according to SOP-202?")
                     },
                 shape = RoundedCornerShape(18.dp),
-                colors = CardDefaults.cardColors(containerColor = MetaBlue)
+                colors = CardDefaults.cardColors(containerColor = LocalKayaColors.current.accent)
             ) {
                 Row(
                     modifier = Modifier.padding(18.dp),
@@ -163,13 +163,13 @@ fun KnowledgeCard(item: KnowledgeItemEntity) {
             ) {
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = MetaBlue.copy(alpha = 0.12f)
+                    color = LocalKayaColors.current.accent.copy(alpha = 0.12f)
                 ) {
                     Text(
                         text = item.category,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MetaBlue,
+                        color = LocalKayaColors.current.accent,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
                 }
@@ -201,7 +201,7 @@ fun KnowledgeCard(item: KnowledgeItemEntity) {
                 text = "Tags: ${item.tags}",
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Medium,
-                color = MetaBlue
+                color = LocalKayaColors.current.accent
             )
         }
     }

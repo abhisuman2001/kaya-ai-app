@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Login
@@ -32,8 +31,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.UserProfile
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusError
+import com.example.ui.theme.LocalKayaColors
+import com.example.ui.theme.ShapeMedium
+import com.example.ui.theme.ShapeSmall
+import com.example.ui.theme.ShapeXLarge
 
 @Composable
 fun ProfileLogoutCard(
@@ -50,11 +51,11 @@ fun ProfileLogoutCard(
             .fillMaxWidth()
             .border(
                 1.dp,
-                if (profile.isLoggedOut) StatusError.copy(0.5f) else MaterialTheme.colorScheme.outlineVariant,
-                RoundedCornerShape(20.dp)
+                if (profile.isLoggedOut) LocalKayaColors.current.status.error.copy(0.5f) else MaterialTheme.colorScheme.outlineVariant,
+                ShapeXLarge
             )
             .testTag("profile_logout_card"),
-        shape = RoundedCornerShape(20.dp),
+        shape = ShapeXLarge,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
         Column(modifier = Modifier.padding(18.dp)) {
@@ -69,10 +70,10 @@ fun ProfileLogoutCard(
                             text = "SESSION DISCONNECTED",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
-                            color = StatusError
+                            color = LocalKayaColors.current.status.error
                         )
                         Text(
-                            text = "You are currently logged out of SiteMind HUD.",
+                            text = "You are currently logged out of Kaya AI HUD.",
                             fontSize = 11.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -82,8 +83,8 @@ fun ProfileLogoutCard(
 
                     Button(
                         onClick = onLogin,
-                        colors = ButtonDefaults.buttonColors(containerColor = MetaBlue),
-                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                        shape = ShapeMedium,
                         modifier = Modifier
                             .height(38.dp)
                             .testTag("login_button")
@@ -117,15 +118,15 @@ fun ProfileLogoutCard(
 
                     OutlinedButton(
                         onClick = onRequestLogout,
-                        shape = RoundedCornerShape(12.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = StatusError),
+                        shape = ShapeMedium,
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = LocalKayaColors.current.status.error),
                         modifier = Modifier
                             .height(38.dp)
                             .testTag("logout_button")
                     ) {
-                        Icon(imageVector = Icons.Default.ExitToApp, contentDescription = null, tint = StatusError, modifier = Modifier.size(14.dp))
+                        Icon(imageVector = Icons.Default.ExitToApp, contentDescription = null, tint = LocalKayaColors.current.status.error, modifier = Modifier.size(14.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("LOGOUT", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = StatusError)
+                        Text("LOGOUT", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = LocalKayaColors.current.status.error)
                     }
                 }
             }
@@ -135,7 +136,7 @@ fun ProfileLogoutCard(
     if (showLogoutDialog) {
         AlertDialog(
             onDismissRequest = onCancelLogout,
-            title = { Text("Confirm Logout from SiteMind", fontWeight = FontWeight.Bold, fontSize = 16.sp) },
+            title = { Text("Confirm Logout from Kaya AI", fontWeight = FontWeight.Bold, fontSize = 16.sp) },
             text = {
                 Text(
                     "Are you sure you want to sign out? This will temporarily pause real-time Ray-Ban smart glasses AI hazard alerts until you log back in.",
@@ -145,8 +146,8 @@ fun ProfileLogoutCard(
             confirmButton = {
                 Button(
                     onClick = onConfirmLogout,
-                    colors = ButtonDefaults.buttonColors(containerColor = StatusError),
-                    shape = RoundedCornerShape(10.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = LocalKayaColors.current.status.error),
+                    shape = ShapeSmall,
                     modifier = Modifier.testTag("confirm_logout_btn")
                 ) {
                     Text("YES, LOGOUT", fontSize = 11.sp, fontWeight = FontWeight.Bold)
@@ -160,7 +161,7 @@ fun ProfileLogoutCard(
                     Text("CANCEL", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                 }
             },
-            shape = RoundedCornerShape(20.dp)
+            shape = ShapeXLarge
         )
     }
 }

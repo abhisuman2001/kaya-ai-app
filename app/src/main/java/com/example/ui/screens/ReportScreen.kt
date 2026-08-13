@@ -29,9 +29,8 @@ import com.example.data.model.ReportFilterCategory
 import com.example.ui.components.ComprehensiveReportCard
 import com.example.ui.components.ReportCategoryFilterCard
 import com.example.ui.components.ReportHeaderCard
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusSuccess
 import com.example.ui.viewmodel.SiteMindViewModel
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun ReportScreen(
@@ -59,7 +58,7 @@ fun ReportScreen(
         AlertDialog(
             onDismissRequest = { viewModel.dismissReportNotifications() },
             title = {
-                Text("SHARE REPORT", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = MetaBlue)
+                Text("SHARE REPORT", fontSize = 16.sp, fontWeight = FontWeight.Bold, color = LocalKayaColors.current.accent)
             },
             text = {
                 Text(msg, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurface)
@@ -69,7 +68,7 @@ fun ReportScreen(
                     onClick = { viewModel.dismissReportNotifications() },
                     modifier = Modifier.testTag("dismiss_share_dialog_btn")
                 ) {
-                    Text("OK", fontWeight = FontWeight.Bold, color = MetaBlue)
+                    Text("OK", fontWeight = FontWeight.Bold, color = LocalKayaColors.current.accent)
                 }
             }
         )
@@ -79,7 +78,7 @@ fun ReportScreen(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = 24.dp)
             .testTag("report_screen_list"),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -89,10 +88,10 @@ fun ReportScreen(
         item {
             Column {
                 Text(
-                    text = "PHASE 12 — AUTOMATED SITE REPORTING",
+                    text = "REPORTS",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MetaBlue,
+                    color = LocalKayaColors.current.accent,
                     letterSpacing = 1.sp
                 )
                 Text(
@@ -109,14 +108,14 @@ fun ReportScreen(
             item {
                 Surface(
                     shape = RoundedCornerShape(12.dp),
-                    color = StatusSuccess.copy(0.15f),
+                    color = LocalKayaColors.current.status.success.copy(0.15f),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
                         text = toast,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
-                        color = StatusSuccess,
+                        color = LocalKayaColors.current.status.success,
                         modifier = Modifier.padding(12.dp)
                     )
                 }

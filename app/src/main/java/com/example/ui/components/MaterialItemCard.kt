@@ -45,10 +45,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.MaterialItem
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusError
-import com.example.ui.theme.StatusSuccess
-import com.example.ui.theme.StatusWarning
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun MaterialItemCard(
@@ -58,7 +55,7 @@ fun MaterialItemCard(
     modifier: Modifier = Modifier
 ) {
     val isExpired = material.expiryDate.contains("EXPIRED", ignoreCase = true)
-    val statusColor = if (material.isCompliant && !isExpired) StatusSuccess else StatusError
+    val statusColor = if (material.isCompliant && !isExpired) LocalKayaColors.current.status.success else LocalKayaColors.current.status.error
 
     Card(
         modifier = modifier
@@ -81,19 +78,19 @@ fun MaterialItemCard(
             ) {
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = MetaBlue.copy(0.12f)
+                    color = LocalKayaColors.current.accent.copy(0.12f)
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(imageVector = Icons.Default.LocalOffer, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(12.dp))
+                        Icon(imageVector = Icons.Default.LocalOffer, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(12.dp))
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = material.brand.uppercase(),
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MetaBlue
+                            color = LocalKayaColors.current.accent
                         )
                     }
                 }
@@ -137,7 +134,7 @@ fun MaterialItemCard(
                 modifier = Modifier.padding(top = 2.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Icon(imageVector = Icons.Default.Grid4x4, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(12.dp))
+                Icon(imageVector = Icons.Default.Grid4x4, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(12.dp))
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(text = material.locationGrid, fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
@@ -159,7 +156,7 @@ fun MaterialItemCard(
                         }
                         Column(horizontalAlignment = Alignment.End) {
                             Text(text = "COMPLIANCE CODE", fontSize = 8.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text(text = material.complianceCode, fontSize = 11.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, color = MetaBlue)
+                            Text(text = material.complianceCode, fontSize = 11.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, color = LocalKayaColors.current.accent)
                         }
                     }
 
@@ -171,7 +168,7 @@ fun MaterialItemCard(
                                 text = material.expiryDate,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = if (isExpired) StatusError else MaterialTheme.colorScheme.onSurface
+                                color = if (isExpired) LocalKayaColors.current.status.error else MaterialTheme.colorScheme.onSurface
                             )
                         }
                         Column(horizontalAlignment = Alignment.End) {
@@ -187,7 +184,7 @@ fun MaterialItemCard(
             // Stock Inventory Row with Delta Buttons (+10 / -10)
             Surface(
                 shape = RoundedCornerShape(12.dp),
-                color = MetaBlue.copy(0.08f),
+                color = LocalKayaColors.current.accent.copy(0.08f),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Row(
@@ -196,7 +193,7 @@ fun MaterialItemCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(imageVector = Icons.Default.Inventory, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(16.dp))
+                        Icon(imageVector = Icons.Default.Inventory, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(8.dp))
                         Column {
                             Text(text = "CURRENT STOCK", fontSize = 8.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -205,7 +202,7 @@ fun MaterialItemCard(
                                 fontSize = 13.sp,
                                 fontFamily = FontFamily.Monospace,
                                 fontWeight = FontWeight.Bold,
-                                color = MetaBlue
+                                color = LocalKayaColors.current.accent
                             )
                         }
                     }
@@ -216,13 +213,13 @@ fun MaterialItemCard(
                             color = MaterialTheme.colorScheme.surface,
                             modifier = Modifier
                                 .size(28.dp)
-                                .border(1.dp, MetaBlue, CircleShape)
+                                .border(1.dp, LocalKayaColors.current.accent, CircleShape)
                         ) {
                             IconButton(
                                 onClick = { onUpdateStockDelta(-10.0) },
                                 modifier = Modifier.testTag("sub_stock_${material.id}")
                             ) {
-                                Icon(imageVector = Icons.Default.Remove, contentDescription = "Sub Stock", tint = MetaBlue, modifier = Modifier.size(14.dp))
+                                Icon(imageVector = Icons.Default.Remove, contentDescription = "Sub Stock", tint = LocalKayaColors.current.accent, modifier = Modifier.size(14.dp))
                             }
                         }
 
@@ -230,7 +227,7 @@ fun MaterialItemCard(
 
                         Surface(
                             shape = CircleShape,
-                            color = MetaBlue,
+                            color = LocalKayaColors.current.accent,
                             modifier = Modifier.size(28.dp)
                         ) {
                             IconButton(
@@ -258,7 +255,7 @@ fun MaterialItemCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(12.dp))
+                    Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(12.dp))
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(text = "Glasses AI ${(material.aiConfidence * 100).toInt()}% • Delivered ${material.deliveryDate}", fontSize = 9.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
@@ -272,7 +269,7 @@ fun MaterialItemCard(
                         text = if (material.isCompliant) "FLAG ISSUE" else "APPROVE SPEC",
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
-                        color = if (material.isCompliant) StatusError else StatusSuccess
+                        color = if (material.isCompliant) LocalKayaColors.current.status.error else LocalKayaColors.current.status.success
                     )
                 }
             }

@@ -1,11 +1,11 @@
 package com.example.ui.navigation
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.ui.Alignment
 import androidx.compose.material.icons.Icons
@@ -16,20 +16,13 @@ import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Smartphone
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -55,10 +48,12 @@ import com.example.ui.screens.AnalyticsScreen
 import com.example.ui.screens.NotificationsScreen
 import com.example.ui.screens.ProfileScreen
 import com.example.ui.screens.AiIntegrationScreen
+import com.example.ui.screens.MediaScreen
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.NotificationsActive
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.FactCheck
 import androidx.compose.material.icons.filled.Warning
@@ -70,8 +65,8 @@ import com.example.ui.screens.auth.OtpScreen
 import com.example.ui.screens.auth.RegisterScreen
 import com.example.ui.screens.auth.RoleSelectionScreen
 import com.example.ui.screens.auth.SplashScreen
-import com.example.ui.theme.BorderDark
-import com.example.ui.theme.MetaBlue
+import com.example.ui.components.KayaBottomNav
+import com.example.ui.components.KayaNavItem
 import com.example.ui.viewmodel.SiteMindViewModel
 
 sealed class Screen(val route: String, val title: String, val icon: ImageVector) {
@@ -92,6 +87,7 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector)
     object Notifications : Screen("notifications", "Alerts", Icons.Default.NotificationsActive)
     object Profile : Screen("profile", "Profile", Icons.Default.Person)
     object AiIntegration : Screen("ai_integration", "AI Engine", Icons.Default.AutoAwesome)
+    object Media : Screen("media", "Media", Icons.Default.PhotoLibrary)
 }
 
 @Composable
@@ -160,56 +156,35 @@ fun AppNavigation(
             )
 
             Scaffold(
+                contentWindowInsets = WindowInsets.safeDrawing,
+                containerColor = MaterialTheme.colorScheme.background,
                 bottomBar = {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .background(MaterialTheme.colorScheme.surface),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        NavigationBar(
-                            containerColor = MaterialTheme.colorScheme.surface,
-                            tonalElevation = 0.dp,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .widthIn(max = 640.dp)
-                                .border(width = 1.dp, color = BorderDark)
-                        ) {
-                            bottomNavItems.forEach { screen ->
-                                val isSelected = currentRoute == screen.route
-                                NavigationBarItem(
-                                    icon = { Icon(imageVector = screen.icon, contentDescription = screen.title) },
-                                    label = { Text(text = screen.title, fontSize = 10.sp) },
-                                    selected = isSelected,
-                                    onClick = {
-                                        if (currentRoute != screen.route) {
-                                            navController.navigate(screen.route) {
-                                                popUpTo(navController.graph.findStartDestination().id) {
-                                                    saveState = true
-                                                }
-                                                launchSingleTop = true
-                                                restoreState = true
-                                            }
-                                        }
-                                    },
-                                    colors = NavigationBarItemDefaults.colors(
-                                        selectedIconColor = MetaBlue,
-                                        selectedTextColor = MetaBlue,
-                                        indicatorColor = MetaBlue.copy(alpha = 0.15f),
-                                        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                                        unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant
-                                    ),
-                                    modifier = Modifier.testTag("nav_${screen.route}")
-                                )
+                    // v1's floating pill nav. Kept inside bottomBar so Scaffold still
+                    // reserves its height and content is never hidden behind it.
+                    KayaBottomNav(
+                        items = bottomNavItems.map {
+                            KayaNavItem(route = it.route, label = it.title, icon = it.icon)
+                        },
+                        currentRoute = currentRoute,
+                        onSelect = { route ->
+                            if (currentRoute != route) {
+                                navController.navigate(route) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
                             }
                         }
-                    }
+                    )
                 }
             ) { innerPadding ->
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(innerPadding),
+                        .padding(innerPadding)
+                        .imePadding(),
                     contentAlignment = Alignment.TopCenter
                 ) {
                     NavHost(
@@ -227,7 +202,10 @@ fun AppNavigation(
                             onNavigateToBlueprints = { navController.navigate(Screen.Blueprints.route) },
                             onNavigateToKnowledge = { navController.navigate(Screen.Knowledge.route) },
                             onNavigateToReports = { navController.navigate(Screen.Reports.route) },
-                            onNavigateToDevice = { navController.navigate(Screen.Device.route) }
+                            // v1's hero card links to the media gallery ("View Media"), not the
+                            // device page. The parameter name is fixed by the screen signature,
+                            // which is part of the app's navigation contract.
+                            onNavigateToDevice = { navController.navigate(Screen.Media.route) }
                         )
                     }
                     composable(Screen.Tasks.route) {
@@ -252,6 +230,9 @@ fun AppNavigation(
                     }
                     composable(Screen.AiIntegration.route) {
                         AiIntegrationScreen(viewModel = viewModel)
+                    }
+                    composable(Screen.Media.route) {
+                        MediaScreen(viewModel = viewModel)
                     }
                     composable(Screen.Assistant.route) {
                         AiAssistantScreen(viewModel = viewModel)

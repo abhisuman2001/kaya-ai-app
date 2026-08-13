@@ -23,8 +23,8 @@ import com.example.ui.components.SceneBoundingBoxOverlay
 import com.example.ui.components.SceneCategoryTabs
 import com.example.ui.components.SceneRiskScoreCard
 import com.example.ui.components.SceneBottomSheet
-import com.example.ui.theme.MetaBlue
 import com.example.ui.viewmodel.SiteMindViewModel
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun SceneAnalysisScreen(
@@ -41,7 +41,7 @@ fun SceneAnalysisScreen(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = 24.dp)
             .testTag("scene_analysis_screen_list"),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -54,7 +54,7 @@ fun SceneAnalysisScreen(
                     text = "GEMINI 1.5 PRO VISION ENGINE",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MetaBlue,
+                    color = LocalKayaColors.current.accent,
                     letterSpacing = 1.sp
                 )
                 Text(

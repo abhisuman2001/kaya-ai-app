@@ -93,11 +93,12 @@ import com.example.data.model.DiscoveredGlassDevice
 import com.example.data.model.GlassAiState
 import com.example.data.model.PairingStep
 import com.example.ui.components.RayBanGlassesHero
-import com.example.ui.theme.BorderDark
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusError
-import com.example.ui.theme.StatusSuccess
-import com.example.ui.theme.StatusWarning
+import com.example.ui.theme.LocalKayaColors
+import com.example.ui.theme.ShapeLarge
+import com.example.ui.theme.ShapeMedium
+import com.example.ui.theme.ShapeSmall
+import com.example.ui.theme.ShapeXSmall
+import com.example.ui.theme.ShapeXLarge
 import com.example.ui.viewmodel.SiteMindViewModel
 
 @Composable
@@ -122,7 +123,7 @@ fun DeviceScreen(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 16.dp),
+            .padding(horizontal = 24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item { Spacer(modifier = Modifier.height(8.dp)) }
@@ -132,8 +133,8 @@ fun DeviceScreen(
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .border(1.dp, BorderDark, RoundedCornerShape(20.dp)),
-                shape = RoundedCornerShape(20.dp),
+                    .border(1.dp, MaterialTheme.colorScheme.outline, ShapeXLarge),
+                shape = ShapeXLarge,
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column(modifier = Modifier.padding(18.dp)) {
@@ -146,24 +147,24 @@ fun DeviceScreen(
                             Box(
                                 modifier = Modifier
                                     .size(40.dp)
-                                    .background(MetaBlue.copy(0.15f), CircleShape),
+                                    .background(MaterialTheme.colorScheme.primary.copy(0.15f), CircleShape),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Icon(Icons.Default.Person, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(22.dp))
+                                Icon(Icons.Default.Person, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
                             }
                             Spacer(modifier = Modifier.width(12.dp))
                             Column {
-                                Text(currentUser.name, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                                Text(currentUser.email, color = Color.White.copy(0.6f), fontSize = 11.sp)
+                                Text(currentUser.name, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                                Text(currentUser.email, color = MaterialTheme.colorScheme.onSurface.copy(0.6f), fontSize = 11.sp)
                             }
                         }
 
                         Box(
                             modifier = Modifier
-                                .background(MetaBlue.copy(0.2f), RoundedCornerShape(10.dp))
+                                .background(MaterialTheme.colorScheme.primary.copy(0.2f), ShapeSmall)
                                 .padding(horizontal = 10.dp, vertical = 4.dp)
                         ) {
-                            Text(currentUser.role.title, color = MetaBlue, fontWeight = FontWeight.Bold, fontSize = 11.sp)
+                            Text(currentUser.role.title, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 11.sp)
                         }
                     }
 
@@ -178,12 +179,12 @@ fun DeviceScreen(
                             modifier = Modifier
                                 .weight(1f)
                                 .testTag("switch_role_button"),
-                            shape = RoundedCornerShape(12.dp),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, BorderDark)
+                            shape = ShapeMedium,
+                            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline)
                         ) {
-                            Icon(Icons.Default.Shield, contentDescription = null, modifier = Modifier.size(14.dp), tint = MetaBlue)
+                            Icon(Icons.Default.Shield, contentDescription = null, modifier = Modifier.size(14.dp), tint = MaterialTheme.colorScheme.primary)
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Switch Role", fontSize = 11.sp, color = Color.White)
+                            Text("Switch Role", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurface)
                         }
 
                         OutlinedButton(
@@ -191,12 +192,12 @@ fun DeviceScreen(
                             modifier = Modifier
                                 .weight(1f)
                                 .testTag("logout_button"),
-                            shape = RoundedCornerShape(12.dp),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, StatusError.copy(0.4f))
+                            shape = ShapeMedium,
+                            border = androidx.compose.foundation.BorderStroke(1.dp, LocalKayaColors.current.status.error.copy(0.4f))
                         ) {
-                            Icon(Icons.Default.ExitToApp, contentDescription = null, modifier = Modifier.size(14.dp), tint = StatusError)
+                            Icon(Icons.Default.ExitToApp, contentDescription = null, modifier = Modifier.size(14.dp), tint = LocalKayaColors.current.status.error)
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("Sign Out", fontSize = 11.sp, color = StatusError)
+                            Text("Sign Out", fontSize = 11.sp, color = LocalKayaColors.current.status.error)
                         }
                     }
                 }
@@ -215,7 +216,7 @@ fun DeviceScreen(
                         text = "RAY-BAN META DEVICE PAIRING & STATUS",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MetaBlue,
+                        color = MaterialTheme.colorScheme.primary,
                         letterSpacing = 1.sp
                     )
                     Text(
@@ -235,15 +236,15 @@ fun DeviceScreen(
                 Box(
                     modifier = Modifier
                         .background(
-                            if (glassState.connectionState == GlassAiState.OFFLINE) StatusError.copy(0.2f)
-                            else StatusSuccess.copy(0.2f),
-                            RoundedCornerShape(20.dp)
+                            if (glassState.connectionState == GlassAiState.OFFLINE) LocalKayaColors.current.status.error.copy(0.2f)
+                            else LocalKayaColors.current.status.success.copy(0.2f),
+                            ShapeXLarge
                         )
                         .padding(horizontal = 12.dp, vertical = 6.dp)
                 ) {
                     Text(
                         text = if (glassState.connectionState == GlassAiState.OFFLINE) "OFFLINE" else "CONNECTED",
-                        color = if (glassState.connectionState == GlassAiState.OFFLINE) StatusError else StatusSuccess,
+                        color = if (glassState.connectionState == GlassAiState.OFFLINE) LocalKayaColors.current.status.error else LocalKayaColors.current.status.success,
                         fontWeight = FontWeight.Bold,
                         fontSize = 11.sp
                     )
@@ -272,7 +273,7 @@ fun DeviceScreen(
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
+                shape = ShapeXLarge,
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column(modifier = Modifier.padding(18.dp)) {
@@ -293,7 +294,7 @@ fun DeviceScreen(
                             text = connQuality.signalRating,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
-                            color = StatusSuccess
+                            color = LocalKayaColors.current.status.success
                         )
                     }
 
@@ -317,14 +318,14 @@ fun DeviceScreen(
                         Button(
                             onClick = { viewModel.reconnectDevice() },
                             enabled = !isReconnecting,
-                            colors = ButtonDefaults.buttonColors(containerColor = MetaBlue),
-                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                            shape = ShapeMedium,
                             modifier = Modifier
                                 .weight(1f)
                                 .testTag("reconnect_button")
                         ) {
                             if (isReconnecting) {
-                                CircularProgressIndicator(color = Color.White, modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                                CircularProgressIndicator(color = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Text("Reconnecting...", fontSize = 12.sp)
                             } else {
@@ -342,17 +343,17 @@ fun DeviceScreen(
                                     viewModel.disconnectDevice()
                                 }
                             },
-                            shape = RoundedCornerShape(12.dp),
+                            shape = ShapeMedium,
                             border = androidx.compose.foundation.BorderStroke(
                                 1.dp,
-                                if (glassState.connectionState == GlassAiState.OFFLINE) StatusSuccess else StatusError.copy(0.5f)
+                                if (glassState.connectionState == GlassAiState.OFFLINE) LocalKayaColors.current.status.success else LocalKayaColors.current.status.error.copy(0.5f)
                             ),
                             modifier = Modifier.testTag("toggle_connection_button")
                         ) {
                             Text(
                                 text = if (glassState.connectionState == GlassAiState.OFFLINE) "Connect" else "Disconnect",
                                 fontSize = 12.sp,
-                                color = if (glassState.connectionState == GlassAiState.OFFLINE) StatusSuccess else StatusError
+                                color = if (glassState.connectionState == GlassAiState.OFFLINE) LocalKayaColors.current.status.success else LocalKayaColors.current.status.error
                             )
                         }
                     }
@@ -365,8 +366,8 @@ fun DeviceScreen(
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .border(1.dp, BorderDark, RoundedCornerShape(20.dp)),
-                shape = RoundedCornerShape(20.dp),
+                    .border(1.dp, MaterialTheme.colorScheme.outline, ShapeXLarge),
+                shape = ShapeXLarge,
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column(modifier = Modifier.padding(18.dp)) {
@@ -376,13 +377,13 @@ fun DeviceScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.BluetoothSearching, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(20.dp))
+                            Icon(Icons.Default.BluetoothSearching, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = "BLUETOOTH LE DISCOVERY",
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White,
+                                color = MaterialTheme.colorScheme.onSurface,
                                 letterSpacing = 1.sp
                             )
                         }
@@ -390,17 +391,17 @@ fun DeviceScreen(
                         OutlinedButton(
                             onClick = { viewModel.startBleScan() },
                             enabled = !isScanning,
-                            shape = RoundedCornerShape(12.dp),
+                            shape = ShapeMedium,
                             modifier = Modifier.testTag("scan_ble_button")
                         ) {
                             if (isScanning) {
-                                CircularProgressIndicator(modifier = Modifier.size(14.dp), color = MetaBlue, strokeWidth = 2.dp)
+                                CircularProgressIndicator(modifier = Modifier.size(14.dp), color = MaterialTheme.colorScheme.primary, strokeWidth = 2.dp)
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text("Scanning...", fontSize = 11.sp)
                             } else {
-                                Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(14.dp), tint = MetaBlue)
+                                Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(14.dp), tint = MaterialTheme.colorScheme.primary)
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text("Scan Nearby", fontSize = 11.sp, color = MetaBlue)
+                                Text("Scan Nearby", fontSize = 11.sp, color = MaterialTheme.colorScheme.primary)
                             }
                         }
                     }
@@ -420,7 +421,7 @@ fun DeviceScreen(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .height(80.dp)
-                                .background(MetaBlue.copy(0.08f), RoundedCornerShape(16.dp)),
+                                .background(MaterialTheme.colorScheme.primary.copy(0.08f), ShapeLarge),
                             contentAlignment = Alignment.Center
                         ) {
                             val infiniteTransition = rememberInfiniteTransition(label = "pulse")
@@ -433,7 +434,7 @@ fun DeviceScreen(
                             Icon(
                                 imageVector = Icons.Default.BluetoothSearching,
                                 contentDescription = null,
-                                tint = MetaBlue,
+                                tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier
                                     .size(36.dp)
                                     .scale(pulseScale)
@@ -465,8 +466,8 @@ fun DeviceScreen(
                 Card(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .border(1.dp, if (pairingStep == PairingStep.SUCCESS) StatusSuccess else MetaBlue, RoundedCornerShape(20.dp)),
-                    shape = RoundedCornerShape(20.dp),
+                        .border(1.dp, if (pairingStep == PairingStep.SUCCESS) LocalKayaColors.current.status.success else MaterialTheme.colorScheme.primary, ShapeXLarge),
+                    shape = ShapeXLarge,
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
                 ) {
                     Column(modifier = Modifier.padding(18.dp)) {
@@ -474,7 +475,7 @@ fun DeviceScreen(
                             Icon(
                                 imageVector = if (pairingStep == PairingStep.SUCCESS) Icons.Default.CheckCircle else Icons.Default.BluetoothConnected,
                                 contentDescription = null,
-                                tint = if (pairingStep == PairingStep.SUCCESS) StatusSuccess else MetaBlue,
+                                tint = if (pairingStep == PairingStep.SUCCESS) LocalKayaColors.current.status.success else MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(22.dp)
                             )
                             Spacer(modifier = Modifier.width(10.dp))
@@ -483,7 +484,7 @@ fun DeviceScreen(
                                     text = if (pairingStep == PairingStep.SUCCESS) "RAY-BAN PAIRING COMPLETE" else "PAIRING IN PROGRESS",
                                     fontSize = 12.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = Color.White
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Text(
                                     text = pairingStatusMsg,
@@ -501,7 +502,7 @@ fun DeviceScreen(
                                 .fillMaxWidth()
                                 .height(8.dp)
                                 .clip(CircleShape),
-                            color = if (pairingStep == PairingStep.SUCCESS) StatusSuccess else MetaBlue,
+                            color = if (pairingStep == PairingStep.SUCCESS) LocalKayaColors.current.status.success else MaterialTheme.colorScheme.primary,
                             trackColor = MaterialTheme.colorScheme.surfaceVariant
                         )
 
@@ -512,9 +513,9 @@ fun DeviceScreen(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .testTag("dismiss_pairing_success_button"),
-                                shape = RoundedCornerShape(12.dp)
+                                shape = ShapeMedium
                             ) {
-                                Text("Done & Close Flow", fontSize = 12.sp, color = StatusSuccess)
+                                Text("Done & Close Flow", fontSize = 12.sp, color = LocalKayaColors.current.status.success)
                             }
                         }
                     }
@@ -529,10 +530,10 @@ fun DeviceScreen(
                     .fillMaxWidth()
                     .border(
                         1.dp,
-                        if (!permissions.allGranted) StatusWarning.copy(0.6f) else BorderDark,
-                        RoundedCornerShape(20.dp)
+                        if (!permissions.allGranted) LocalKayaColors.current.status.warning.copy(0.6f) else MaterialTheme.colorScheme.outline,
+                        ShapeXLarge
                     ),
-                shape = RoundedCornerShape(20.dp),
+                shape = ShapeXLarge,
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column(modifier = Modifier.padding(18.dp)) {
@@ -552,15 +553,15 @@ fun DeviceScreen(
                             Text(
                                 text = if (permissions.allGranted) "All required permissions granted" else "Action needed: Enable spatial sensors",
                                 fontSize = 11.sp,
-                                color = if (permissions.allGranted) StatusSuccess else StatusWarning
+                                color = if (permissions.allGranted) LocalKayaColors.current.status.success else LocalKayaColors.current.status.warning
                             )
                         }
 
                         if (!permissions.allGranted) {
                             Button(
                                 onClick = { viewModel.grantAllPermissions() },
-                                colors = ButtonDefaults.buttonColors(containerColor = MetaBlue),
-                                shape = RoundedCornerShape(10.dp),
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                                shape = ShapeSmall,
                                 modifier = Modifier.testTag("grant_all_permissions_button")
                             ) {
                                 Text("Grant All", fontSize = 11.sp)
@@ -619,7 +620,7 @@ fun DeviceScreen(
         item {
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
+                shape = ShapeXLarge,
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Column(modifier = Modifier.padding(18.dp)) {
@@ -635,20 +636,20 @@ fun DeviceScreen(
 
                     MetricRow(
                         icon = Icons.Default.BatteryChargingFull,
-                        tint = StatusSuccess,
-                        title = "Mobile Device Battery",
-                        value = "${glassState.batteryPercent}% • ${glassState.chargingStatusText}",
-                        progress = (glassState.batteryPercent.coerceIn(0, 100)) / 100f
+                        tint = LocalKayaColors.current.status.success,
+                        title = "Ray-Ban Frames Battery",
+                        value = "${glassState.batteryPercent}% (approx. 4.5 hrs usage)",
+                        progress = glassState.batteryPercent / 100f
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
 
                     MetricRow(
                         icon = Icons.Default.BatteryChargingFull,
-                        tint = MetaBlue,
-                        title = "Battery Health Status",
-                        value = "${glassState.batteryHealth} Health • ${glassState.tempCelsius}°C",
-                        progress = 1.0f
+                        tint = MaterialTheme.colorScheme.primary,
+                        title = "Meta Smart Charging Case",
+                        value = "${glassState.caseBatteryPercent}% (provides 8 extra recharges)",
+                        progress = glassState.caseBatteryPercent / 100f
                     )
 
                     Spacer(modifier = Modifier.height(14.dp))
@@ -660,23 +661,23 @@ fun DeviceScreen(
                     ) {
                         Column {
                             Text("Current Firmware", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Text(glassState.firmwareVersion, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = Color.White)
+                            Text(glassState.firmwareVersion, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                         }
 
                         OutlinedButton(
                             onClick = { viewModel.checkFirmwareUpdate() },
                             enabled = !isCheckingFirmware,
-                            shape = RoundedCornerShape(12.dp),
+                            shape = ShapeMedium,
                             modifier = Modifier.testTag("check_firmware_button")
                         ) {
                             if (isCheckingFirmware) {
-                                CircularProgressIndicator(modifier = Modifier.size(14.dp), color = MetaBlue, strokeWidth = 2.dp)
+                                CircularProgressIndicator(modifier = Modifier.size(14.dp), color = MaterialTheme.colorScheme.primary, strokeWidth = 2.dp)
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text("Checking...", fontSize = 11.sp)
                             } else {
-                                Icon(Icons.Default.SystemUpdate, contentDescription = null, modifier = Modifier.size(14.dp), tint = MetaBlue)
+                                Icon(Icons.Default.SystemUpdate, contentDescription = null, modifier = Modifier.size(14.dp), tint = MaterialTheme.colorScheme.primary)
                                 Spacer(modifier = Modifier.width(6.dp))
-                                Text("Check Updates", fontSize = 11.sp, color = MetaBlue)
+                                Text("Check Updates", fontSize = 11.sp, color = MaterialTheme.colorScheme.primary)
                             }
                         }
                     }
@@ -692,8 +693,8 @@ fun DeviceScreen(
             ) {
                 Button(
                     onClick = { viewModel.runAiQuery("Test microphone array and open-ear spatial audio") },
-                    colors = ButtonDefaults.buttonColors(containerColor = MetaBlue),
-                    shape = RoundedCornerShape(14.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                    shape = ShapeMedium,
                     modifier = Modifier
                         .weight(1f)
                         .testTag("test_audio_button")
@@ -705,7 +706,7 @@ fun DeviceScreen(
 
                 OutlinedButton(
                     onClick = { viewModel.setGlassState(GlassAiState.CONNECTED) },
-                    shape = RoundedCornerShape(14.dp),
+                    shape = ShapeMedium,
                     modifier = Modifier
                         .weight(1f)
                         .testTag("re_sync_ble_button")
@@ -729,8 +730,8 @@ private fun DiscoveredDeviceItem(
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .border(1.dp, if (device.isPaired) MetaBlue else BorderDark, RoundedCornerShape(14.dp)),
-        shape = RoundedCornerShape(14.dp),
+            .border(1.dp, if (device.isPaired) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline, ShapeMedium),
+        shape = ShapeMedium,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(0.4f))
     ) {
         Row(
@@ -744,13 +745,13 @@ private fun DiscoveredDeviceItem(
                 Box(
                     modifier = Modifier
                         .size(36.dp)
-                        .background(if (device.isSmartphoneBridge) StatusSuccess.copy(0.2f) else MetaBlue.copy(0.15f), CircleShape),
+                        .background(if (device.isSmartphoneBridge) LocalKayaColors.current.status.success.copy(0.2f) else MaterialTheme.colorScheme.primary.copy(0.15f), CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = if (device.isSmartphoneBridge) Icons.Default.Smartphone else Icons.Default.BluetoothConnected,
                         contentDescription = null,
-                        tint = if (device.isSmartphoneBridge) StatusSuccess else MetaBlue,
+                        tint = if (device.isSmartphoneBridge) LocalKayaColors.current.status.success else MaterialTheme.colorScheme.primary,
                         modifier = Modifier.size(18.dp)
                     )
                 }
@@ -759,23 +760,23 @@ private fun DiscoveredDeviceItem(
 
                 Column {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(device.name, fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Color.White)
+                        Text(device.name, fontWeight = FontWeight.Bold, fontSize = 13.sp, color = MaterialTheme.colorScheme.onSurface)
                         Spacer(modifier = Modifier.width(6.dp))
                         if (device.isSmartphoneBridge) {
                             Box(
                                 modifier = Modifier
-                                    .background(StatusSuccess.copy(0.2f), RoundedCornerShape(6.dp))
+                                    .background(LocalKayaColors.current.status.success.copy(0.2f), ShapeXSmall)
                                     .padding(horizontal = 6.dp, vertical = 2.dp)
                             ) {
-                                Text("PHONE BRIDGE", color = StatusSuccess, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                                Text("PHONE BRIDGE", color = LocalKayaColors.current.status.success, fontSize = 9.sp, fontWeight = FontWeight.Bold)
                             }
                         } else if (device.isPaired) {
                             Box(
                                 modifier = Modifier
-                                    .background(StatusSuccess.copy(0.2f), RoundedCornerShape(6.dp))
+                                    .background(LocalKayaColors.current.status.success.copy(0.2f), ShapeXSmall)
                                     .padding(horizontal = 6.dp, vertical = 2.dp)
                             ) {
-                                Text("PAIRED", color = StatusSuccess, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                                Text("PAIRED", color = LocalKayaColors.current.status.success, fontSize = 9.sp, fontWeight = FontWeight.Bold)
                             }
                         }
                     }
@@ -791,15 +792,15 @@ private fun DiscoveredDeviceItem(
             Button(
                 onClick = onPairClick,
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (device.isSmartphoneBridge) StatusSuccess else if (device.isPaired) MaterialTheme.colorScheme.surfaceVariant else MetaBlue
+                    containerColor = if (device.isSmartphoneBridge) LocalKayaColors.current.status.success else if (device.isPaired) MaterialTheme.colorScheme.surfaceVariant else MaterialTheme.colorScheme.primary
                 ),
-                shape = RoundedCornerShape(10.dp),
+                shape = ShapeSmall,
                 modifier = Modifier.testTag("pair_device_${device.id}_button")
             ) {
                 Text(
                     text = if (device.isSmartphoneBridge) "Connect Bridge" else if (device.isPaired) "Re-Pair" else "Pair Device",
                     fontSize = 11.sp,
-                    color = Color.White
+                    color = if (device.isPaired && !device.isSmartphoneBridge) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.onPrimary
                 )
             }
         }
@@ -827,7 +828,7 @@ private fun PermissionRow(
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = if (granted) MetaBlue else StatusWarning,
+                tint = if (granted) MaterialTheme.colorScheme.primary else LocalKayaColors.current.status.warning,
                 modifier = Modifier.size(20.dp)
             )
             Spacer(modifier = Modifier.width(10.dp))
@@ -838,14 +839,14 @@ private fun PermissionRow(
                     Box(
                         modifier = Modifier
                             .background(
-                                if (granted) StatusSuccess.copy(0.15f) else StatusError.copy(0.15f),
-                                RoundedCornerShape(6.dp)
+                                if (granted) LocalKayaColors.current.status.success.copy(0.15f) else LocalKayaColors.current.status.error.copy(0.15f),
+                                ShapeXSmall
                             )
                             .padding(horizontal = 6.dp, vertical = 2.dp)
                     ) {
                         Text(
                             text = if (granted) "GRANTED" else "PENDING",
-                            color = if (granted) StatusSuccess else StatusError,
+                            color = if (granted) LocalKayaColors.current.status.success else LocalKayaColors.current.status.error,
                             fontSize = 9.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -860,7 +861,7 @@ private fun PermissionRow(
             onCheckedChange = { onToggle() },
             colors = SwitchDefaults.colors(
                 checkedThumbColor = Color.White,
-                checkedTrackColor = MetaBlue,
+                checkedTrackColor = MaterialTheme.colorScheme.primary,
                 uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant
             ),
             modifier = Modifier.testTag(tag)
@@ -916,7 +917,7 @@ private fun SubMetric(
                 .background(MaterialTheme.colorScheme.surfaceVariant),
             contentAlignment = Alignment.Center
         ) {
-            Icon(imageVector = icon, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(15.dp))
+            Icon(imageVector = icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(15.dp))
         }
         Spacer(modifier = Modifier.width(8.dp))
         Column {
@@ -942,10 +943,10 @@ private fun PhoneGlassBridgeCard(
                 .fillMaxWidth()
                 .border(
                     1.dp,
-                    if (isBridgeActive) StatusSuccess else MetaBlue.copy(0.6f),
-                    RoundedCornerShape(20.dp)
+                    if (isBridgeActive) LocalKayaColors.current.status.success else MaterialTheme.colorScheme.primary.copy(0.6f),
+                    ShapeXLarge
                 ),
-            shape = RoundedCornerShape(20.dp),
+            shape = ShapeXLarge,
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
         ) {
             Column(modifier = Modifier.padding(18.dp)) {
@@ -959,13 +960,13 @@ private fun PhoneGlassBridgeCard(
                         Box(
                             modifier = Modifier
                                 .size(40.dp)
-                                .background(if (isBridgeActive) StatusSuccess.copy(0.2f) else MetaBlue.copy(0.2f), CircleShape),
+                                .background(if (isBridgeActive) LocalKayaColors.current.status.success.copy(0.2f) else MaterialTheme.colorScheme.primary.copy(0.2f), CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Smartphone,
                                 contentDescription = null,
-                                tint = if (isBridgeActive) StatusSuccess else MetaBlue,
+                                tint = if (isBridgeActive) LocalKayaColors.current.status.success else MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(22.dp)
                             )
                         }
@@ -975,14 +976,14 @@ private fun PhoneGlassBridgeCard(
                                 text = "DEMO MODE / SIMULATE META GLASSES",
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = if (isBridgeActive) StatusSuccess else MetaBlue,
+                                color = if (isBridgeActive) LocalKayaColors.current.status.success else MaterialTheme.colorScheme.primary,
                                 letterSpacing = 1.sp
                             )
                             Text(
                                 text = if (isBridgeActive) "Demo Mode Active (Phone Camera & Mic)" else "Simulate Glasses on This Phone",
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
@@ -990,8 +991,8 @@ private fun PhoneGlassBridgeCard(
                     Box(
                         modifier = Modifier
                             .background(
-                                if (isBridgeActive) StatusSuccess.copy(0.2f) else MaterialTheme.colorScheme.surfaceVariant,
-                                RoundedCornerShape(12.dp)
+                                if (isBridgeActive) LocalKayaColors.current.status.success.copy(0.2f) else MaterialTheme.colorScheme.surfaceVariant,
+                                ShapeMedium
                             )
                             .padding(horizontal = 10.dp, vertical = 5.dp)
                     ) {
@@ -999,12 +1000,12 @@ private fun PhoneGlassBridgeCard(
                             Box(
                                 modifier = Modifier
                                     .size(6.dp)
-                                    .background(if (isBridgeActive) StatusSuccess else StatusWarning, CircleShape)
+                                    .background(if (isBridgeActive) LocalKayaColors.current.status.success else LocalKayaColors.current.status.warning, CircleShape)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
                                 text = if (isBridgeActive) "DEMO ACTIVE" else "STANDBY",
-                                color = if (isBridgeActive) StatusSuccess else StatusWarning,
+                                color = if (isBridgeActive) LocalKayaColors.current.status.success else LocalKayaColors.current.status.warning,
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -1036,7 +1037,7 @@ private fun PhoneGlassBridgeCard(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(0.4f), RoundedCornerShape(16.dp))
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(0.4f), ShapeLarge)
                         .padding(14.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
@@ -1048,7 +1049,7 @@ private fun PhoneGlassBridgeCard(
                         // Phone Battery Telemetry
                         Column(modifier = Modifier.weight(1f)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.BatteryChargingFull, contentDescription = null, tint = StatusSuccess, modifier = Modifier.size(16.dp))
+                                Icon(Icons.Default.BatteryChargingFull, contentDescription = null, tint = LocalKayaColors.current.status.success, modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text("Phone Battery", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
@@ -1057,7 +1058,7 @@ private fun PhoneGlassBridgeCard(
                                 text = "${glassState.batteryPercent}% • ${glassState.chargingStatusText} • Health: ${glassState.batteryHealth}",
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                             Spacer(modifier = Modifier.height(6.dp))
                             LinearProgressIndicator(
@@ -1066,7 +1067,7 @@ private fun PhoneGlassBridgeCard(
                                     .fillMaxWidth()
                                     .height(4.dp)
                                     .clip(RoundedCornerShape(2.dp)),
-                                color = StatusSuccess,
+                                color = LocalKayaColors.current.status.success,
                                 trackColor = MaterialTheme.colorScheme.surface
                             )
                         }
@@ -1076,7 +1077,7 @@ private fun PhoneGlassBridgeCard(
                         // Connection Status Telemetry
                         Column(modifier = Modifier.weight(1f)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.BluetoothConnected, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(16.dp))
+                                Icon(Icons.Default.BluetoothConnected, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text("Bluetooth & Wireless", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
@@ -1085,7 +1086,7 @@ private fun PhoneGlassBridgeCard(
                                 text = if (isBridgeActive) "BT 5.3 + Wi-Fi Direct" else "Ready to Pair",
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = if (isBridgeActive) StatusSuccess else MaterialTheme.colorScheme.onSurface
+                                color = if (isBridgeActive) LocalKayaColors.current.status.success else MaterialTheme.colorScheme.onSurface
                             )
                             Spacer(modifier = Modifier.height(2.dp))
                             Text(
@@ -1107,7 +1108,7 @@ private fun PhoneGlassBridgeCard(
                         // Camera Sensor Status
                         Column(modifier = Modifier.weight(1f)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.Videocam, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(16.dp))
+                                Icon(Icons.Default.Videocam, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text("Camera Sensor", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
@@ -1116,7 +1117,7 @@ private fun PhoneGlassBridgeCard(
                                 text = if (glassState.cameraFacing == "REAR") "Rear Cam • 1080p 60fps" else "Front Cam • 1080p 30fps",
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
 
@@ -1128,7 +1129,7 @@ private fun PhoneGlassBridgeCard(
                                 Icon(
                                     imageVector = if (glassState.isTorchActive) Icons.Default.FlashOn else Icons.Default.FlashOff,
                                     contentDescription = null,
-                                    tint = if (glassState.isTorchActive) StatusSuccess else MaterialTheme.colorScheme.onSurfaceVariant,
+                                    tint = if (glassState.isTorchActive) LocalKayaColors.current.status.success else MaterialTheme.colorScheme.onSurfaceVariant,
                                     modifier = Modifier.size(16.dp)
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
@@ -1139,7 +1140,7 @@ private fun PhoneGlassBridgeCard(
                                 text = if (glassState.isTorchActive) "TORCH ACTIVE" else "Standby (OFF)",
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = if (glassState.isTorchActive) StatusSuccess else Color.White
+                                color = if (glassState.isTorchActive) LocalKayaColors.current.status.success else MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
@@ -1155,7 +1156,7 @@ private fun PhoneGlassBridgeCard(
                         // Microphone Array
                         Column(modifier = Modifier.weight(1f)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.Mic, contentDescription = null, tint = StatusSuccess, modifier = Modifier.size(16.dp))
+                                Icon(Icons.Default.Mic, contentDescription = null, tint = LocalKayaColors.current.status.success, modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text("Phone Mic Array", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
@@ -1164,7 +1165,7 @@ private fun PhoneGlassBridgeCard(
                                 text = "Capturing 48kHz Voice",
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
 
@@ -1173,7 +1174,7 @@ private fun PhoneGlassBridgeCard(
                         // Speaker Output
                         Column(modifier = Modifier.weight(1f)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.VolumeUp, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(16.dp))
+                                Icon(Icons.Default.VolumeUp, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text("Audio Speaker", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
@@ -1182,7 +1183,7 @@ private fun PhoneGlassBridgeCard(
                                 text = "Volume 80% • HUD Voice",
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
@@ -1199,20 +1200,20 @@ private fun PhoneGlassBridgeCard(
                         // Camera Flip Toggle
                         OutlinedButton(
                             onClick = { viewModel.togglePhoneBridgeCameraFacing() },
-                            shape = RoundedCornerShape(10.dp),
+                            shape = ShapeSmall,
                             modifier = Modifier
                                 .weight(1f)
                                 .testTag("toggle_camera_facing_button")
                         ) {
-                            Icon(Icons.Default.Cameraswitch, contentDescription = null, modifier = Modifier.size(14.dp), tint = MetaBlue)
+                            Icon(Icons.Default.Cameraswitch, contentDescription = null, modifier = Modifier.size(14.dp), tint = MaterialTheme.colorScheme.primary)
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text(if (glassState.cameraFacing == "REAR") "Rear Cam" else "Front Cam", fontSize = 11.sp, color = Color.White)
+                            Text(if (glassState.cameraFacing == "REAR") "Rear Cam" else "Front Cam", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurface)
                         }
 
                         // Torch Toggle
                         OutlinedButton(
                             onClick = { viewModel.togglePhoneBridgeTorch() },
-                            shape = RoundedCornerShape(10.dp),
+                            shape = ShapeSmall,
                             modifier = Modifier
                                 .weight(1f)
                                 .testTag("toggle_torch_button")
@@ -1221,10 +1222,10 @@ private fun PhoneGlassBridgeCard(
                                 imageVector = if (glassState.isTorchActive) Icons.Default.FlashOn else Icons.Default.FlashOff,
                                 contentDescription = null,
                                 modifier = Modifier.size(14.dp),
-                                tint = if (glassState.isTorchActive) StatusSuccess else MaterialTheme.colorScheme.onSurfaceVariant
+                                tint = if (glassState.isTorchActive) LocalKayaColors.current.status.success else MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text(if (glassState.isTorchActive) "Torch ON" else "Torch OFF", fontSize = 11.sp, color = Color.White)
+                            Text(if (glassState.isTorchActive) "Torch ON" else "Torch OFF", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurface)
                         }
                     }
 
@@ -1247,8 +1248,8 @@ private fun PhoneGlassBridgeCard(
                     ) {
                         Button(
                             onClick = { onNavigateToRoute?.invoke(com.example.ui.navigation.Screen.LiveAi.route) },
-                            colors = ButtonDefaults.buttonColors(containerColor = MetaBlue),
-                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                            shape = ShapeMedium,
                             modifier = Modifier
                                 .weight(1f)
                                 .testTag("test_live_ai_button")
@@ -1260,8 +1261,8 @@ private fun PhoneGlassBridgeCard(
 
                         Button(
                             onClick = { onNavigateToRoute?.invoke(com.example.ui.navigation.Screen.Assistant.route) },
-                            colors = ButtonDefaults.buttonColors(containerColor = MetaBlue),
-                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                            shape = ShapeMedium,
                             modifier = Modifier
                                 .weight(1f)
                                 .testTag("test_voice_ai_button")
@@ -1273,8 +1274,8 @@ private fun PhoneGlassBridgeCard(
 
                         Button(
                             onClick = { onNavigateToRoute?.invoke(com.example.ui.navigation.Screen.Tasks.route) },
-                            colors = ButtonDefaults.buttonColors(containerColor = MetaBlue),
-                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                            shape = ShapeMedium,
                             modifier = Modifier
                                 .weight(1f)
                                 .testTag("test_tasks_button")
@@ -1289,20 +1290,20 @@ private fun PhoneGlassBridgeCard(
 
                     OutlinedButton(
                         onClick = { viewModel.disablePhoneBridgeMode() },
-                        shape = RoundedCornerShape(12.dp),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, StatusError.copy(0.5f)),
+                        shape = ShapeMedium,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, LocalKayaColors.current.status.error.copy(0.5f)),
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("disconnect_phone_bridge_button")
                     ) {
-                        Text("Exit Demo Mode / Stop Phone Simulation", fontSize = 12.sp, color = StatusError)
+                        Text("Exit Demo Mode / Stop Phone Simulation", fontSize = 12.sp, color = LocalKayaColors.current.status.error)
                     }
                 } else {
                     // Connect Button
                     Button(
                         onClick = { viewModel.enableDemoMode() },
-                        colors = ButtonDefaults.buttonColors(containerColor = MetaBlue),
-                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                        shape = ShapeMedium,
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("enable_phone_bridge_button")
@@ -1319,8 +1320,8 @@ private fun PhoneGlassBridgeCard(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .border(1.dp, MetaBlue.copy(0.4f), RoundedCornerShape(20.dp)),
-            shape = RoundedCornerShape(20.dp),
+                .border(1.dp, MaterialTheme.colorScheme.primary.copy(0.4f), ShapeXLarge),
+            shape = ShapeXLarge,
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
         ) {
             Column(modifier = Modifier.padding(18.dp)) {
@@ -1335,13 +1336,13 @@ private fun PhoneGlassBridgeCard(
                         Box(
                             modifier = Modifier
                                 .size(36.dp)
-                                .background(MetaBlue.copy(0.15f), CircleShape),
+                                .background(MaterialTheme.colorScheme.primary.copy(0.15f), CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = Icons.Default.HelpOutline,
                                 contentDescription = null,
-                                tint = MetaBlue,
+                                tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(20.dp)
                             )
                         }
@@ -1351,14 +1352,14 @@ private fun PhoneGlassBridgeCard(
                                 text = "SETUP & BLUETOOTH GUIDE",
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MetaBlue,
+                                color = MaterialTheme.colorScheme.primary,
                                 letterSpacing = 1.sp
                             )
                             Text(
                                 text = "How to Connect Mobile Phone via Bluetooth",
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = Color.White
+                                color = MaterialTheme.colorScheme.onSurface
                             )
                         }
                     }
@@ -1366,7 +1367,7 @@ private fun PhoneGlassBridgeCard(
                     Icon(
                         imageVector = if (isGuideExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
                         contentDescription = null,
-                        tint = MetaBlue
+                        tint = MaterialTheme.colorScheme.primary
                     )
                 }
 
@@ -1402,7 +1403,7 @@ private fun PhoneGlassBridgeCard(
                         GuideStepItem(
                             stepNumber = "3",
                             title = "Scan & Select Device",
-                            description = "In SiteMind, scroll to 'Discovered Glasses & Mobile Bridges' on this screen and tap 'Connect Bridge' on 'Smartphone Camera & Mic Bridge'."
+                            description = "In Kaya AI, scroll to 'Discovered Glasses & Mobile Bridges' on this screen and tap 'Connect Bridge' on 'Smartphone Camera & Mic Bridge'."
                         )
 
                         Spacer(modifier = Modifier.height(10.dp))
@@ -1429,8 +1430,8 @@ private fun PhoneGlassBridgeCard(
                             onClick = {
                                 viewModel.enablePhoneBridgeMode("Smartphone Camera & Mic Bridge")
                             },
-                            colors = ButtonDefaults.buttonColors(containerColor = MetaBlue),
-                            shape = RoundedCornerShape(12.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                            shape = ShapeMedium,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .testTag("guide_quick_connect_button")
@@ -1455,19 +1456,19 @@ private fun GuideStepItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surfaceVariant.copy(0.3f), RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(0.3f), ShapeMedium)
             .padding(10.dp),
         verticalAlignment = Alignment.Top
     ) {
         Box(
             modifier = Modifier
                 .size(24.dp)
-                .background(MetaBlue, CircleShape),
+                .background(MaterialTheme.colorScheme.primary, CircleShape),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = stepNumber,
-                color = Color.White,
+                color = MaterialTheme.colorScheme.onPrimary,
                 fontSize = 11.sp,
                 fontWeight = FontWeight.Bold
             )
@@ -1480,7 +1481,7 @@ private fun GuideStepItem(
                 text = title,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.White
+                color = MaterialTheme.colorScheme.onSurface
             )
             Spacer(modifier = Modifier.height(2.dp))
             Text(

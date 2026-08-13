@@ -36,8 +36,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.BackendServerStatus
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusSuccess
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun BackendStatusCard(
@@ -63,7 +62,7 @@ fun BackendStatusCard(
                         modifier = Modifier
                             .size(10.dp)
                             .clip(CircleShape)
-                            .background(StatusSuccess)
+                            .background(LocalKayaColors.current.status.success)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
@@ -71,19 +70,19 @@ fun BackendStatusCard(
                         fontSize = 11.sp,
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold,
-                        color = MetaBlue
+                        color = LocalKayaColors.current.accent
                     )
                 }
 
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = StatusSuccess.copy(0.15f)
+                    color = LocalKayaColors.current.status.success.copy(0.15f)
                 ) {
                     Text(
                         text = "ONLINE (${status.latencyMs}ms)",
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
-                        color = StatusSuccess,
+                        color = LocalKayaColors.current.status.success,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
                 }
@@ -175,7 +174,7 @@ fun BackendStatusCard(
                                 modifier = Modifier
                                     .size(6.dp)
                                     .clip(CircleShape)
-                                    .background(StatusSuccess)
+                                    .background(LocalKayaColors.current.status.success)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
@@ -213,11 +212,11 @@ private fun InfrastructureMetricItem(
         color = MaterialTheme.colorScheme.surfaceVariant.copy(0.4f)
     ) {
         Column(modifier = Modifier.padding(10.dp)) {
-            Icon(imageVector = icon, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(16.dp))
+            Icon(imageVector = icon, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(16.dp))
             Spacer(modifier = Modifier.height(4.dp))
             Text(text = title, fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Text(text = value, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
-            Text(text = subValue, fontSize = 9.sp, color = MetaBlue)
+            Text(text = subValue, fontSize = 9.sp, color = LocalKayaColors.current.accent)
         }
     }
 }

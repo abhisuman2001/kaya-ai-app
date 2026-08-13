@@ -35,8 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.ProductionPillar
 import com.example.data.model.ReadinessAuditCheck
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusSuccess
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun PillarAuditListCard(
@@ -61,14 +60,14 @@ fun PillarAuditListCard(
     ) {
         Column(modifier = Modifier.padding(18.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(imageVector = Icons.Default.VerifiedUser, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(18.dp))
+                Icon(imageVector = Icons.Default.VerifiedUser, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "6-PILLAR QUALITY AUDIT CHECKS",
                     fontSize = 11.sp,
                     fontFamily = FontFamily.Monospace,
                     fontWeight = FontWeight.Bold,
-                    color = MetaBlue
+                    color = LocalKayaColors.current.accent
                 )
             }
 
@@ -83,7 +82,7 @@ fun PillarAuditListCard(
                     val isSelected = pillar == selectedPillar
                     Surface(
                         shape = RoundedCornerShape(12.dp),
-                        color = if (isSelected) MetaBlue else MaterialTheme.colorScheme.surfaceVariant,
+                        color = if (isSelected) LocalKayaColors.current.accent else MaterialTheme.colorScheme.surfaceVariant,
                         modifier = Modifier
                             .clickable { onPillarSelected(pillar) }
                             .testTag("pillar_tab_${pillar.name}")
@@ -116,7 +115,7 @@ fun PillarAuditListCard(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, tint = StatusSuccess, modifier = Modifier.size(16.dp))
+                                    Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, tint = LocalKayaColors.current.status.success, modifier = Modifier.size(16.dp))
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Text(
                                         text = check.title,
@@ -128,14 +127,14 @@ fun PillarAuditListCard(
 
                                 Surface(
                                     shape = RoundedCornerShape(6.dp),
-                                    color = StatusSuccess.copy(0.15f)
+                                    color = LocalKayaColors.current.status.success.copy(0.15f)
                                 ) {
                                     Text(
                                         text = check.metricValue,
                                         fontSize = 10.sp,
                                         fontFamily = FontFamily.Monospace,
                                         fontWeight = FontWeight.Bold,
-                                        color = StatusSuccess,
+                                        color = LocalKayaColors.current.status.success,
                                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                                     )
                                 }

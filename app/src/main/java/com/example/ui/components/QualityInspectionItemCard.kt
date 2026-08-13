@@ -40,10 +40,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.QualityInspectionItem
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusError
-import com.example.ui.theme.StatusSuccess
-import com.example.ui.theme.StatusWarning
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun QualityInspectionItemCard(
@@ -51,7 +48,7 @@ fun QualityInspectionItemCard(
     onRemediateToggle: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val statusColor = if (item.isPassed || item.isRemediated) StatusSuccess else StatusError
+    val statusColor = if (item.isPassed || item.isRemediated) LocalKayaColors.current.status.success else LocalKayaColors.current.status.error
 
     Card(
         modifier = modifier
@@ -103,7 +100,7 @@ fun QualityInspectionItemCard(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(imageVector = Icons.Default.Grid4x4, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(12.dp))
+                            Icon(imageVector = Icons.Default.Grid4x4, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(12.dp))
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(text = item.locationGrid, fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
@@ -143,15 +140,15 @@ fun QualityInspectionItemCard(
 
                     Column(modifier = Modifier.weight(1f)) {
                         Text(text = "SPEC THRESHOLD", fontSize = 8.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text(text = item.specificationThreshold, fontSize = 12.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, color = MetaBlue)
+                        Text(text = item.specificationThreshold, fontSize = 12.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, color = LocalKayaColors.current.accent)
                     }
 
                     Column(horizontalAlignment = Alignment.End) {
                         Text(text = "CONFIDENCE", fontSize = 8.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(11.dp))
+                            Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(11.dp))
                             Spacer(modifier = Modifier.width(2.dp))
-                            Text(text = "${(item.aiConfidence * 100).toInt()}%", fontSize = 11.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, color = MetaBlue)
+                            Text(text = "${(item.aiConfidence * 100).toInt()}%", fontSize = 11.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, color = LocalKayaColors.current.accent)
                         }
                     }
                 }
@@ -166,14 +163,14 @@ fun QualityInspectionItemCard(
                 Spacer(modifier = Modifier.height(6.dp))
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = StatusWarning.copy(0.12f),
+                    color = LocalKayaColors.current.status.warning.copy(0.12f),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
                         text = "REMEDIATION PLAN: ${item.recommendation}",
                         fontSize = 10.sp,
                         fontWeight = FontWeight.SemiBold,
-                        color = StatusWarning,
+                        color = LocalKayaColors.current.status.warning,
                         modifier = Modifier.padding(8.dp)
                     )
                 }
@@ -188,7 +185,7 @@ fun QualityInspectionItemCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(imageVector = Icons.Default.Person, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(12.dp))
+                    Icon(imageVector = Icons.Default.Person, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(12.dp))
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(text = "${item.inspectorName} • ${item.timestamp}", fontSize = 9.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
@@ -203,7 +200,7 @@ fun QualityInspectionItemCard(
                             text = if (item.isRemediated) "RE-OPEN" else "MARK REMEDIATED",
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
-                            color = if (item.isRemediated) StatusSuccess else StatusError
+                            color = if (item.isRemediated) LocalKayaColors.current.status.success else LocalKayaColors.current.status.error
                         )
                     }
                 }
