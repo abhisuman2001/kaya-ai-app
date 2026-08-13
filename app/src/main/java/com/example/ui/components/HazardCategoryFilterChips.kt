@@ -22,10 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.HazardCategory
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusError
-import com.example.ui.theme.StatusSuccess
-import com.example.ui.theme.StatusWarning
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun HazardCategoryFilterChips(
@@ -47,7 +44,7 @@ fun HazardCategoryFilterChips(
         ) {
             Surface(
                 shape = RoundedCornerShape(12.dp),
-                color = if (selectedCategory == null) MetaBlue else MaterialTheme.colorScheme.surfaceVariant,
+                color = if (selectedCategory == null) LocalKayaColors.current.accent else MaterialTheme.colorScheme.surfaceVariant,
                 modifier = Modifier
                     .clickable { onCategorySelect(null) }
                     .testTag("filter_category_all")
@@ -65,7 +62,7 @@ fun HazardCategoryFilterChips(
                 val isSelected = selectedCategory == cat
                 Surface(
                     shape = RoundedCornerShape(12.dp),
-                    color = if (isSelected) MetaBlue else MaterialTheme.colorScheme.surfaceVariant,
+                    color = if (isSelected) LocalKayaColors.current.accent else MaterialTheme.colorScheme.surfaceVariant,
                     modifier = Modifier
                         .clickable { onCategorySelect(cat) }
                         .testTag("filter_category_${cat.name.lowercase()}")
@@ -109,9 +106,9 @@ fun HazardCategoryFilterChips(
             severities.forEach { sev ->
                 val isSelected = selectedSeverity == sev
                 val sevColor = when (sev) {
-                    "CRITICAL", "HIGH" -> StatusError
-                    "MEDIUM" -> StatusWarning
-                    else -> StatusSuccess
+                    "CRITICAL", "HIGH" -> LocalKayaColors.current.status.error
+                    "MEDIUM" -> LocalKayaColors.current.status.warning
+                    else -> LocalKayaColors.current.status.success
                 }
 
                 Surface(

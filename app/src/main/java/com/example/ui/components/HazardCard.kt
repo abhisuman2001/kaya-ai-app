@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Construction
@@ -47,10 +46,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.HazardCategory
 import com.example.data.model.HazardDetectionItem
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusError
-import com.example.ui.theme.StatusSuccess
-import com.example.ui.theme.StatusWarning
+import com.example.ui.theme.LocalKayaColors
+import com.example.ui.theme.ShapeMedium
+import com.example.ui.theme.ShapeSmall
+import com.example.ui.theme.ShapeXLarge
 
 @Composable
 fun HazardCard(
@@ -59,14 +58,14 @@ fun HazardCard(
     onVoiceAlertClick: () -> Unit,
     onDismissClick: () -> Unit,
     onReportClick: () -> Unit,
-    isSupervisor: Boolean = true,
+    isSupervisor: Boolean,
     modifier: Modifier = Modifier
 ) {
     val sevColor = when (hazard.severity) {
-        "CRITICAL" -> StatusError
-        "HIGH" -> StatusError
-        "MEDIUM" -> StatusWarning
-        else -> StatusSuccess
+        "CRITICAL" -> LocalKayaColors.current.status.error
+        "HIGH" -> LocalKayaColors.current.status.error
+        "MEDIUM" -> LocalKayaColors.current.status.warning
+        else -> LocalKayaColors.current.status.success
     }
 
     val iconVector = when (hazard.category) {
@@ -86,10 +85,10 @@ fun HazardCard(
             .border(
                 width = if (hazard.isAcknowledged) 1.dp else 1.5.dp,
                 color = if (hazard.isAcknowledged) MaterialTheme.colorScheme.outlineVariant else sevColor.copy(0.6f),
-                shape = RoundedCornerShape(20.dp)
+                shape = ShapeXLarge
             )
             .testTag("hazard_item_card_${hazard.id}"),
-        shape = RoundedCornerShape(20.dp),
+        shape = ShapeXLarge,
         colors = CardDefaults.cardColors(
             containerColor = if (hazard.isAcknowledged) MaterialTheme.colorScheme.surfaceVariant.copy(0.4f) else MaterialTheme.colorScheme.surface
         )
@@ -124,7 +123,7 @@ fun HazardCard(
                             text = hazard.category.displayName.uppercase(),
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MetaBlue,
+                            color = MaterialTheme.colorScheme.primary,
                             letterSpacing = 0.5.sp
                         )
                         Text(
@@ -137,7 +136,7 @@ fun HazardCard(
                 }
 
                 Surface(
-                    shape = RoundedCornerShape(8.dp),
+                    shape = ShapeSmall,
                     color = sevColor
                 ) {
                     Text(
@@ -182,13 +181,13 @@ fun HazardCard(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.testTag("hazard_assigned_worker_${hazard.id}")
                 ) {
-                    Icon(imageVector = Icons.Default.Person, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(13.dp))
+                    Icon(imageVector = Icons.Default.Person, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(13.dp))
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = "Assigned Worker: ${hazard.assignedWorkerName}",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Medium,
-                        color = MetaBlue
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             }
@@ -197,7 +196,7 @@ fun HazardCard(
 
             // Description & OSHA Reference Box
             Surface(
-                shape = RoundedCornerShape(10.dp),
+                shape = ShapeSmall,
                 color = MaterialTheme.colorScheme.surfaceVariant,
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -230,9 +229,9 @@ fun HazardCard(
                 Button(
                     onClick = onVoiceAlertClick,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isVoicePlaying) StatusError else MetaBlue
+                        containerColor = if (isVoicePlaying) LocalKayaColors.current.status.error else MaterialTheme.colorScheme.primary
                     ),
-                    shape = RoundedCornerShape(10.dp),
+                    shape = ShapeSmall,
                     modifier = Modifier
                         .weight(1.2f)
                         .testTag("voice_alert_button_${hazard.id}")
@@ -256,7 +255,7 @@ fun HazardCard(
                     OutlinedButton(
                         onClick = onDismissClick,
                         enabled = !hazard.isAcknowledged,
-                        shape = RoundedCornerShape(10.dp),
+                        shape = ShapeSmall,
                         modifier = Modifier
                             .weight(1f)
                             .testTag("dismiss_hazard_button_${hazard.id}")
@@ -278,7 +277,7 @@ fun HazardCard(
                     Button(
                         onClick = onReportClick,
                         colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                        shape = RoundedCornerShape(10.dp),
+                        shape = ShapeSmall,
                         modifier = Modifier
                             .weight(1f)
                             .testTag("report_hazard_button_${hazard.id}")

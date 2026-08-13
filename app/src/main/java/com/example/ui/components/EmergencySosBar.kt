@@ -41,7 +41,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.ui.theme.StatusError
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun EmergencySosBar(
@@ -56,10 +56,10 @@ fun EmergencySosBar(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(bottom = 12.dp)
-                    .border(2.dp, StatusError, RoundedCornerShape(16.dp))
+                    .border(2.dp, LocalKayaColors.current.status.error, RoundedCornerShape(16.dp))
                     .testTag("emergency_alert_active_banner"),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = StatusError.copy(0.2f))
+                colors = CardDefaults.cardColors(containerColor = LocalKayaColors.current.status.error.copy(0.2f))
             ) {
                 Row(
                     modifier = Modifier
@@ -83,7 +83,7 @@ fun EmergencySosBar(
                         Icon(
                             imageVector = Icons.Default.Warning,
                             contentDescription = null,
-                            tint = StatusError,
+                            tint = LocalKayaColors.current.status.error,
                             modifier = Modifier
                                 .scale(sirenScale)
                                 .size(28.dp)
@@ -96,7 +96,7 @@ fun EmergencySosBar(
                                 text = "🚨 SITE EMERGENCY BROADCAST ACTIVE",
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = StatusError
+                                color = LocalKayaColors.current.status.error
                             )
                             Text(
                                 text = "Ray-Ban Meta SOS Sent • Radio Ch 4 Alerted",
@@ -108,7 +108,7 @@ fun EmergencySosBar(
 
                     Button(
                         onClick = onClearEmergency,
-                        colors = ButtonDefaults.buttonColors(containerColor = StatusError),
+                        colors = ButtonDefaults.buttonColors(containerColor = LocalKayaColors.current.status.error),
                         shape = RoundedCornerShape(10.dp),
                         modifier = Modifier.testTag("clear_emergency_button")
                     ) {
@@ -123,7 +123,7 @@ fun EmergencySosBar(
         if (!isEmergencyActive) {
             Button(
                 onClick = onTriggerSos,
-                colors = ButtonDefaults.buttonColors(containerColor = StatusError),
+                colors = ButtonDefaults.buttonColors(containerColor = LocalKayaColors.current.status.error),
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier
                     .fillMaxWidth()

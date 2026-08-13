@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddAlert
 import androidx.compose.material.icons.filled.Close
@@ -47,10 +46,10 @@ import androidx.compose.ui.window.Dialog
 import com.example.data.model.HazardCategory
 import com.example.data.model.WorkerItem
 import com.example.data.model.sampleWorkerRoster
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusError
-import com.example.ui.theme.StatusSuccess
-import com.example.ui.theme.StatusWarning
+import com.example.ui.theme.LocalKayaColors
+import com.example.ui.theme.ShapeMedium
+import com.example.ui.theme.ShapeSmall
+import com.example.ui.theme.ShapeXXLarge
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -58,7 +57,7 @@ fun CreateHazardDialog(
     onDismiss: () -> Unit,
     onCreate: (title: String, category: HazardCategory, severity: String, location: String, oshaStandard: String, description: String, workerId: String?, workerName: String?) -> Unit,
     workerRoster: List<WorkerItem> = sampleWorkerRoster,
-    isSupervisor: Boolean = true,
+    isSupervisor: Boolean,
     modifier: Modifier = Modifier
 ) {
     var title by remember { mutableStateOf("") }
@@ -75,9 +74,9 @@ fun CreateHazardDialog(
         Card(
             modifier = modifier
                 .fillMaxWidth()
-                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(24.dp))
+                .border(1.dp, MaterialTheme.colorScheme.outlineVariant, ShapeXXLarge)
                 .testTag("create_hazard_dialog_card"),
-            shape = RoundedCornerShape(24.dp),
+            shape = ShapeXXLarge,
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
         ) {
             Column(
@@ -95,7 +94,7 @@ fun CreateHazardDialog(
                         Icon(
                             imageVector = Icons.Default.AddAlert,
                             contentDescription = null,
-                            tint = StatusError,
+                            tint = LocalKayaColors.current.status.error,
                             modifier = Modifier.size(22.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
@@ -118,22 +117,22 @@ fun CreateHazardDialog(
                 if (!isSupervisor) {
                     Spacer(modifier = Modifier.height(10.dp))
                     Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = StatusError.copy(alpha = 0.12f),
-                        border = androidx.compose.foundation.BorderStroke(1.dp, StatusError.copy(0.4f)),
+                        shape = ShapeMedium,
+                        color = LocalKayaColors.current.status.error.copy(alpha = 0.12f),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, LocalKayaColors.current.status.error.copy(0.4f)),
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         Row(
                             modifier = Modifier.padding(12.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(imageVector = Icons.Default.Warning, contentDescription = null, tint = StatusError, modifier = Modifier.size(20.dp))
+                            Icon(imageVector = Icons.Default.Warning, contentDescription = null, tint = LocalKayaColors.current.status.error, modifier = Modifier.size(20.dp))
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
                                 text = "SUPERVISOR ROLE REQUIRED: Hazard filing and worker assignments are restricted to site supervisors.",
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = StatusError
+                                color = LocalKayaColors.current.status.error
                             )
                         }
                     }
@@ -142,7 +141,7 @@ fun CreateHazardDialog(
                 Spacer(modifier = Modifier.height(14.dp))
 
                 // Hazard Category Selection
-                Text("SELECT DETECTION CATEGORY", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = MetaBlue)
+                Text("SELECT DETECTION CATEGORY", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                 Spacer(modifier = Modifier.height(6.dp))
 
                 FlowRow(
@@ -153,8 +152,8 @@ fun CreateHazardDialog(
                     HazardCategory.entries.forEach { cat ->
                         val isSelected = selectedCategory == cat
                         Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = if (isSelected) MetaBlue else MaterialTheme.colorScheme.surfaceVariant,
+                            shape = ShapeSmall,
+                            color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
                             modifier = Modifier
                                 .clickable { selectedCategory = cat }
                                 .testTag("select_category_${cat.name.lowercase()}")
@@ -173,7 +172,7 @@ fun CreateHazardDialog(
                 Spacer(modifier = Modifier.height(12.dp))
 
                 // Severity Selection
-                Text("RISK SEVERITY LEVEL", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = MetaBlue)
+                Text("RISK SEVERITY LEVEL", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                 Spacer(modifier = Modifier.height(6.dp))
 
                 Row(
@@ -183,13 +182,13 @@ fun CreateHazardDialog(
                     severities.forEach { sev ->
                         val isSelected = selectedSeverity == sev
                         val sevColor = when (sev) {
-                            "CRITICAL", "HIGH" -> StatusError
-                            "MEDIUM" -> StatusWarning
-                            else -> StatusSuccess
+                            "CRITICAL", "HIGH" -> LocalKayaColors.current.status.error
+                            "MEDIUM" -> LocalKayaColors.current.status.warning
+                            else -> LocalKayaColors.current.status.success
                         }
 
                         Surface(
-                            shape = RoundedCornerShape(8.dp),
+                            shape = ShapeSmall,
                             color = if (isSelected) sevColor else MaterialTheme.colorScheme.surfaceVariant,
                             modifier = Modifier
                                 .weight(1f)
@@ -223,7 +222,7 @@ fun CreateHazardDialog(
                         .testTag("hazard_title_input"),
                     singleLine = true,
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = MetaBlue,
+                        focusedBorderColor = MaterialTheme.colorScheme.primary,
                         unfocusedBorderColor = MaterialTheme.colorScheme.outline
                     )
                 )
@@ -272,7 +271,7 @@ fun CreateHazardDialog(
 
                 if (isSupervisor) {
                     Spacer(modifier = Modifier.height(12.dp))
-                    Text("ASSIGNED WORKER (REQUIRED)", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = MetaBlue)
+                    Text("ASSIGNED WORKER (REQUIRED)", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                     Spacer(modifier = Modifier.height(6.dp))
 
                     FlowRow(
@@ -283,8 +282,8 @@ fun CreateHazardDialog(
                         workerRoster.forEach { worker ->
                             val isSelected = selectedWorker?.id == worker.id
                             Surface(
-                                shape = RoundedCornerShape(8.dp),
-                                color = if (isSelected) MetaBlue else MaterialTheme.colorScheme.surfaceVariant,
+                                shape = ShapeSmall,
+                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
                                 modifier = Modifier
                                     .clickable { selectedWorker = worker }
                                     .testTag("select_worker_${worker.id}")
@@ -329,8 +328,8 @@ fun CreateHazardDialog(
                         }
                     },
                     enabled = isFormValid,
-                    colors = ButtonDefaults.buttonColors(containerColor = StatusError),
-                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = LocalKayaColors.current.status.error),
+                    shape = ShapeMedium,
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(48.dp)
