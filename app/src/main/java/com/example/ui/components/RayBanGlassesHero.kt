@@ -163,6 +163,14 @@ fun RayBanGlassesHero(
                             else -> Color(0xFFEF4444)
                         }
 
+                        if (deviceState.isCharging) {
+                            Text(
+                                text = "⚡",
+                                fontSize = 10.sp,
+                                modifier = Modifier.padding(end = 4.dp)
+                            )
+                        }
+
                         // Battery visual bar representation
                         Box(
                             modifier = Modifier
@@ -175,7 +183,7 @@ fun RayBanGlassesHero(
                             Box(
                                 modifier = Modifier
                                     .fillMaxHeight()
-                                    .fillMaxWidth(deviceState.batteryPercent / 100f)
+                                    .fillMaxWidth((deviceState.batteryPercent.coerceIn(0, 100)) / 100f)
                                     .clip(RoundedCornerShape(1.dp))
                                     .background(batteryColor)
                             )
@@ -184,7 +192,7 @@ fun RayBanGlassesHero(
                         Spacer(modifier = Modifier.width(6.dp))
 
                         Text(
-                            text = "${deviceState.batteryPercent}%",
+                            text = "${deviceState.batteryPercent}% (${deviceState.batteryHealth})",
                             color = MaterialTheme.colorScheme.onSurface,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
@@ -286,16 +294,16 @@ fun RayBanGlassesHero(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // Quick Info Chips (Bluetooth, 12MP Camera, 5-Mic Array) with explicit gap & flex weights
+            // Quick Info Chips (Mobile Battery, Camera/HUD, Battery Health)
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 InfoChip(
-                    icon = Icons.Default.BluetoothConnected,
-                    label = "Bluetooth 5.3",
-                    value = "Low Latency",
-                    modifier = Modifier.weight(1f)
+                    icon = Icons.Default.BatteryChargingFull,
+                    label = "Mobile Battery",
+                    value = "${deviceState.batteryPercent}% • ${if (deviceState.isCharging) "Charging" else "On Battery"}",
+                    modifier = Modifier.weight(1.2f)
                 )
                 InfoChip(
                     icon = Icons.Default.Videocam,
@@ -305,8 +313,8 @@ fun RayBanGlassesHero(
                 )
                 InfoChip(
                     icon = Icons.Default.Mic,
-                    label = "5-Mic Array",
-                    value = "Noise Shield",
+                    label = "Battery Health",
+                    value = "${deviceState.batteryHealth} (${deviceState.tempCelsius}°C)",
                     modifier = Modifier.weight(1f)
                 )
             }

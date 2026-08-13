@@ -236,13 +236,21 @@ private fun GreetingHeaderCard(
     roleTitle: String,
     onRoleClick: () -> Unit
 ) {
-    val currentTime = SimpleDateFormat("EEE, MMM d • HH:mm", Locale.getDefault()).format(Date())
-    val greetingText = remember {
-        val hour = java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)
-        when (hour) {
-            in 5..11 -> "Good Morning"
-            in 12..16 -> "Good Afternoon"
-            else -> "Good Evening"
+    var currentTime by remember { mutableStateOf("") }
+    var greetingText by remember { mutableStateOf("Good Morning") }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            val calendar = java.util.Calendar.getInstance()
+            val hour = calendar.get(java.util.Calendar.HOUR_OF_DAY)
+            greetingText = when (hour) {
+                in 4..11 -> "Good Morning"
+                in 12..16 -> "Good Afternoon"
+                in 17..21 -> "Good Evening"
+                else -> "Good Night"
+            }
+            currentTime = SimpleDateFormat("EEE, MMM d • HH:mm", Locale.getDefault()).format(calendar.time)
+            kotlinx.coroutines.delay(1000L)
         }
     }
 

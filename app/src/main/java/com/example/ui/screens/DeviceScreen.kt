@@ -636,9 +636,9 @@ fun DeviceScreen(
                     MetricRow(
                         icon = Icons.Default.BatteryChargingFull,
                         tint = StatusSuccess,
-                        title = "Ray-Ban Frames Battery",
-                        value = "${glassState.batteryPercent}% (approx. 4.5 hrs usage)",
-                        progress = glassState.batteryPercent / 100f
+                        title = "Mobile Device Battery",
+                        value = "${glassState.batteryPercent}% • ${glassState.chargingStatusText}",
+                        progress = (glassState.batteryPercent.coerceIn(0, 100)) / 100f
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
@@ -646,9 +646,9 @@ fun DeviceScreen(
                     MetricRow(
                         icon = Icons.Default.BatteryChargingFull,
                         tint = MetaBlue,
-                        title = "Meta Smart Charging Case",
-                        value = "${glassState.caseBatteryPercent}% (provides 8 extra recharges)",
-                        progress = glassState.caseBatteryPercent / 100f
+                        title = "Battery Health Status",
+                        value = "${glassState.batteryHealth} Health • ${glassState.tempCelsius}°C",
+                        progress = 1.0f
                     )
 
                     Spacer(modifier = Modifier.height(14.dp))
@@ -1054,14 +1054,14 @@ private fun PhoneGlassBridgeCard(
                             }
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "${if (isBridgeActive) glassState.batteryPercent else 98}% • Charging (USB-C Fast)",
+                                text = "${glassState.batteryPercent}% • ${glassState.chargingStatusText} • Health: ${glassState.batteryHealth}",
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
                             )
                             Spacer(modifier = Modifier.height(6.dp))
                             LinearProgressIndicator(
-                                progress = { if (isBridgeActive) glassState.batteryPercent / 100f else 0.98f },
+                                progress = { (glassState.batteryPercent.coerceIn(0, 100)) / 100f },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(4.dp)

@@ -3,6 +3,9 @@ package com.example.ui.viewmodel
 import com.example.BuildConfig
 import android.app.Application
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.os.BatteryManager
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.data.ai.MultiAgentService
@@ -325,6 +328,84 @@ class SiteMindViewModel(application: Application) : AndroidViewModel(application
 
     private val _connectionQuality = MutableStateFlow(ConnectionQualityInfo(-58, 54, 18, "Excellent"))
     val connectionQuality: StateFlow<ConnectionQualityInfo> = _connectionQuality.asStateFlow()
+
+    init {
+        startBatteryTelemetryObserver()
+    }
+
+    private fun startBatteryTelemetryObserver() {
+        viewModelScope.launch(Dispatchers.IO) {
+            while (true) {
+                try {
+                    val appCtx = getApplication<Application>()
+                    val batteryIntent: Intent? = appCtx.registerReceiver(
+                        null,
+                        IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+                    )
+                    if (batteryIntent != null) {
+                        val level = batteryIntent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
+                        val scale = batteryIntent.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
+                        val batteryPct = if (level >= 0 && scale > 0) ((level.toFloat() / scale.toFloat()) * 100).toInt() else _glassState.value.batteryPercent
+
+                        val status = batteryIntent.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
+                        val isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
+                                         status == BatteryManager.BATTERY_STATUS_FULL
+
+                        val chargePlug = batteryIntent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1)
+                        val plugType = when (chargePlug) {
+                            BatteryManager.BATTERY_PLUGGED_AC -> "AC Charger"
+                            BatteryManager.BATTERY_PLUGGED_USB -> "USB Port"
+                            BatteryManager.BATTERY_PLUGGED_WIRELESS -> "Wireless"
+                            else -> ""
+                        }
+
+                        val chargingStatusText = when (status) {
+                            BatteryManager.BATTERY_STATUS_CHARGING -> if (plugType.isNotEmpty()) "Charging ($plugType)" else "Charging"
+                            BatteryManager.BATTERY_STATUS_FULL -> "Fully Charged"
+                            BatteryManager.BATTERY_STATUS_DISCHARGING -> "Discharging"
+                            BatteryManager.BATTERY_STATUS_NOT_CHARGING -> "Not Charging"
+                            else -> if (isCharging) "Charging" else "Discharging"
+                        }
+
+                        val rawHealth = batteryIntent.getIntExtra(BatteryManager.EXTRA_HEALTH, BatteryManager.BATTERY_HEALTH_UNKNOWN)
+                        val healthStr = when (rawHealth) {
+                            BatteryManager.BATTERY_HEALTH_GOOD -> "Good"
+                            BatteryManager.BATTERY_HEALTH_OVERHEAT -> "Overheating"
+                            BatteryManager.BATTERY_HEALTH_DEAD -> "Dead"
+                            BatteryManager.BATTERY_HEALTH_OVER_VOLTAGE -> "Over Voltage"
+                            BatteryManager.BATTERY_HEALTH_UNSPECIFIED_FAILURE -> "Unspecified Failure"
+                            BatteryManager.BATTERY_HEALTH_COLD -> "Cold"
+                            else -> "Good"
+                        }
+
+                        val rawTemp = batteryIntent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 310)
+                        val tempC = rawTemp / 10
+
+                        _glassState.value = _glassState.value.copy(
+                            batteryPercent = batteryPct,
+                            isCharging = isCharging,
+                            chargingStatusText = chargingStatusText,
+                            batteryHealth = healthStr,
+                            tempCelsius = tempC
+                        )
+
+                        _currentUser.value = _currentUser.value.copy(
+                            glassesBattery = batteryPct
+                        )
+
+                        _discoveredDevices.value = _discoveredDevices.value.map { dev ->
+                            if (dev.isSmartphoneBridge) {
+                                dev.copy(batteryPercent = batteryPct)
+                            } else dev
+                        }
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+                delay(2000L)
+            }
+        }
+    }
 
     private val _isReconnecting = MutableStateFlow(false)
     val isReconnecting: StateFlow<Boolean> = _isReconnecting.asStateFlow()

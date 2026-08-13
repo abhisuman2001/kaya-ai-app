@@ -1,5 +1,6 @@
 package com.example.data.ai
 
+import android.util.Log
 import com.example.BuildConfig
 import com.example.data.model.AgentExecutionStep
 import com.example.data.model.AgentStatus
@@ -28,7 +29,11 @@ class MultiAgentService {
         siteZone: String = "Grid B-4 Level 3"
     ): LiveAiAnalysisResult = withContext(Dispatchers.Default) {
 
-        val apiKey = try { BuildConfig.GEMINI_API_KEY } catch (e: Exception) { "" }
+        val apiKey = try {
+            val single = try { BuildConfig::class.java.getField("GEMINI_API_KEY").get(null) as? String } catch (e: Exception) { null }
+            val plural = try { BuildConfig::class.java.getField("GEMINI_API_KEYS").get(null) as? String } catch (e: Exception) { null }
+            listOfNotNull(single, plural).filter { it.isNotBlank() }.joinToString(",")
+        } catch (e: Exception) { "" }
 
         val geminiResult = callGeminiApi(apiKey, query, base64Frame, siteZone)
 
@@ -151,14 +156,44 @@ class MultiAgentService {
         val errorMessage: String?
     )
 
-    private fun callGeminiApi(apiKey: String, query: String, base64Frame: String?, zone: String): GeminiApiCallResult {
-        if (apiKey.isBlank() || apiKey == "MY_GEMINI_API_KEY") {
+    private fun callGeminiApi(apiKeyConfig: String, query: String, base64Frame: String?, zone: String): GeminiApiCallResult {
+        val keys: List<String> = apiKeyConfig.split(",", ";", "\n")
+            .map { it.trim() }
+            .filter { it.isNotBlank() && it != "YOUR_GEMINI_API_KEY" && it != "MY_GEMINI_API_KEY" }
+
+        val maskedKeys = keys.map { if (it.length > 8) it.take(4) + "..." + it.takeLast(4) else "short_key" }
+        Log.d("MultiAgentService", "Loaded ${keys.size} keys: $maskedKeys")
+
+        if (keys.isEmpty()) {
             return GeminiApiCallResult(
                 text = null,
                 isError = true,
                 errorMessage = "Gemini API Key is missing or invalid placeholder. Please check secrets."
             )
         }
+
+        var lastErrorMsg = ""
+        for ((index, key) in keys.withIndex()) {
+            Log.d("MultiAgentService", "Attempting Gemini API call with key ${index + 1} of ${keys.size} [${maskedKeys[index]}]")
+            val result = callSingleGeminiKey(key, query, base64Frame, zone)
+            if (!result.isError && !result.text.isNullOrBlank()) {
+                if (index > 0) {
+                    Log.i("MultiAgentService", "Successfully succeeded using fallback API key #${index + 1} [${maskedKeys[index]}]")
+                }
+                return result
+            }
+            lastErrorMsg = result.errorMessage ?: "Key ${index + 1} failed"
+            Log.w("MultiAgentService", "Gemini API key #${index + 1} [${maskedKeys[index]}] failed ($lastErrorMsg). Retrying with next key if available...")
+        }
+
+        return GeminiApiCallResult(
+            text = null,
+            isError = true,
+            errorMessage = "All ${keys.size} configured Gemini API key(s) failed. Last error: $lastErrorMsg"
+        )
+    }
+
+    private fun callSingleGeminiKey(apiKey: String, query: String, base64Frame: String?, zone: String): GeminiApiCallResult {
         return try {
             val systemPrompt = """
                 You are SiteMind AI, a real-time computer vision and safety intelligence engine running on Ray-Ban Meta Smart Glasses on a construction site (Location: $zone).
@@ -242,6 +277,7 @@ class MultiAgentService {
                         GeminiApiCallResult(text = null, isError = true, errorMessage = "Gemini API response contained no valid output text.")
                     }
                 } else {
+                    val maskedKey = if (apiKey.length > 8) apiKey.take(4) + "..." + apiKey.takeLast(4) else "short_key"
                     val errorMsg = when (response.code) {
                         400 -> "API Key is invalid or request malformed (HTTP 400)."
                         401 -> "API Key expired or unauthorized (HTTP 401)."
@@ -250,14 +286,18 @@ class MultiAgentService {
                         429 -> "Gemini API quota rate limit exceeded (HTTP 429)."
                         else -> "Gemini API call failed with HTTP status ${response.code}."
                     }
+                    Log.w("MultiAgentService", "Single key [$maskedKey] failed with HTTP ${response.code}: $errorMsg")
                     GeminiApiCallResult(text = null, isError = true, errorMessage = errorMsg)
                 }
             }
         } catch (e: Exception) {
+            val maskedKey = if (apiKey.length > 8) apiKey.take(4) + "..." + apiKey.takeLast(4) else "short_key"
+            val errorMsg = "Gemini API connection error: ${e.localizedMessage ?: "Network connection issue"}"
+            Log.w("MultiAgentService", "Single key [$maskedKey] exception: $errorMsg", e)
             GeminiApiCallResult(
                 text = null,
                 isError = true,
-                errorMessage = "Gemini API connection error: ${e.localizedMessage ?: "Network connection issue"}"
+                errorMessage = errorMsg
             )
         }
     }
