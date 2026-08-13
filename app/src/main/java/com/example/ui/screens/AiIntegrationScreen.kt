@@ -20,8 +20,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.ui.components.YoloVisionOcrCard
-import com.example.ui.theme.MetaBlue
 import com.example.ui.viewmodel.SiteMindViewModel
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun AiIntegrationScreen(
@@ -34,7 +34,7 @@ fun AiIntegrationScreen(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = 24.dp)
             .testTag("ai_integration_screen_list"),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -48,7 +48,7 @@ fun AiIntegrationScreen(
                     fontSize = 11.sp,
                     fontFamily = FontFamily.Monospace,
                     fontWeight = FontWeight.Bold,
-                    color = MetaBlue,
+                    color = LocalKayaColors.current.accent,
                     letterSpacing = 1.sp
                 )
                 Text(

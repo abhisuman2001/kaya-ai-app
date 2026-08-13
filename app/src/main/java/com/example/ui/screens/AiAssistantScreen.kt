@@ -98,10 +98,14 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.data.model.AiGeneratedReport
 import com.example.data.model.GlassAiState
+import com.example.ui.components.Eyebrow
 import com.example.ui.components.ReportConfirmationBottomSheet
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusError
-import com.example.ui.theme.StatusSuccess
+import com.example.ui.theme.LocalKayaColors
+import com.example.ui.theme.ShapeLarge
+import com.example.ui.theme.ShapeMedium
+import com.example.ui.theme.ShapeSmall
+import com.example.ui.theme.ShapeXLarge
+import com.example.ui.theme.ShapeXXLarge
 import com.example.ui.viewmodel.SiteMindViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -306,7 +310,7 @@ fun AiAssistantScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 24.dp)
         ) {
             LazyColumn(
                 state = listState,
@@ -318,26 +322,21 @@ fun AiAssistantScreen(
             ) {
                 item { Spacer(modifier = Modifier.height(8.dp)) }
 
-                // 1. Header
+                // 1. Header — v1's eyebrow + display pattern
                 item {
                     Column {
+                        Eyebrow(text = "Voice AI")
+                        Spacer(modifier = Modifier.height(6.dp))
                         Text(
-                            text = "VOICE AI",
-                            fontSize = 11.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = MetaBlue,
-                            letterSpacing = 1.sp
-                        )
-                        Text(
-                            text = "Voice AI",
-                            fontSize = 20.sp,
-                            fontWeight = FontWeight.Bold,
+                            text = "Ask anything",
+                            style = MaterialTheme.typography.displaySmall,
                             color = MaterialTheme.colorScheme.onBackground
                         )
                         Text(
-                            text = "Talk naturally with your AI Safety Copilot",
-                            fontSize = 12.sp,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            text = "Talk naturally with your AI safety copilot.",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = 6.dp)
                         )
                     }
                 }
@@ -349,8 +348,8 @@ fun AiAssistantScreen(
                                 .fillMaxWidth()
                                 .testTag("voice_ai_glass_disconnected_card"),
                             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, StatusError.copy(alpha = 0.5f)),
-                            shape = RoundedCornerShape(20.dp)
+                            border = androidx.compose.foundation.BorderStroke(1.dp, LocalKayaColors.current.status.error.copy(alpha = 0.5f)),
+                            shape = ShapeXLarge
                         ) {
                             Column(
                                 modifier = Modifier
@@ -365,7 +364,7 @@ fun AiAssistantScreen(
                                     Icon(
                                         imageVector = Icons.Default.MicOff,
                                         contentDescription = null,
-                                        tint = StatusError,
+                                        tint = LocalKayaColors.current.status.error,
                                         modifier = Modifier.size(26.dp)
                                     )
                                     Text(
@@ -386,8 +385,8 @@ fun AiAssistantScreen(
                                 Spacer(modifier = Modifier.height(14.dp))
                                 Button(
                                     onClick = { viewModel.connectGlass() },
-                                    colors = ButtonDefaults.buttonColors(containerColor = MetaBlue),
-                                    shape = RoundedCornerShape(12.dp),
+                                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                                    shape = ShapeMedium,
                                     modifier = Modifier
                                         .fillMaxWidth(0.85f)
                                         .testTag("connect_glass_from_voice_ai_button")
@@ -541,17 +540,17 @@ fun AiStatusCard(
         modifier = modifier
             .fillMaxWidth()
             .testTag("voice_ai_status_card"),
-        shape = RoundedCornerShape(20.dp),
+        shape = ShapeXLarge,
         colors = CardDefaults.cardColors(
             containerColor = if (isLiveStreaming) {
-                StatusSuccess.copy(alpha = 0.08f)
+                LocalKayaColors.current.status.success.copy(alpha = 0.08f)
             } else {
                 MaterialTheme.colorScheme.surface
             }
         ),
         border = androidx.compose.foundation.BorderStroke(
             1.dp,
-            if (isLiveStreaming) StatusSuccess.copy(alpha = 0.35f) else MaterialTheme.colorScheme.outlineVariant
+            if (isLiveStreaming) LocalKayaColors.current.status.success.copy(alpha = 0.35f) else MaterialTheme.colorScheme.outlineVariant
         )
     ) {
         Row(
@@ -570,7 +569,7 @@ fun AiStatusCard(
                         .size(36.dp)
                         .clip(CircleShape)
                         .background(
-                            if (isLiveStreaming) StatusSuccess.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant
+                            if (isLiveStreaming) LocalKayaColors.current.status.success.copy(alpha = 0.2f) else MaterialTheme.colorScheme.surfaceVariant
                         ),
                     contentAlignment = Alignment.Center
                 ) {
@@ -578,7 +577,7 @@ fun AiStatusCard(
                         modifier = Modifier
                             .size(10.dp)
                             .clip(CircleShape)
-                            .background(if (isLiveStreaming) StatusSuccess else Color.Gray)
+                            .background(if (isLiveStreaming) LocalKayaColors.current.status.success else Color.Gray)
                     )
                 }
 
@@ -589,7 +588,7 @@ fun AiStatusCard(
                         text = if (isLiveStreaming) "🟢 AI Connected" else "⚪ Waiting for Vision Context",
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
-                        color = if (isLiveStreaming) StatusSuccess else MaterialTheme.colorScheme.onSurface
+                        color = if (isLiveStreaming) LocalKayaColors.current.status.success else MaterialTheme.colorScheme.onSurface
                     )
                     Text(
                         text = if (isLiveStreaming) {
@@ -606,9 +605,9 @@ fun AiStatusCard(
             if (!isLiveStreaming) {
                 Button(
                     onClick = onStartLiveAi,
-                    shape = RoundedCornerShape(12.dp),
+                    shape = ShapeMedium,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = MetaBlue,
+                        containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = Color.White
                     ),
                     modifier = Modifier
@@ -634,7 +633,7 @@ fun EmptyVoiceAiState(
         modifier = modifier
             .fillMaxWidth()
             .testTag("empty_voice_ai_state"),
-        shape = RoundedCornerShape(24.dp),
+        shape = ShapeXXLarge,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
@@ -648,7 +647,7 @@ fun EmptyVoiceAiState(
                 modifier = Modifier
                     .size(56.dp)
                     .clip(CircleShape)
-                    .background(MetaBlue.copy(alpha = 0.12f)),
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)),
                 contentAlignment = Alignment.Center
             ) {
                 Text(text = "👋", fontSize = 28.sp)
@@ -695,7 +694,7 @@ fun SuggestedQuestionsSection(
             Icon(
                 imageVector = Icons.Default.Lightbulb,
                 contentDescription = null,
-                tint = MetaBlue,
+                tint = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.size(16.dp)
             )
             Spacer(modifier = Modifier.width(6.dp))
@@ -714,7 +713,7 @@ fun SuggestedQuestionsSection(
         ) {
             suggestions.forEach { question ->
                 Surface(
-                    shape = RoundedCornerShape(16.dp),
+                    shape = ShapeLarge,
                     color = MaterialTheme.colorScheme.surfaceVariant,
                     border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant.copy(0.6f)),
                     modifier = Modifier
@@ -728,7 +727,7 @@ fun SuggestedQuestionsSection(
                         Icon(
                             imageVector = Icons.Default.AutoAwesome,
                             contentDescription = null,
-                            tint = MetaBlue,
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(13.dp)
                         )
                         Spacer(modifier = Modifier.width(6.dp))
@@ -779,7 +778,7 @@ fun ConversationMessageItem(
             ) {
                 Surface(
                     shape = RoundedCornerShape(topStart = 20.dp, topEnd = 4.dp, bottomStart = 20.dp, bottomEnd = 20.dp),
-                    color = MetaBlue,
+                    color = MaterialTheme.colorScheme.primary,
                     shadowElevation = 1.dp
                 ) {
                     Column(modifier = Modifier.padding(14.dp)) {
@@ -814,13 +813,13 @@ fun ConversationMessageItem(
                         modifier = Modifier
                             .size(24.dp)
                             .clip(CircleShape)
-                            .background(MetaBlue.copy(alpha = 0.15f)),
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.AutoAwesome,
                             contentDescription = null,
-                            tint = MetaBlue,
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(14.dp)
                         )
                     }
@@ -829,7 +828,7 @@ fun ConversationMessageItem(
                         text = "AI Safety Copilot",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MetaBlue
+                        color = MaterialTheme.colorScheme.primary
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     Text(
@@ -862,11 +861,11 @@ fun ConversationMessageItem(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Surface(
-                                shape = RoundedCornerShape(10.dp),
-                                color = if (message.isTtsPlaying) StatusSuccess.copy(0.15f) else MetaBlue.copy(0.12f),
+                                shape = ShapeSmall,
+                                color = if (message.isTtsPlaying) LocalKayaColors.current.status.success.copy(0.15f) else MaterialTheme.colorScheme.primary.copy(0.12f),
                                 border = androidx.compose.foundation.BorderStroke(
                                     0.5.dp,
-                                    if (message.isTtsPlaying) StatusSuccess else MetaBlue.copy(0.4f)
+                                    if (message.isTtsPlaying) LocalKayaColors.current.status.success else MaterialTheme.colorScheme.primary.copy(0.4f)
                                 ),
                                 modifier = Modifier.clickable { onToggleTts(message.id) }
                             ) {
@@ -877,7 +876,7 @@ fun ConversationMessageItem(
                                     Icon(
                                         imageVector = if (message.isTtsPlaying) Icons.Default.VolumeUp else Icons.Default.GraphicEq,
                                         contentDescription = "Speak to glasses",
-                                        tint = if (message.isTtsPlaying) StatusSuccess else MetaBlue,
+                                        tint = if (message.isTtsPlaying) LocalKayaColors.current.status.success else MaterialTheme.colorScheme.primary,
                                         modifier = Modifier.size(13.dp)
                                     )
                                     Spacer(modifier = Modifier.width(5.dp))
@@ -885,7 +884,7 @@ fun ConversationMessageItem(
                                         text = if (message.isTtsPlaying) "SPEAKING TO GLASSES..." else "PLAY TO GLASSES",
                                         fontSize = 10.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = if (message.isTtsPlaying) StatusSuccess else MetaBlue
+                                        color = if (message.isTtsPlaying) LocalKayaColors.current.status.success else MaterialTheme.colorScheme.primary
                                     )
                                 }
                             }
@@ -950,9 +949,9 @@ fun ActiveVoiceProcessingBanner(
         modifier = modifier
             .fillMaxWidth()
             .testTag("active_voice_processing_banner"),
-        shape = RoundedCornerShape(16.dp),
+        shape = ShapeLarge,
         color = MaterialTheme.colorScheme.surfaceVariant,
-        border = androidx.compose.foundation.BorderStroke(1.dp, MetaBlue.copy(0.4f))
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(0.4f))
     ) {
         Row(
             modifier = Modifier.padding(14.dp),
@@ -964,9 +963,9 @@ fun ActiveVoiceProcessingBanner(
                     .clip(CircleShape)
                     .background(
                         when (voiceState) {
-                            VoiceState.LISTENING -> StatusError.copy(alpha = 0.2f)
-                            VoiceState.THINKING -> MetaBlue.copy(alpha = 0.2f)
-                            VoiceState.SPEAKING -> StatusSuccess.copy(alpha = 0.2f)
+                            VoiceState.LISTENING -> LocalKayaColors.current.status.error.copy(alpha = 0.2f)
+                            VoiceState.THINKING -> MaterialTheme.colorScheme.primary.copy(alpha = 0.2f)
+                            VoiceState.SPEAKING -> LocalKayaColors.current.status.success.copy(alpha = 0.2f)
                             else -> MaterialTheme.colorScheme.surface
                         }
                     ),
@@ -981,10 +980,10 @@ fun ActiveVoiceProcessingBanner(
                     },
                     contentDescription = null,
                     tint = when (voiceState) {
-                        VoiceState.LISTENING -> StatusError
-                        VoiceState.THINKING -> MetaBlue
-                        VoiceState.SPEAKING -> StatusSuccess
-                        else -> MetaBlue
+                        VoiceState.LISTENING -> LocalKayaColors.current.status.error
+                        VoiceState.THINKING -> MaterialTheme.colorScheme.primary
+                        VoiceState.SPEAKING -> LocalKayaColors.current.status.success
+                        else -> MaterialTheme.colorScheme.primary
                     },
                     modifier = Modifier.size(20.dp)
                 )
@@ -1013,6 +1012,7 @@ fun ActiveVoiceProcessingBanner(
             }
 
             // Animated Waveform Canvas
+            val waveformColor = MaterialTheme.colorScheme.primary
             Box(
                 modifier = Modifier
                     .width(48.dp)
@@ -1035,7 +1035,7 @@ fun ActiveVoiceProcessingBanner(
                         val left = i * (barWidth + gap)
                         val top = (height - barH) / 2f
                         drawRoundRect(
-                            color = MetaBlue.copy(alpha = pulseAlpha),
+                            color = waveformColor.copy(alpha = pulseAlpha),
                             topLeft = Offset(left, top),
                             size = Size(barWidth, barH),
                             cornerRadius = androidx.compose.ui.geometry.CornerRadius(2.dp.toPx(), 2.dp.toPx())
@@ -1102,12 +1102,12 @@ fun BottomVoiceControlBar(
                         modifier = Modifier
                             .weight(1f)
                             .testTag("voice_text_input_field"),
-                        shape = RoundedCornerShape(16.dp),
+                        shape = ShapeLarge,
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                         keyboardActions = KeyboardActions(onSend = { onSendText() }),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedBorderColor = MetaBlue,
+                            focusedBorderColor = MaterialTheme.colorScheme.primary,
                             unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant
                         )
                     )
@@ -1118,7 +1118,7 @@ fun BottomVoiceControlBar(
                         modifier = Modifier
                             .size(48.dp)
                             .clip(CircleShape)
-                            .background(if (textInputText.isNotBlank()) MetaBlue else MaterialTheme.colorScheme.surfaceVariant)
+                            .background(if (textInputText.isNotBlank()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant)
                             .testTag("send_text_button")
                     ) {
                         Icon(
@@ -1142,13 +1142,13 @@ fun BottomVoiceControlBar(
                     modifier = Modifier
                         .size(44.dp)
                         .clip(CircleShape)
-                        .background(if (showTextInput) MetaBlue.copy(0.15f) else MaterialTheme.colorScheme.surfaceVariant)
+                        .background(if (showTextInput) MaterialTheme.colorScheme.primary.copy(0.15f) else MaterialTheme.colorScheme.surfaceVariant)
                         .testTag("keyboard_toggle_button")
                 ) {
                     Icon(
                         imageVector = Icons.Default.Keyboard,
                         contentDescription = "Toggle text input",
-                        tint = if (showTextInput) MetaBlue else MaterialTheme.colorScheme.onSurfaceVariant,
+                        tint = if (showTextInput) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(22.dp)
                     )
                 }
@@ -1161,7 +1161,7 @@ fun BottomVoiceControlBar(
                             modifier = Modifier
                                 .size((68 * pulseScale).dp)
                                 .clip(CircleShape)
-                                .background(StatusError.copy(alpha = 0.25f))
+                                .background(LocalKayaColors.current.status.error.copy(alpha = 0.25f))
                         )
                     }
 
@@ -1169,10 +1169,10 @@ fun BottomVoiceControlBar(
                         onClick = onMicClick,
                         shape = CircleShape,
                         color = when (voiceState) {
-                            VoiceState.LISTENING -> StatusError
-                            VoiceState.THINKING -> MetaBlue
-                            VoiceState.SPEAKING -> StatusSuccess
-                            VoiceState.IDLE -> MetaBlue
+                            VoiceState.LISTENING -> LocalKayaColors.current.status.error
+                            VoiceState.THINKING -> MaterialTheme.colorScheme.primary
+                            VoiceState.SPEAKING -> LocalKayaColors.current.status.success
+                            VoiceState.IDLE -> MaterialTheme.colorScheme.primary
                         },
                         shadowElevation = 6.dp,
                         modifier = Modifier
@@ -1228,46 +1228,11 @@ fun BottomVoiceControlBar(
                 fontSize = 11.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = when (voiceState) {
-                    VoiceState.LISTENING -> StatusError
-                    VoiceState.SPEAKING -> StatusSuccess
+                    VoiceState.LISTENING -> LocalKayaColors.current.status.error
+                    VoiceState.SPEAKING -> LocalKayaColors.current.status.success
                     else -> MaterialTheme.colorScheme.onSurfaceVariant
                 }
             )
-        }
-    }
-}
-
-// ==========================================
-// CONTEXTUAL AI RESPONSE GENERATOR
-// ==========================================
-
-private fun generateContextualAiResponse(question: String, isLiveStreaming: Boolean): String {
-    val q = question.lowercase()
-
-    return when {
-        q.contains("safe") || q.contains("hazard") || q.contains("danger") || q.contains("risk") -> {
-            "The work zone is mostly safe for general activity. However, 1 critical hazard is present: a worker near the tower crane swing zone is missing a safety helmet. I recommend ensuring proper PPE before crane lifts resume."
-        }
-        q.contains("looking") || q.contains("see") || q.contains("view") || q.contains("camera") -> {
-            "You are observing a steel framework assembly operation on Level 3 near scaffold platform B-4. There are 3 workers present, 1 active tower crane, and elevated scaffolding."
-        }
-        q.contains("explain") || q.contains("why") || q.contains("violation") || q.contains("helmet") -> {
-            "A worker has entered the active crane operating area without head protection. Why this is risky: falling objects or equipment movement pose an immediate head injury hazard. Recommended action: wear an approved safety helmet immediately."
-        }
-        q.contains("next") || q.contains("fix") || q.contains("action") || q.contains("do") -> {
-            "Immediate actions: 1. Instruct worker #1 near grid B-4 to equip safety helmet. 2. Verify dual-leg lanyard tie-offs on scaffold platform 3. 3. Confirm crane operator clearance."
-        }
-        q.contains("summarize") || q.contains("summary") || q.contains("zone") || q.contains("scene") -> {
-            "Work Zone Summary: 3 workers present on steel erection. 1 tower crane operating overhead, 1 scaffold active. 2 workers fully compliant, 1 PPE violation flagged."
-        }
-        q.contains("ppe") || q.contains("vest") || q.contains("glove") -> {
-            "PPE Status: 2 out of 3 workers are 100% compliant with helmets and safety vests. 1 worker near the crane zone is missing a safety helmet."
-        }
-        q.contains("condition") || q.contains("today") || q.contains("weather") -> {
-            "Site conditions are optimal with clear visibility (1080p stream active). Ambient temp is 31°C. Structural steel work is progressing smoothly with 1 active PPE risk monitored."
-        }
-        else -> {
-            "I'm analyzing your surroundings via Live AI Vision. Currently, 3 workers and 1 operating crane are in frame. One worker near the crane requires a safety helmet. Let me know if you need specific safety checks!"
         }
     }
 }
