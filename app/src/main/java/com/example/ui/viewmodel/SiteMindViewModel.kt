@@ -50,7 +50,10 @@ import com.example.data.network.SupabaseReportDto
 import com.example.data.network.SupabaseTaskDto
 import com.example.data.network.SupabaseBlueprintDto
 import com.example.data.network.SupabaseDeviceDto
+import com.example.data.network.SupabaseWorkerStatusDto
+import com.example.data.network.SupabaseMediaAssetDto
 import com.example.data.network.SupabaseProfileDto
+import com.example.data.network.SupabaseProjectDto
 import com.example.data.model.AssistantState
 import com.example.data.model.SiteContextMemory
 import com.example.data.model.BimMeasurement
@@ -129,6 +132,7 @@ class SiteMindViewModel(application: Application) : AndroidViewModel(application
                 e.printStackTrace()
             }
         }
+        pushWorkerStatus()
     }
 
     fun createTask(title: String, description: String, priority: String) {
@@ -166,6 +170,7 @@ class SiteMindViewModel(application: Application) : AndroidViewModel(application
                 e.printStackTrace()
             }
         }
+        pushWorkerStatus()
     }
 
     // Glass Device State
@@ -999,6 +1004,59 @@ class SiteMindViewModel(application: Application) : AndroidViewModel(application
     )
     val siteTasks: StateFlow<List<SiteTaskItem>> = _siteTasks.asStateFlow()
 
+    // ---- Media gallery (media_assets) ----
+    // Empty until the fetch returns. No seeded fixtures: an empty gallery is the truth
+    // when nothing has been captured, and inventing thumbnails would hide a broken sync.
+    private val _mediaAssets = MutableStateFlow<List<SupabaseMediaAssetDto>>(emptyList())
+    val mediaAssets: StateFlow<List<SupabaseMediaAssetDto>> = _mediaAssets.asStateFlow()
+
+    private val _mediaLoading = MutableStateFlow(false)
+    val mediaLoading: StateFlow<Boolean> = _mediaLoading.asStateFlow()
+
+    private val _mediaError = MutableStateFlow<String?>(null)
+    val mediaError: StateFlow<String?> = _mediaError.asStateFlow()
+
+    // ---- Projects ----
+    private val _projects = MutableStateFlow<List<SupabaseProjectDto>>(emptyList())
+    val projects: StateFlow<List<SupabaseProjectDto>> = _projects.asStateFlow()
+
+    /**
+     * Loads captures for the gallery. Surfaces failure into [mediaError] rather than
+     * swallowing it — the rest of this class predates that rule and prints stack traces,
+     * which is why broken syncs have been invisible.
+     */
+    fun fetchMediaAssets() {
+        viewModelScope.launch(Dispatchers.IO) {
+            _mediaLoading.value = true
+            _mediaError.value = null
+            try {
+                val response = ApiClient.apiService.getMediaAssets()
+                if (response.isSuccessful) {
+                    _mediaAssets.value = response.body().orEmpty()
+                } else {
+                    _mediaError.value = "Could not load captures (HTTP ${response.code()})."
+                }
+            } catch (e: Exception) {
+                _mediaError.value = e.localizedMessage ?: "Could not reach the server."
+            } finally {
+                _mediaLoading.value = false
+            }
+        }
+    }
+
+    fun fetchProjects() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val response = ApiClient.apiService.getProjects()
+                if (response.isSuccessful) {
+                    _projects.value = response.body().orEmpty()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
     init {
         val savedTheme = prefs.getString("app_theme", null)
         if (savedTheme != null) {
@@ -1011,6 +1069,10 @@ class SiteMindViewModel(application: Application) : AndroidViewModel(application
         syncWithSupabase()
         // Run initial AI analysis
         runAiQuery("Perform initial safety & blueprint check")
+        // Keep worker_status/devices fresh for the dashboard while a session is active
+        startWorkerStatusHeartbeat()
+        fetchMediaAssets()
+        fetchProjects()
     }
 
     fun syncWithSupabase() {
@@ -1112,6 +1174,114 @@ class SiteMindViewModel(application: Application) : AndroidViewModel(application
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
+            }
+
+            pushWorkerStatus()
+            syncDeviceToSupabase()
+        }
+    }
+
+    // Stable per-install id for this device, generated once and persisted —
+    // there is no real hardware serial to key devices/worker_status rows on
+    // since glasses pairing is simulated.
+    private val installDeviceId: String by lazy {
+        prefs.getString("kaya_device_id", null) ?: java.util.UUID.randomUUID().toString().also {
+            prefs.edit().putString("kaya_device_id", it).apply()
+        }
+    }
+
+    private fun nowIso(): String {
+        val sdf = java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", java.util.Locale.US)
+        sdf.timeZone = java.util.TimeZone.getTimeZone("UTC")
+        return sdf.format(java.util.Date())
+    }
+
+    // Maps the glasses' UI-facing state onto worker_status.ai_session, a Postgres
+    // enum restricted to 'active' | 'idle' | 'offline' — any other literal fails the insert.
+    private fun mapToAiSession(state: GlassAiState): String = when (state) {
+        GlassAiState.LISTENING, GlassAiState.THINKING, GlassAiState.ANALYZING, GlassAiState.SPEAKING -> "active"
+        GlassAiState.OFFLINE -> "offline"
+        else -> "idle"
+    }
+
+    /**
+     * Upserts what this worker/device is doing right now into `worker_status`,
+     * the row the dashboard roster and monitoring page read. Only meaningful
+     * once a real Supabase-authenticated user exists; before login the id is a
+     * local placeholder that has no matching auth.users row.
+     */
+    private fun pushWorkerStatus() {
+        if (_authState.value != AuthScreenState.AUTHENTICATED) return
+        val user = _currentUser.value
+        if (user.id.isBlank()) return
+
+        val activeHazard = _hazardDetectionState.value.hazards
+            .filter { !it.isAcknowledged }
+            .maxByOrNull { severity ->
+                when (severity.severity) {
+                    "CRITICAL" -> 3
+                    "HIGH" -> 2
+                    "MEDIUM" -> 1
+                    else -> 0
+                }
+            }
+        val activeTask = _siteTasks.value.firstOrNull { !it.isCompleted }
+
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                ApiClient.apiService.upsertWorkerStatus(
+                    SupabaseWorkerStatusDto(
+                        user_id = user.id,
+                        device_id = installDeviceId,
+                        task = activeTask?.title,
+                        ai_session = mapToAiSession(_glassState.value.connectionState),
+                        hazard = activeHazard?.title,
+                        hazard_severity = activeHazard?.severity,
+                        last_active_at = nowIso()
+                    )
+                )
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    /** Registers/refreshes this install's own row in `devices` so the dashboard's
+     *  device-health stats reflect a real session instead of static seed data. */
+    private fun syncDeviceToSupabase() {
+        if (_authState.value != AuthScreenState.AUTHENTICATED) return
+        val user = _currentUser.value
+        if (user.id.isBlank()) return
+
+        val glass = _glassState.value
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                ApiClient.apiService.upsertDevice(
+                    SupabaseDeviceDto(
+                        id = installDeviceId,
+                        user_id = user.id,
+                        name = glass.deviceName,
+                        firmware = glass.firmwareVersion,
+                        battery_level = glass.batteryPercent,
+                        connection_state = if (glass.connectionState == GlassAiState.OFFLINE) "disconnected" else "connected",
+                        last_seen_at = nowIso()
+                    )
+                )
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    /** Keeps worker_status/devices fresh while a session is active, independent
+     *  of any single state transition — the dashboard's "last active" and
+     *  online/offline reads go stale otherwise. */
+    private fun startWorkerStatusHeartbeat() {
+        viewModelScope.launch {
+            while (true) {
+                delay(45_000)
+                pushWorkerStatus()
+                syncDeviceToSupabase()
             }
         }
     }
@@ -1711,6 +1881,7 @@ class SiteMindViewModel(application: Application) : AndroidViewModel(application
 
     fun simulateVoiceState(state: GlassAiState) {
         _glassState.value = _glassState.value.copy(connectionState = state)
+        pushWorkerStatus()
     }
 
     fun toggleLiveStream() {
@@ -1733,6 +1904,7 @@ class SiteMindViewModel(application: Application) : AndroidViewModel(application
 
     fun setGlassState(newState: GlassAiState) {
         _glassState.value = _glassState.value.copy(connectionState = newState)
+        pushWorkerStatus()
     }
 
     fun resolveHazard(hazard: HazardEntity) {
@@ -2113,6 +2285,7 @@ class SiteMindViewModel(application: Application) : AndroidViewModel(application
                 // Network call failed; local entity stays saved in Room with "PENDING_SYNC"
             }
         }
+        pushWorkerStatus()
     }
 
     fun dismissHazardItem(hazardId: String) {
@@ -2127,6 +2300,7 @@ class SiteMindViewModel(application: Application) : AndroidViewModel(application
                 e.printStackTrace()
             }
         }
+        pushWorkerStatus()
     }
 
     fun playVoiceAlert(hazardId: String) {
