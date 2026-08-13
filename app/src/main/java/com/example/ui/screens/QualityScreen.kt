@@ -25,8 +25,8 @@ import com.example.ui.components.QualityHistoryCard
 import com.example.ui.components.QualityInspectionItemCard
 import com.example.ui.components.QualityRecommendationsCard
 import com.example.ui.components.QualityScoreCard
-import com.example.ui.theme.MetaBlue
 import com.example.ui.viewmodel.SiteMindViewModel
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun QualityScreen(
@@ -45,7 +45,7 @@ fun QualityScreen(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = 24.dp)
             .testTag("quality_screen_list"),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -55,10 +55,10 @@ fun QualityScreen(
         item {
             Column {
                 Text(
-                    text = "PHASE 10 — QUALITY INSPECTION",
+                    text = "QUALITY",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MetaBlue,
+                    color = LocalKayaColors.current.accent,
                     letterSpacing = 1.sp
                 )
                 Text(
