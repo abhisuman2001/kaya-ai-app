@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
@@ -51,9 +50,11 @@ import com.example.data.model.UserRole
 import com.example.ui.components.CreateHazardDialog
 import com.example.ui.components.HazardCard
 import com.example.ui.components.HazardCategoryFilterChips
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusError
-import com.example.ui.theme.StatusSuccess
+import com.example.ui.theme.LocalKayaColors
+import com.example.ui.theme.ShapeMedium
+import com.example.ui.theme.ShapeSmall
+import com.example.ui.theme.ShapeLarge
+import com.example.ui.theme.ShapeXLarge
 import com.example.ui.viewmodel.SiteMindViewModel
 
 @Composable
@@ -80,7 +81,7 @@ fun HazardDetectionScreen(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = 24.dp)
             .testTag("hazard_detection_screen_list"),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -98,7 +99,7 @@ fun HazardDetectionScreen(
                         text = "OPTICAL AI HAZARD ENGINE",
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MetaBlue,
+                        color = MaterialTheme.colorScheme.primary,
                         letterSpacing = 1.sp
                     )
                     Text(
@@ -112,8 +113,8 @@ fun HazardDetectionScreen(
                 if (isSupervisor) {
                     Button(
                         onClick = { showCreateDialog = true },
-                        colors = ButtonDefaults.buttonColors(containerColor = StatusError),
-                        shape = RoundedCornerShape(12.dp),
+                        colors = ButtonDefaults.buttonColors(containerColor = LocalKayaColors.current.status.error),
+                        shape = ShapeMedium,
                         modifier = Modifier.testTag("create_hazard_button")
                     ) {
                         Icon(imageVector = Icons.Default.Add, contentDescription = "Add Hazard", tint = Color.White, modifier = Modifier.size(16.dp))
@@ -129,9 +130,9 @@ fun HazardDetectionScreen(
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(20.dp))
+                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, ShapeXLarge)
                     .testTag("hazard_summary_card"),
-                shape = RoundedCornerShape(20.dp),
+                shape = ShapeXLarge,
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
             ) {
                 Row(
@@ -146,13 +147,13 @@ fun HazardDetectionScreen(
                             modifier = Modifier
                                 .size(44.dp)
                                 .clip(CircleShape)
-                                .background(if (criticalCount > 0) StatusError.copy(0.15f) else StatusSuccess.copy(0.15f)),
+                                .background(if (criticalCount > 0) LocalKayaColors.current.status.error.copy(0.15f) else LocalKayaColors.current.status.success.copy(0.15f)),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
                                 imageVector = if (criticalCount > 0) Icons.Default.Warning else Icons.Default.Shield,
                                 contentDescription = null,
-                                tint = if (criticalCount > 0) StatusError else StatusSuccess,
+                                tint = if (criticalCount > 0) LocalKayaColors.current.status.error else LocalKayaColors.current.status.success,
                                 modifier = Modifier.size(22.dp)
                             )
                         }
@@ -175,14 +176,14 @@ fun HazardDetectionScreen(
                     }
 
                     Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = MetaBlue.copy(0.15f)
+                        shape = ShapeSmall,
+                        color = MaterialTheme.colorScheme.primary.copy(0.15f)
                     ) {
                         Text(
                             text = "100% OSHA 1926",
                             fontSize = 10.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MetaBlue,
+                            color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                         )
                     }
@@ -194,8 +195,8 @@ fun HazardDetectionScreen(
         item {
             AnimatedVisibility(visible = hazardState.activeVoicePlayingId != null) {
                 Surface(
-                    shape = RoundedCornerShape(16.dp),
-                    color = StatusError,
+                    shape = ShapeLarge,
+                    color = LocalKayaColors.current.status.error,
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag("voice_alert_playing_banner")
@@ -224,9 +225,9 @@ fun HazardDetectionScreen(
                         Button(
                             onClick = { viewModel.stopVoiceAlert() },
                             colors = ButtonDefaults.buttonColors(containerColor = Color.White),
-                            shape = RoundedCornerShape(8.dp)
+                            shape = ShapeSmall
                         ) {
-                            Text("STOP", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = StatusError)
+                            Text("STOP", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = LocalKayaColors.current.status.error)
                         }
                     }
                 }
@@ -250,7 +251,7 @@ fun HazardDetectionScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(vertical = 20.dp),
-                    shape = RoundedCornerShape(16.dp),
+                    shape = ShapeLarge,
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(0.4f))
                 ) {
                     Column(
@@ -259,7 +260,7 @@ fun HazardDetectionScreen(
                             .padding(24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, tint = StatusSuccess, modifier = Modifier.size(36.dp))
+                        Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, tint = LocalKayaColors.current.status.success, modifier = Modifier.size(36.dp))
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(text = "No Hazards Found for Selected Filters", fontSize = 14.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface)
                         Text(text = "All site workers and equipment conform to OSHA safety guidelines.", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)

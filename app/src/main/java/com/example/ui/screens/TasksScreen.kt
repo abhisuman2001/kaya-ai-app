@@ -85,10 +85,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.data.model.ConstructionTask
 import com.example.data.model.TaskPriority
 import com.example.data.model.TaskStatus
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusError
-import com.example.ui.theme.StatusSuccess
-import com.example.ui.theme.StatusWarning
+import com.example.ui.theme.LocalKayaColors
+import com.example.ui.theme.ShapeLarge
+import com.example.ui.theme.ShapeMedium
+import com.example.ui.theme.ShapeSmall
+import com.example.ui.theme.ShapeXLarge
+import com.example.ui.theme.ShapeXSmall
 import com.example.ui.viewmodel.SiteMindViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -144,7 +146,7 @@ fun TasksScreen(
                             Icon(
                                 imageVector = Icons.Default.Task,
                                 contentDescription = null,
-                                tint = MetaBlue,
+                                tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(24.dp)
                             )
                             Spacer(modifier = Modifier.width(8.dp))
@@ -183,7 +185,7 @@ fun TasksScreen(
                         Icon(
                             imageVector = Icons.Default.Refresh,
                             contentDescription = "Sync Tasks",
-                            tint = MetaBlue
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
@@ -192,9 +194,9 @@ fun TasksScreen(
 
                 // Project Badge
                 Surface(
-                    shape = RoundedCornerShape(8.dp),
-                    color = MetaBlue.copy(alpha = 0.12f),
-                    border = androidx.compose.foundation.BorderStroke(0.5.dp, MetaBlue.copy(alpha = 0.3f))
+                    shape = ShapeSmall,
+                    color = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                    border = androidx.compose.foundation.BorderStroke(0.5.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
@@ -211,7 +213,7 @@ fun TasksScreen(
                             text = siteContext.projectName,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MetaBlue
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
@@ -221,7 +223,7 @@ fun TasksScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = 24.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             item {
@@ -248,10 +250,10 @@ fun TasksScreen(
                         onClick = { selectedFilter = null },
                         label = { Text("All (${tasks.size})", fontSize = 12.sp) },
                         colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MetaBlue,
+                            selectedContainerColor = MaterialTheme.colorScheme.primary,
                             selectedLabelColor = Color.White
                         ),
-                        shape = RoundedCornerShape(20.dp),
+                        shape = ShapeXLarge,
                         modifier = Modifier.testTag("filter_all_tasks")
                     )
 
@@ -265,7 +267,7 @@ fun TasksScreen(
                             selectedContainerColor = Color(0xFF2563EB),
                             selectedLabelColor = Color.White
                         ),
-                        shape = RoundedCornerShape(20.dp),
+                        shape = ShapeXLarge,
                         modifier = Modifier.testTag("filter_in_progress")
                     )
 
@@ -279,7 +281,7 @@ fun TasksScreen(
                             selectedContainerColor = Color(0xFF6B7280),
                             selectedLabelColor = Color.White
                         ),
-                        shape = RoundedCornerShape(20.dp),
+                        shape = ShapeXLarge,
                         modifier = Modifier.testTag("filter_pending")
                     )
 
@@ -290,10 +292,10 @@ fun TasksScreen(
                         },
                         label = { Text("Completed", fontSize = 12.sp) },
                         colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = StatusSuccess,
+                            selectedContainerColor = LocalKayaColors.current.status.success,
                             selectedLabelColor = Color.White
                         ),
-                        shape = RoundedCornerShape(20.dp),
+                        shape = ShapeXLarge,
                         modifier = Modifier.testTag("filter_completed")
                     )
                 }
@@ -306,9 +308,9 @@ fun TasksScreen(
                         .fillMaxWidth()
                         .clickable { onNavigateToVoiceAi("What is my next task?") }
                         .testTag("voice_ai_task_banner"),
-                    shape = RoundedCornerShape(14.dp),
-                    colors = CardDefaults.cardColors(containerColor = MetaBlue.copy(alpha = 0.08f)),
-                    border = androidx.compose.foundation.BorderStroke(1.dp, MetaBlue.copy(alpha = 0.25f))
+                    shape = ShapeMedium,
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f))
                 ) {
                     Row(
                         modifier = Modifier.padding(12.dp),
@@ -318,7 +320,7 @@ fun TasksScreen(
                             modifier = Modifier
                                 .size(36.dp)
                                 .clip(CircleShape)
-                                .background(MetaBlue),
+                                .background(MaterialTheme.colorScheme.primary),
                             contentAlignment = Alignment.Center
                         ) {
                             Icon(
@@ -334,7 +336,7 @@ fun TasksScreen(
                                 text = "Voice AI Active • Hands-Free Assistance",
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
-                                color = MetaBlue
+                                color = MaterialTheme.colorScheme.primary
                             )
                             Text(
                                 text = "\"What is my next task?\"",
@@ -346,7 +348,7 @@ fun TasksScreen(
                         Icon(
                             imageVector = Icons.Default.ChevronRight,
                             contentDescription = null,
-                            tint = MetaBlue
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
@@ -402,7 +404,7 @@ private fun ShiftProgressCard(
         modifier = Modifier
             .fillMaxWidth()
             .testTag("shift_progress_card"),
-        shape = RoundedCornerShape(18.dp),
+        shape = ShapeXLarge,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
@@ -425,7 +427,7 @@ private fun ShiftProgressCard(
                     text = "${(progressFraction * 100).toInt()}%",
                     fontSize = 16.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MetaBlue
+                    color = MaterialTheme.colorScheme.primary
                 )
             }
 
@@ -438,8 +440,8 @@ private fun ShiftProgressCard(
                     .fillMaxWidth()
                     .height(8.dp)
                     .clip(RoundedCornerShape(4.dp)),
-                color = MetaBlue,
-                trackColor = MetaBlue.copy(alpha = 0.15f)
+                color = MaterialTheme.colorScheme.primary,
+                trackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -452,19 +454,19 @@ private fun ShiftProgressCard(
                 MetricItem(
                     label = "Completed",
                     value = "$completedCount / $totalCount Tasks",
-                    accentColor = StatusSuccess
+                    accentColor = LocalKayaColors.current.status.success
                 )
 
                 MetricItem(
                     label = "Remaining",
                     value = "$remainingCount Tasks",
-                    accentColor = StatusWarning
+                    accentColor = LocalKayaColors.current.status.warning
                 )
 
                 MetricItem(
                     label = "Estimated Time",
                     value = estimatedTimeText,
-                    accentColor = MetaBlue
+                    accentColor = MaterialTheme.colorScheme.primary
                 )
             }
         }
@@ -514,7 +516,7 @@ private fun TaskCardItem(
             .animateContentSize()
             .clickable { onToggleExpand() }
             .testTag("task_card_${task.taskId}"),
-        shape = RoundedCornerShape(16.dp),
+        shape = ShapeLarge,
         colors = CardDefaults.cardColors(
             containerColor = if (isCompleted) MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
             else MaterialTheme.colorScheme.surface
@@ -522,9 +524,9 @@ private fun TaskCardItem(
         border = androidx.compose.foundation.BorderStroke(
             width = if (task.status == TaskStatus.IN_PROGRESS) 1.5.dp else 1.dp,
             color = when (task.status) {
-                TaskStatus.IN_PROGRESS -> MetaBlue
-                TaskStatus.COMPLETED -> StatusSuccess.copy(alpha = 0.4f)
-                TaskStatus.BLOCKED -> StatusError
+                TaskStatus.IN_PROGRESS -> MaterialTheme.colorScheme.primary
+                TaskStatus.COMPLETED -> LocalKayaColors.current.status.success.copy(alpha = 0.4f)
+                TaskStatus.BLOCKED -> LocalKayaColors.current.status.error
                 else -> MaterialTheme.colorScheme.outlineVariant
             }
         ),
@@ -545,7 +547,7 @@ private fun TaskCardItem(
                             Icon(
                                 imageVector = Icons.Default.CheckCircle,
                                 contentDescription = null,
-                                tint = StatusSuccess,
+                                tint = LocalKayaColors.current.status.success,
                                 modifier = Modifier.size(18.dp)
                             )
                             Spacer(modifier = Modifier.width(6.dp))
@@ -606,7 +608,7 @@ private fun TaskCardItem(
                 }
 
                 Surface(
-                    shape = RoundedCornerShape(6.dp),
+                    shape = ShapeXSmall,
                     color = priorityBg.copy(alpha = 0.15f),
                     border = androidx.compose.foundation.BorderStroke(0.5.dp, priorityBg)
                 ) {
@@ -623,12 +625,12 @@ private fun TaskCardItem(
                 val (statusBg, statusText) = when (task.status) {
                     TaskStatus.PENDING -> Pair(Color(0xFF6B7280), "Pending")
                     TaskStatus.IN_PROGRESS -> Pair(Color(0xFF2563EB), "In Progress")
-                    TaskStatus.COMPLETED -> Pair(StatusSuccess, "Completed ✓")
+                    TaskStatus.COMPLETED -> Pair(LocalKayaColors.current.status.success, "Completed ✓")
                     TaskStatus.BLOCKED -> Pair(Color(0xFFDC2626), "Blocked")
                 }
 
                 Surface(
-                    shape = RoundedCornerShape(6.dp),
+                    shape = ShapeXSmall,
                     color = statusBg.copy(alpha = 0.15f),
                     border = androidx.compose.foundation.BorderStroke(0.5.dp, statusBg)
                 ) {
@@ -739,7 +741,7 @@ private fun TaskCardItem(
                                 Icon(
                                     imageVector = Icons.Default.Shield,
                                     contentDescription = null,
-                                    tint = StatusWarning,
+                                    tint = LocalKayaColors.current.status.warning,
                                     modifier = Modifier
                                         .size(14.dp)
                                         .padding(top = 2.dp)
@@ -773,7 +775,7 @@ private fun TaskCardItem(
                         ) {
                             task.requiredPpe.forEach { ppe ->
                                 Surface(
-                                    shape = RoundedCornerShape(8.dp),
+                                    shape = ShapeSmall,
                                     color = MaterialTheme.colorScheme.surfaceVariant,
                                     border = androidx.compose.foundation.BorderStroke(0.5.dp, MaterialTheme.colorScheme.outlineVariant)
                                 ) {
@@ -795,18 +797,18 @@ private fun TaskCardItem(
                     if (task.aiRecommendations.isNotEmpty()) {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(12.dp),
+                            shape = ShapeMedium,
                             colors = CardDefaults.cardColors(
-                                containerColor = MetaBlue.copy(alpha = 0.08f)
+                                containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.08f)
                             ),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, MetaBlue.copy(alpha = 0.25f))
+                            border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.25f))
                         ) {
                             Column(modifier = Modifier.padding(12.dp)) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(
                                         imageVector = Icons.Default.AutoAwesome,
                                         contentDescription = null,
-                                        tint = MetaBlue,
+                                        tint = MaterialTheme.colorScheme.primary,
                                         modifier = Modifier.size(16.dp)
                                     )
                                     Spacer(modifier = Modifier.width(6.dp))
@@ -814,7 +816,7 @@ private fun TaskCardItem(
                                         text = "AI Recommendation",
                                         fontSize = 12.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = MetaBlue
+                                        color = MaterialTheme.colorScheme.primary
                                     )
                                 }
 
@@ -846,8 +848,8 @@ private fun TaskCardItem(
                                     .weight(1f)
                                     .height(40.dp)
                                     .testTag("complete_task_${task.taskId}"),
-                                shape = RoundedCornerShape(10.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = StatusSuccess)
+                                shape = ShapeSmall,
+                                colors = ButtonDefaults.buttonColors(containerColor = LocalKayaColors.current.status.success)
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Check,
@@ -866,8 +868,8 @@ private fun TaskCardItem(
                                     .weight(1f)
                                     .height(40.dp)
                                     .testTag("start_task_${task.taskId}"),
-                                shape = RoundedCornerShape(10.dp),
-                                colors = ButtonDefaults.buttonColors(containerColor = MetaBlue)
+                                shape = ShapeSmall,
+                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.PlayArrow,
@@ -885,16 +887,16 @@ private fun TaskCardItem(
                                 .weight(1f)
                                 .height(40.dp)
                                 .testTag("ask_voice_task_${task.taskId}"),
-                            shape = RoundedCornerShape(10.dp)
+                            shape = ShapeSmall
                         ) {
                             Icon(
                                 imageVector = Icons.Default.RecordVoiceOver,
                                 contentDescription = null,
-                                tint = MetaBlue,
+                                tint = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.size(16.dp)
                             )
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Ask Voice", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MetaBlue)
+                            Text("Ask Voice", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                         }
                     }
                 }
@@ -913,7 +915,7 @@ private fun EmptyTasksState() {
             .fillMaxWidth()
             .padding(vertical = 24.dp)
             .testTag("empty_tasks_card"),
-        shape = RoundedCornerShape(18.dp),
+        shape = ShapeXLarge,
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
@@ -928,13 +930,13 @@ private fun EmptyTasksState() {
                 modifier = Modifier
                     .size(64.dp)
                     .clip(CircleShape)
-                    .background(MetaBlue.copy(alpha = 0.1f)),
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = Icons.Default.AssignmentTurnedIn,
                     contentDescription = null,
-                    tint = MetaBlue,
+                    tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(36.dp)
                 )
             }
