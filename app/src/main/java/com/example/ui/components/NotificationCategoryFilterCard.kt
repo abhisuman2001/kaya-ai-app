@@ -18,7 +18,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.NotificationCategory
-import com.example.ui.theme.MetaBlue
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun NotificationCategoryFilterCard(
@@ -35,7 +35,7 @@ fun NotificationCategoryFilterCard(
             val isSelected = selectedCategory == cat
             Surface(
                 shape = RoundedCornerShape(12.dp),
-                color = if (isSelected) MetaBlue else MaterialTheme.colorScheme.surfaceVariant,
+                color = if (isSelected) LocalKayaColors.current.accent else MaterialTheme.colorScheme.surfaceVariant,
                 modifier = Modifier
                     .clickable { onCategorySelected(cat) }
                     .testTag("notif_cat_${cat.name}")

@@ -38,8 +38,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusError
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun NotificationHeaderCard(
@@ -52,7 +51,7 @@ fun NotificationHeaderCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .border(1.dp, MetaBlue.copy(0.4f), RoundedCornerShape(24.dp))
+            .border(1.dp, LocalKayaColors.current.accent.copy(0.4f), RoundedCornerShape(24.dp))
             .testTag("notification_header_card"),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
@@ -68,13 +67,13 @@ fun NotificationHeaderCard(
                         modifier = Modifier
                             .size(38.dp)
                             .clip(CircleShape)
-                            .background(MetaBlue.copy(0.15f)),
+                            .background(LocalKayaColors.current.accent.copy(0.15f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.NotificationsActive,
                             contentDescription = null,
-                            tint = MetaBlue,
+                            tint = LocalKayaColors.current.accent,
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -85,7 +84,7 @@ fun NotificationHeaderCard(
                             fontSize = 11.sp,
                             fontFamily = FontFamily.Monospace,
                             fontWeight = FontWeight.Bold,
-                            color = MetaBlue
+                            color = LocalKayaColors.current.accent
                         )
                         Text(
                             text = "Real-Time Safety & Field Dispatch",
@@ -98,13 +97,13 @@ fun NotificationHeaderCard(
 
                 Surface(
                     shape = RoundedCornerShape(10.dp),
-                    color = if (unreadCount > 0) StatusError.copy(0.15f) else MetaBlue.copy(0.15f)
+                    color = if (unreadCount > 0) LocalKayaColors.current.status.error.copy(0.15f) else LocalKayaColors.current.accent.copy(0.15f)
                 ) {
                     Text(
                         text = if (unreadCount > 0) "$unreadCount UNREAD" else "ALL READ",
                         fontSize = 9.sp,
                         fontWeight = FontWeight.Bold,
-                        color = if (unreadCount > 0) StatusError else MetaBlue,
+                        color = if (unreadCount > 0) LocalKayaColors.current.status.error else LocalKayaColors.current.accent,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
                 }
@@ -125,14 +124,14 @@ fun NotificationHeaderCard(
                         .height(38.dp)
                         .testTag("mark_all_read_btn")
                 ) {
-                    Icon(imageVector = Icons.Default.DoneAll, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(14.dp))
+                    Icon(imageVector = Icons.Default.DoneAll, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(14.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("MARK ALL READ", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = MetaBlue)
+                    Text("MARK ALL READ", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = LocalKayaColors.current.accent)
                 }
 
                 Button(
                     onClick = onSendTestPush,
-                    colors = ButtonDefaults.buttonColors(containerColor = MetaBlue),
+                    colors = ButtonDefaults.buttonColors(containerColor = LocalKayaColors.current.accent),
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier
                         .weight(1f)

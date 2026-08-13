@@ -42,10 +42,7 @@ import androidx.compose.ui.unit.sp
 import com.example.data.model.NotificationCategory
 import com.example.data.model.NotificationPriority
 import com.example.data.model.SiteNotificationItem
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusError
-import com.example.ui.theme.StatusSuccess
-import com.example.ui.theme.StatusWarning
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun NotificationItemCard(
@@ -55,12 +52,12 @@ fun NotificationItemCard(
     modifier: Modifier = Modifier
 ) {
     val categoryColor = when (item.category) {
-        NotificationCategory.HAZARDS -> StatusError
-        NotificationCategory.AI_ALERTS -> MetaBlue
-        NotificationCategory.REPORTS -> StatusSuccess
-        NotificationCategory.TASKS -> StatusWarning
-        NotificationCategory.FIRMWARE -> MetaBlue
-        else -> MetaBlue
+        NotificationCategory.HAZARDS -> LocalKayaColors.current.status.error
+        NotificationCategory.AI_ALERTS -> LocalKayaColors.current.accent
+        NotificationCategory.REPORTS -> LocalKayaColors.current.status.success
+        NotificationCategory.TASKS -> LocalKayaColors.current.status.warning
+        NotificationCategory.FIRMWARE -> LocalKayaColors.current.accent
+        else -> LocalKayaColors.current.accent
     }
 
     val categoryIcon = when (item.category) {
@@ -121,7 +118,7 @@ fun NotificationItemCard(
                         Spacer(modifier = Modifier.width(6.dp))
                         Surface(
                             shape = RoundedCornerShape(8.dp),
-                            color = StatusError
+                            color = LocalKayaColors.current.status.error
                         ) {
                             Text(
                                 text = "CRITICAL",

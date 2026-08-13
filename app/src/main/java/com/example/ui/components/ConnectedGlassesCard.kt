@@ -36,8 +36,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.UserProfile
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusSuccess
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun ConnectedGlassesCard(
@@ -47,7 +46,7 @@ fun ConnectedGlassesCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .border(1.dp, MetaBlue.copy(0.3f), RoundedCornerShape(20.dp))
+            .border(1.dp, LocalKayaColors.current.accent.copy(0.3f), RoundedCornerShape(20.dp))
             .testTag("connected_glasses_card"),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
@@ -63,13 +62,13 @@ fun ConnectedGlassesCard(
                         modifier = Modifier
                             .size(36.dp)
                             .clip(CircleShape)
-                            .background(MetaBlue.copy(0.15f)),
+                            .background(LocalKayaColors.current.accent.copy(0.15f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = Icons.Default.Visibility,
                             contentDescription = null,
-                            tint = MetaBlue,
+                            tint = LocalKayaColors.current.accent,
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -80,7 +79,7 @@ fun ConnectedGlassesCard(
                             fontSize = 11.sp,
                             fontFamily = FontFamily.Monospace,
                             fontWeight = FontWeight.Bold,
-                            color = MetaBlue
+                            color = LocalKayaColors.current.accent
                         )
                         Text(
                             text = profile.connectedGlassesModel,
@@ -93,19 +92,19 @@ fun ConnectedGlassesCard(
 
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = StatusSuccess.copy(0.15f)
+                    color = LocalKayaColors.current.status.success.copy(0.15f)
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(imageVector = Icons.Default.Bluetooth, contentDescription = null, tint = StatusSuccess, modifier = Modifier.size(12.dp))
+                        Icon(imageVector = Icons.Default.Bluetooth, contentDescription = null, tint = LocalKayaColors.current.status.success, modifier = Modifier.size(12.dp))
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = "CONNECTED",
                             fontSize = 9.sp,
                             fontWeight = FontWeight.Bold,
-                            color = StatusSuccess
+                            color = LocalKayaColors.current.status.success
                         )
                     }
                 }
@@ -121,11 +120,11 @@ fun ConnectedGlassesCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(imageVector = Icons.Default.BatteryFull, contentDescription = null, tint = StatusSuccess, modifier = Modifier.size(16.dp))
+                        Icon(imageVector = Icons.Default.BatteryFull, contentDescription = null, tint = LocalKayaColors.current.status.success, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
                         Text("Battery Level", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
-                    Text("${profile.glassesBattery}%", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = StatusSuccess)
+                    Text("${profile.glassesBattery}%", fontSize = 12.sp, fontWeight = FontWeight.Bold, color = LocalKayaColors.current.status.success)
                 }
 
                 Spacer(modifier = Modifier.height(6.dp))
@@ -136,8 +135,8 @@ fun ConnectedGlassesCard(
                         .fillMaxWidth()
                         .height(8.dp)
                         .clip(RoundedCornerShape(4.dp)),
-                    color = StatusSuccess,
-                    trackColor = StatusSuccess.copy(0.2f)
+                    color = LocalKayaColors.current.status.success,
+                    trackColor = LocalKayaColors.current.status.success.copy(0.2f)
                 )
             }
 
@@ -148,7 +147,7 @@ fun ConnectedGlassesCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text("Ray-Ban OS: v2.4.1 (Latest)", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text("Calibrated: Today 08:30", fontSize = 10.sp, color = MetaBlue, fontWeight = FontWeight.Bold)
+                Text("Calibrated: Today 08:30", fontSize = 10.sp, color = LocalKayaColors.current.accent, fontWeight = FontWeight.Bold)
             }
         }
     }
