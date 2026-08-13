@@ -25,8 +25,8 @@ import com.example.ui.components.BimMeasurementsCard
 import com.example.ui.components.CadDeviationCard
 import com.example.ui.components.CadFileUploadSection
 import com.example.ui.components.DifferenceVisualizationCard
-import com.example.ui.theme.MetaBlue
 import com.example.ui.viewmodel.SiteMindViewModel
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun BlueprintScreen(
@@ -39,7 +39,7 @@ fun BlueprintScreen(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
-            .padding(horizontal = 16.dp)
+            .padding(horizontal = 24.dp)
             .testTag("blueprint_cad_screen_list"),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
@@ -52,7 +52,7 @@ fun BlueprintScreen(
                     text = "CAD / BIM BLUEPRINT & AR COMPARISON",
                     fontSize = 11.sp,
                     fontWeight = FontWeight.Bold,
-                    color = MetaBlue,
+                    color = LocalKayaColors.current.accent,
                     letterSpacing = 1.sp
                 )
                 Text(
