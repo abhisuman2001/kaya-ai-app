@@ -37,11 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.AgentExecutionStep
 import com.example.data.model.AgentStatus
-import com.example.ui.theme.BorderDark
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusError
-import com.example.ui.theme.StatusSuccess
-import com.example.ui.theme.StatusWarning
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun MultiAgentTraceCard(
@@ -51,7 +47,7 @@ fun MultiAgentTraceCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .border(1.dp, BorderDark, RoundedCornerShape(20.dp))
+            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(20.dp))
             .testTag("multi_agent_trace_card"),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
@@ -69,7 +65,7 @@ fun MultiAgentTraceCard(
                     Icon(
                         imageVector = Icons.Default.Memory,
                         contentDescription = "Multi-Agent AI",
-                        tint = MetaBlue,
+                        tint = LocalKayaColors.current.accent,
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -83,11 +79,11 @@ fun MultiAgentTraceCard(
 
                 Surface(
                     shape = RoundedCornerShape(10.dp),
-                    color = MetaBlue.copy(alpha = 0.12f)
+                    color = LocalKayaColors.current.accent.copy(alpha = 0.12f)
                 ) {
                     Text(
                         text = "${steps.sumOf { it.latencyMs }} ms total",
-                        color = MetaBlue,
+                        color = LocalKayaColors.current.accent,
                         fontSize = 11.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
@@ -123,10 +119,10 @@ private fun AgentStepRow(
                     .clip(CircleShape)
                     .background(
                         when (step.status) {
-                            AgentStatus.SUCCESS -> StatusSuccess.copy(alpha = 0.15f)
-                            AgentStatus.WARNING -> StatusWarning.copy(alpha = 0.15f)
-                            AgentStatus.ALERT -> StatusError.copy(alpha = 0.15f)
-                            else -> MetaBlue.copy(alpha = 0.15f)
+                            AgentStatus.SUCCESS -> LocalKayaColors.current.status.success.copy(alpha = 0.15f)
+                            AgentStatus.WARNING -> LocalKayaColors.current.status.warning.copy(alpha = 0.15f)
+                            AgentStatus.ALERT -> LocalKayaColors.current.status.error.copy(alpha = 0.15f)
+                            else -> LocalKayaColors.current.accent.copy(alpha = 0.15f)
                         }
                     ),
                 contentAlignment = Alignment.Center
@@ -139,10 +135,10 @@ private fun AgentStepRow(
                     },
                     contentDescription = null,
                     tint = when (step.status) {
-                        AgentStatus.SUCCESS -> StatusSuccess
-                        AgentStatus.WARNING -> StatusWarning
-                        AgentStatus.ALERT -> StatusError
-                        else -> MetaBlue
+                        AgentStatus.SUCCESS -> LocalKayaColors.current.status.success
+                        AgentStatus.WARNING -> LocalKayaColors.current.status.warning
+                        AgentStatus.ALERT -> LocalKayaColors.current.status.error
+                        else -> LocalKayaColors.current.accent
                     },
                     modifier = Modifier.size(14.dp)
                 )

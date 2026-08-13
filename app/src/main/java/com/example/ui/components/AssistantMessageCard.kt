@@ -39,8 +39,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.AssistantChatMessage
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusSuccess
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun AssistantMessageCard(
@@ -49,7 +48,7 @@ fun AssistantMessageCard(
     onSpeechToggle: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val borderColor = if (message.isUser) MaterialTheme.colorScheme.outlineVariant else MetaBlue.copy(0.5f)
+    val borderColor = if (message.isUser) MaterialTheme.colorScheme.outlineVariant else LocalKayaColors.current.accent.copy(0.5f)
     val containerBg = if (message.isUser) MaterialTheme.colorScheme.surfaceVariant.copy(0.4f) else MaterialTheme.colorScheme.surface
 
     Card(
@@ -72,13 +71,13 @@ fun AssistantMessageCard(
                         modifier = Modifier
                             .size(32.dp)
                             .clip(CircleShape)
-                            .background(if (message.isUser) MaterialTheme.colorScheme.surfaceVariant else MetaBlue.copy(0.15f)),
+                            .background(if (message.isUser) MaterialTheme.colorScheme.surfaceVariant else LocalKayaColors.current.accent.copy(0.15f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = if (message.isUser) Icons.Default.Person else Icons.Default.AutoAwesome,
                             contentDescription = null,
-                            tint = if (message.isUser) MaterialTheme.colorScheme.onSurfaceVariant else MetaBlue,
+                            tint = if (message.isUser) MaterialTheme.colorScheme.onSurfaceVariant else LocalKayaColors.current.accent,
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -91,7 +90,7 @@ fun AssistantMessageCard(
                             fontSize = 11.sp,
                             fontFamily = FontFamily.Monospace,
                             fontWeight = FontWeight.Bold,
-                            color = if (message.isUser) MaterialTheme.colorScheme.onSurfaceVariant else MetaBlue
+                            color = if (message.isUser) MaterialTheme.colorScheme.onSurfaceVariant else LocalKayaColors.current.accent
                         )
                         Text(
                             text = message.timestamp,
@@ -104,7 +103,7 @@ fun AssistantMessageCard(
                 if (!message.isUser) {
                     Surface(
                         shape = CircleShape,
-                        color = if (isSpeechPlaying) StatusSuccess else MetaBlue.copy(0.15f),
+                        color = if (isSpeechPlaying) LocalKayaColors.current.status.success else LocalKayaColors.current.accent.copy(0.15f),
                         modifier = Modifier
                             .clip(CircleShape)
                             .testTag("toggle_speech_msg_${message.id}")
@@ -116,7 +115,7 @@ fun AssistantMessageCard(
                             Icon(
                                 imageVector = Icons.Default.VolumeUp,
                                 contentDescription = "Play Speech",
-                                tint = if (isSpeechPlaying) Color.White else MetaBlue,
+                                tint = if (isSpeechPlaying) Color.White else LocalKayaColors.current.accent,
                                 modifier = Modifier.size(16.dp)
                             )
                         }
@@ -140,10 +139,10 @@ fun AssistantMessageCard(
                             modifier = Modifier.padding(10.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(imageVector = Icons.Default.Image, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(20.dp))
+                            Icon(imageVector = Icons.Default.Image, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(20.dp))
                             Spacer(modifier = Modifier.width(8.dp))
                             Column {
-                                Text(text = "ATTACHED SITE IMAGE SNAPSHOT", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = MetaBlue)
+                                Text(text = "ATTACHED SITE IMAGE SNAPSHOT", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = LocalKayaColors.current.accent)
                                 Text(text = imgUri, fontSize = 9.sp, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.onSurfaceVariant)
                             }
                         }
@@ -171,15 +170,15 @@ fun AssistantMessageCard(
                     message.oshaReference?.let { osha ->
                         Surface(
                             shape = RoundedCornerShape(8.dp),
-                            color = MetaBlue.copy(0.12f)
+                            color = LocalKayaColors.current.accent.copy(0.12f)
                         ) {
                             Row(
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(imageVector = Icons.Default.Shield, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(12.dp))
+                                Icon(imageVector = Icons.Default.Shield, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(12.dp))
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text(text = osha, fontSize = 9.sp, fontWeight = FontWeight.Bold, color = MetaBlue)
+                                Text(text = osha, fontSize = 9.sp, fontWeight = FontWeight.Bold, color = LocalKayaColors.current.accent)
                             }
                         }
                     }
@@ -187,15 +186,15 @@ fun AssistantMessageCard(
                     message.confidenceScore?.let { score ->
                         Surface(
                             shape = RoundedCornerShape(8.dp),
-                            color = StatusSuccess.copy(0.12f)
+                            color = LocalKayaColors.current.status.success.copy(0.12f)
                         ) {
                             Row(
                                 modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, tint = StatusSuccess, modifier = Modifier.size(12.dp))
+                                Icon(imageVector = Icons.Default.CheckCircle, contentDescription = null, tint = LocalKayaColors.current.status.success, modifier = Modifier.size(12.dp))
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text(text = "$score% CONFIDENCE", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = StatusSuccess)
+                                Text(text = "$score% CONFIDENCE", fontSize = 9.sp, fontWeight = FontWeight.Bold, color = LocalKayaColors.current.status.success)
                             }
                         }
                     }

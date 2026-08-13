@@ -33,9 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.AnalyticsMetric
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusSuccess
-import com.example.ui.theme.StatusWarning
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun AnalyticsMetricsGrid(
@@ -54,10 +52,10 @@ fun AnalyticsMetricsGrid(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    MetricCardItem(metric = productivity, icon = Icons.Default.Speed, badgeColor = MetaBlue, modifier = Modifier.weight(1f), testTag = "metric_productivity")
-                    MetricCardItem(metric = hazardsPrevented, icon = Icons.Default.Shield, badgeColor = StatusSuccess, modifier = Modifier.weight(1f), testTag = "metric_hazards")
-                    MetricCardItem(metric = projectProgress, icon = Icons.Default.TrendingUp, badgeColor = MetaBlue, modifier = Modifier.weight(1f), testTag = "metric_progress")
-                    MetricCardItem(metric = qualityScore, icon = Icons.Default.FactCheck, badgeColor = StatusSuccess, modifier = Modifier.weight(1f), testTag = "metric_quality")
+                    MetricCardItem(metric = productivity, icon = Icons.Default.Speed, badgeColor = LocalKayaColors.current.accent, modifier = Modifier.weight(1f), testTag = "metric_productivity")
+                    MetricCardItem(metric = hazardsPrevented, icon = Icons.Default.Shield, badgeColor = LocalKayaColors.current.status.success, modifier = Modifier.weight(1f), testTag = "metric_hazards")
+                    MetricCardItem(metric = projectProgress, icon = Icons.Default.TrendingUp, badgeColor = LocalKayaColors.current.accent, modifier = Modifier.weight(1f), testTag = "metric_progress")
+                    MetricCardItem(metric = qualityScore, icon = Icons.Default.FactCheck, badgeColor = LocalKayaColors.current.status.success, modifier = Modifier.weight(1f), testTag = "metric_quality")
                 }
             }
             width >= 360.dp -> {
@@ -70,15 +68,15 @@ fun AnalyticsMetricsGrid(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        MetricCardItem(metric = productivity, icon = Icons.Default.Speed, badgeColor = MetaBlue, modifier = Modifier.weight(1f), testTag = "metric_productivity")
-                        MetricCardItem(metric = hazardsPrevented, icon = Icons.Default.Shield, badgeColor = StatusSuccess, modifier = Modifier.weight(1f), testTag = "metric_hazards")
+                        MetricCardItem(metric = productivity, icon = Icons.Default.Speed, badgeColor = LocalKayaColors.current.accent, modifier = Modifier.weight(1f), testTag = "metric_productivity")
+                        MetricCardItem(metric = hazardsPrevented, icon = Icons.Default.Shield, badgeColor = LocalKayaColors.current.status.success, modifier = Modifier.weight(1f), testTag = "metric_hazards")
                     }
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
-                        MetricCardItem(metric = projectProgress, icon = Icons.Default.TrendingUp, badgeColor = MetaBlue, modifier = Modifier.weight(1f), testTag = "metric_progress")
-                        MetricCardItem(metric = qualityScore, icon = Icons.Default.FactCheck, badgeColor = StatusSuccess, modifier = Modifier.weight(1f), testTag = "metric_quality")
+                        MetricCardItem(metric = projectProgress, icon = Icons.Default.TrendingUp, badgeColor = LocalKayaColors.current.accent, modifier = Modifier.weight(1f), testTag = "metric_progress")
+                        MetricCardItem(metric = qualityScore, icon = Icons.Default.FactCheck, badgeColor = LocalKayaColors.current.status.success, modifier = Modifier.weight(1f), testTag = "metric_quality")
                     }
                 }
             }
@@ -88,10 +86,10 @@ fun AnalyticsMetricsGrid(
                     modifier = Modifier.fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    MetricCardItem(metric = productivity, icon = Icons.Default.Speed, badgeColor = MetaBlue, modifier = Modifier.fillMaxWidth(), testTag = "metric_productivity")
-                    MetricCardItem(metric = hazardsPrevented, icon = Icons.Default.Shield, badgeColor = StatusSuccess, modifier = Modifier.fillMaxWidth(), testTag = "metric_hazards")
-                    MetricCardItem(metric = projectProgress, icon = Icons.Default.TrendingUp, badgeColor = MetaBlue, modifier = Modifier.fillMaxWidth(), testTag = "metric_progress")
-                    MetricCardItem(metric = qualityScore, icon = Icons.Default.FactCheck, badgeColor = StatusSuccess, modifier = Modifier.fillMaxWidth(), testTag = "metric_quality")
+                    MetricCardItem(metric = productivity, icon = Icons.Default.Speed, badgeColor = LocalKayaColors.current.accent, modifier = Modifier.fillMaxWidth(), testTag = "metric_productivity")
+                    MetricCardItem(metric = hazardsPrevented, icon = Icons.Default.Shield, badgeColor = LocalKayaColors.current.status.success, modifier = Modifier.fillMaxWidth(), testTag = "metric_hazards")
+                    MetricCardItem(metric = projectProgress, icon = Icons.Default.TrendingUp, badgeColor = LocalKayaColors.current.accent, modifier = Modifier.fillMaxWidth(), testTag = "metric_progress")
+                    MetricCardItem(metric = qualityScore, icon = Icons.Default.FactCheck, badgeColor = LocalKayaColors.current.status.success, modifier = Modifier.fillMaxWidth(), testTag = "metric_quality")
                 }
             }
         }

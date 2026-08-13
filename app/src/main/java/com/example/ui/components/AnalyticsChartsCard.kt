@@ -38,8 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.ChartDataPoint
 import com.example.data.model.HazardCategoryBreakdown
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusSuccess
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun AnalyticsChartsCard(
@@ -55,7 +54,7 @@ fun AnalyticsChartsCard(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .border(1.dp, MetaBlue.copy(0.3f), RoundedCornerShape(20.dp))
+                .border(1.dp, LocalKayaColors.current.accent.copy(0.3f), RoundedCornerShape(20.dp))
                 .testTag("productivity_chart_card"),
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
@@ -67,20 +66,20 @@ fun AnalyticsChartsCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(imageVector = Icons.Default.ShowChart, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(20.dp))
+                        Icon(imageVector = Icons.Default.ShowChart, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(20.dp))
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "WEEKLY PRODUCTIVITY & QUALITY TREND",
                             fontSize = 11.sp,
                             fontFamily = FontFamily.Monospace,
                             fontWeight = FontWeight.Bold,
-                            color = MetaBlue
+                            color = LocalKayaColors.current.accent
                         )
                     }
 
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        LegendBadge(color = MetaBlue, label = "Productivity %")
-                        LegendBadge(color = StatusSuccess, label = "Quality %")
+                        LegendBadge(color = LocalKayaColors.current.accent, label = "Productivity %")
+                        LegendBadge(color = LocalKayaColors.current.status.success, label = "Quality %")
                     }
                 }
 
@@ -112,7 +111,7 @@ fun AnalyticsChartsCard(
                                         .width(10.dp)
                                         .fillMaxHeight(point.productivityValue / 100f)
                                         .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
-                                        .background(MetaBlue)
+                                        .background(LocalKayaColors.current.accent)
                                 )
                                 // Quality Bar
                                 Box(
@@ -120,7 +119,7 @@ fun AnalyticsChartsCard(
                                         .width(10.dp)
                                         .fillMaxHeight(point.qualityScore / 100f)
                                         .clip(RoundedCornerShape(topStart = 4.dp, topEnd = 4.dp))
-                                        .background(StatusSuccess)
+                                        .background(LocalKayaColors.current.status.success)
                                 )
                             }
                             Spacer(modifier = Modifier.height(6.dp))
@@ -152,26 +151,26 @@ fun AnalyticsChartsCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(imageVector = Icons.Default.PieChart, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(20.dp))
+                        Icon(imageVector = Icons.Default.PieChart, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(20.dp))
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
                             text = "HAZARDS PREVENTED BY CATEGORY",
                             fontSize = 11.sp,
                             fontFamily = FontFamily.Monospace,
                             fontWeight = FontWeight.Bold,
-                            color = MetaBlue
+                            color = LocalKayaColors.current.accent
                         )
                     }
 
                     Surface(
                         shape = RoundedCornerShape(8.dp),
-                        color = MetaBlue.copy(0.12f)
+                        color = LocalKayaColors.current.accent.copy(0.12f)
                     ) {
                         Text(
                             text = "48 ALERTS",
                             fontSize = 9.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MetaBlue,
+                            color = LocalKayaColors.current.accent,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                         )
                     }
