@@ -191,6 +191,18 @@ fun HazardDetectionScreen(
             }
         }
 
+        // Voice Command Feature to File Hazard
+        item {
+            VoiceHazardCommandCard(
+                onProcessVoiceCommand = { voiceCmd ->
+                    viewModel.processVoiceHazardCommand(voiceCmd)
+                },
+                lastVoiceFiledHazard = hazardState.lastVoiceFiledHazard,
+                voiceFeedbackMessage = hazardState.voiceCommandFeedbackMessage,
+                onDismissFeedback = { viewModel.clearVoiceCommandFeedback() }
+            )
+        }
+
         // Voice Alert Active Playing Banner
         item {
             AnimatedVisibility(visible = hazardState.activeVoicePlayingId != null) {

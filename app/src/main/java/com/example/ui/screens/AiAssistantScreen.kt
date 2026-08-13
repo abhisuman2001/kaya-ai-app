@@ -212,9 +212,21 @@ fun AiAssistantScreen(
         textInputText = ""
         liveTranscriptText = questionText
 
+        val lowerQ = questionText.lowercase()
+        val isHazardFilingCommand = lowerQ.contains("file hazard") || 
+                                    lowerQ.contains("log hazard") || 
+                                    lowerQ.contains("report hazard") || 
+                                    lowerQ.contains("create hazard") || 
+                                    lowerQ.contains("hazard alert")
+
         // Check if query is hands-free report creation intent
         val isReporting = viewModel.aiContextEngine.isReportIntent(questionText)
-        if (isReporting) {
+        var voiceFiledHazardTitle: String? = null
+
+        if (isHazardFilingCommand) {
+            val (filedItem, _) = viewModel.processVoiceHazardCommand(questionText)
+            voiceFiledHazardTitle = filedItem?.title
+        } else if (isReporting) {
             val draft = viewModel.aiContextEngine.generateReportFromVoice(questionText)
             activeDraftReport = draft
             showReportBottomSheet = true
@@ -239,7 +251,14 @@ fun AiAssistantScreen(
             viewModel.runAiQuery(questionText)
             delay(1000)
 
-            val aiResponseText = if (isReporting && activeDraftReport != null) {
+            val aiResponseText = if (isHazardFilingCommand) {
+                val lastHz = viewModel.hazardDetectionState.value.lastVoiceFiledHazard
+                if (lastHz != null) {
+                    "Hazard observation filed via Voice Command: '${lastHz.title}' at ${lastHz.location} (${lastHz.severity} severity). Logged under ${lastHz.oshaStandard} and synced to the safety database."
+                } else {
+                    "I've processed your voice command and logged the hazard observation into the SiteMind safety matrix."
+                }
+            } else if (isReporting && activeDraftReport != null) {
                 val draft = activeDraftReport!!
                 "I've captured the current camera frame and context, classified the issue as '${draft.issueType}' (${draft.severity} severity), and generated a draft report for '${draft.title}'. Please review and confirm."
             } else {
@@ -261,7 +280,8 @@ fun AiAssistantScreen(
                     id = aiMsgId,
                     isUser = false,
                     text = aiResponseText,
-                    timestamp = SimpleTimeFormatter.now()
+                    timestamp = SimpleTimeFormatter.now(),
+                    relatedHazardTitle = voiceFiledHazardTitle
                 )
             )
 

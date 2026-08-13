@@ -13,6 +13,12 @@ class User(Base):
     role = Column(String, default="SUPERVISOR")
     job_title = Column(String, nullable=True)
     company = Column(String, nullable=True)
+    site_location = Column(String, default="Metro Tower Construction — Active Site")
+    connected_glasses_model = Column(String, default="Ray-Ban Meta Smart Glasses (Gen 2)")
+    theme = Column(String, default="Dark Mode")
+    language = Column(String, default="English (US)")
+    avatar_url = Column(String, nullable=True)
+    is_google_auth = Column(Boolean, default=False)
 
 class Project(Base):
     __tablename__ = "projects"

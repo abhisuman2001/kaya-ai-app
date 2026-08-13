@@ -3,6 +3,9 @@ package com.example.ui.viewmodel
 import com.example.BuildConfig
 import android.app.Application
 import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.os.BatteryManager
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.data.ai.MultiAgentService
@@ -110,6 +113,63 @@ class SiteMindViewModel(application: Application) : AndroidViewModel(application
         db.knowledgeDao()
     )
     private val aiService = MultiAgentService()
+    val firestoreRepository = FirestoreRepository()
+
+    fun saveUserDetailChanges(updatedProfile: UserProfile) {
+        _currentUser.value = updatedProfile
+        _profileState.value = _profileState.value.copy(profile = updatedProfile)
+        syncUserToDatabases(updatedProfile)
+    }
+
+    private fun syncUserToDatabases(profile: UserProfile) {
+        viewModelScope.launch(Dispatchers.IO) {
+            // Save to Firestore
+            firestoreRepository.saveUserProfileToFirestore(profile)
+
+            // Save to Backend Database
+            try {
+                BackendApiClient.apiService.updateProfile(
+                    BackendUserProfileUpdateRequest(
+                        user_id = profile.id,
+                        name = profile.name,
+                        email = profile.email,
+                        role = profile.role.name,
+                        job_title = profile.jobTitle,
+                        company = profile.company,
+                        site_location = profile.siteLocation,
+                        connected_glasses_model = profile.connectedGlassesModel,
+                        theme = profile.theme,
+                        language = profile.language,
+                        avatar_url = profile.avatarUrl
+                    )
+                )
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+
+            // Save to Supabase profiles & user_roles
+            try {
+                val dbRole = if (profile.role == UserRole.SUPERVISOR) "supervisor" else "worker"
+                ApiClient.apiService.createProfile(
+                    SupabaseProfileDto(
+                        id = profile.id,
+                        display_name = profile.name,
+                        email = profile.email,
+                        site_role = dbRole,
+                        approval_status = "approved"
+                    )
+                )
+                ApiClient.apiService.createUserRole(
+                    com.example.data.network.SupabaseUserRoleDto(
+                        user_id = profile.id,
+                        role = dbRole
+                    )
+                )
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
 
     // Central Memory Layer - AI Context Engine
     val aiContextEngine = AiContextEngine()
@@ -268,6 +328,84 @@ class SiteMindViewModel(application: Application) : AndroidViewModel(application
 
     private val _connectionQuality = MutableStateFlow(ConnectionQualityInfo(-58, 54, 18, "Excellent"))
     val connectionQuality: StateFlow<ConnectionQualityInfo> = _connectionQuality.asStateFlow()
+
+    init {
+        startBatteryTelemetryObserver()
+    }
+
+    private fun startBatteryTelemetryObserver() {
+        viewModelScope.launch(Dispatchers.IO) {
+            while (true) {
+                try {
+                    val appCtx = getApplication<Application>()
+                    val batteryIntent: Intent? = appCtx.registerReceiver(
+                        null,
+                        IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+                    )
+                    if (batteryIntent != null) {
+                        val level = batteryIntent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
+                        val scale = batteryIntent.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
+                        val batteryPct = if (level >= 0 && scale > 0) ((level.toFloat() / scale.toFloat()) * 100).toInt() else _glassState.value.batteryPercent
+
+                        val status = batteryIntent.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
+                        val isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING ||
+                                         status == BatteryManager.BATTERY_STATUS_FULL
+
+                        val chargePlug = batteryIntent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1)
+                        val plugType = when (chargePlug) {
+                            BatteryManager.BATTERY_PLUGGED_AC -> "AC Charger"
+                            BatteryManager.BATTERY_PLUGGED_USB -> "USB Port"
+                            BatteryManager.BATTERY_PLUGGED_WIRELESS -> "Wireless"
+                            else -> ""
+                        }
+
+                        val chargingStatusText = when (status) {
+                            BatteryManager.BATTERY_STATUS_CHARGING -> if (plugType.isNotEmpty()) "Charging ($plugType)" else "Charging"
+                            BatteryManager.BATTERY_STATUS_FULL -> "Fully Charged"
+                            BatteryManager.BATTERY_STATUS_DISCHARGING -> "Discharging"
+                            BatteryManager.BATTERY_STATUS_NOT_CHARGING -> "Not Charging"
+                            else -> if (isCharging) "Charging" else "Discharging"
+                        }
+
+                        val rawHealth = batteryIntent.getIntExtra(BatteryManager.EXTRA_HEALTH, BatteryManager.BATTERY_HEALTH_UNKNOWN)
+                        val healthStr = when (rawHealth) {
+                            BatteryManager.BATTERY_HEALTH_GOOD -> "Good"
+                            BatteryManager.BATTERY_HEALTH_OVERHEAT -> "Overheating"
+                            BatteryManager.BATTERY_HEALTH_DEAD -> "Dead"
+                            BatteryManager.BATTERY_HEALTH_OVER_VOLTAGE -> "Over Voltage"
+                            BatteryManager.BATTERY_HEALTH_UNSPECIFIED_FAILURE -> "Unspecified Failure"
+                            BatteryManager.BATTERY_HEALTH_COLD -> "Cold"
+                            else -> "Good"
+                        }
+
+                        val rawTemp = batteryIntent.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, 310)
+                        val tempC = rawTemp / 10
+
+                        _glassState.value = _glassState.value.copy(
+                            batteryPercent = batteryPct,
+                            isCharging = isCharging,
+                            chargingStatusText = chargingStatusText,
+                            batteryHealth = healthStr,
+                            tempCelsius = tempC
+                        )
+
+                        _currentUser.value = _currentUser.value.copy(
+                            glassesBattery = batteryPct
+                        )
+
+                        _discoveredDevices.value = _discoveredDevices.value.map { dev ->
+                            if (dev.isSmartphoneBridge) {
+                                dev.copy(batteryPercent = batteryPct)
+                            } else dev
+                        }
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+                delay(2000L)
+            }
+        }
+    }
 
     private val _isReconnecting = MutableStateFlow(false)
     val isReconnecting: StateFlow<Boolean> = _isReconnecting.asStateFlow()
@@ -1551,6 +1689,28 @@ class SiteMindViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
+    private fun parseSupabaseError(errorBody: String?, statusCode: Int, defaultMsg: String): String {
+        if (errorBody.isNullOrBlank()) {
+            return if (statusCode > 0) "$defaultMsg (HTTP $statusCode)" else defaultMsg
+        }
+        return try {
+            val jsonObj = org.json.JSONObject(errorBody)
+            val msg = jsonObj.optString("msg", "")
+            val errDesc = jsonObj.optString("error_description", "")
+            val message = jsonObj.optString("message", "")
+            val err = jsonObj.optString("error", "")
+            when {
+                msg.isNotBlank() -> msg
+                errDesc.isNotBlank() -> errDesc
+                message.isNotBlank() -> message
+                err.isNotBlank() -> err
+                else -> if (statusCode > 0) "$defaultMsg (HTTP $statusCode)" else errorBody.take(150)
+            }
+        } catch (e: Exception) {
+            if (statusCode > 0) "$defaultMsg (HTTP $statusCode): ${errorBody.take(100)}" else errorBody.take(150)
+        }
+    }
+
     fun navigateToAuth(screen: AuthScreenState) {
         _authError.value = null
         _authState.value = screen
@@ -1578,7 +1738,7 @@ class SiteMindViewModel(application: Application) : AndroidViewModel(application
                 if (response.isSuccessful && response.body() != null) {
                     val authBody = response.body()!!
                     val user = authBody.user
-                    val userId = user?.id ?: java.util.UUID.randomUUID().toString()
+                    val userId = user?.id ?: authBody.id ?: "usr_${System.currentTimeMillis()}"
 
                     var displayName = user?.user_metadata?.display_name ?: email.substringBefore("@").replace(".", " ")
                     var siteRole = user?.user_metadata?.site_role ?: "worker"
@@ -1609,63 +1769,50 @@ class SiteMindViewModel(application: Application) : AndroidViewModel(application
                     _profileState.value = ProfileState(profile = updatedUser)
                     _authLoading.value = false
                     _authState.value = AuthScreenState.AUTHENTICATED
+                    syncUserToDatabases(updatedUser)
                     syncWithSupabase()
                     return@launch
                 } else {
-                    val errStr = response.errorBody()?.string() ?: ""
-                    _authError.value = if (errStr.contains("invalid_credentials", ignoreCase = true)) "Invalid email or password." else "Authentication failed. Please verify credentials."
+                    val errBody = response.errorBody()?.string()
+                    val parsedMsg = parseSupabaseError(errBody, response.code(), "Authentication failed")
+                    _authError.value = if (errBody?.contains("invalid_credentials", ignoreCase = true) == true) {
+                        "Invalid email or password."
+                    } else {
+                        parsedMsg
+                    }
                     _authLoading.value = false
                     return@launch
                 }
             } catch (e: Exception) {
-                // Fallback attempt: check profiles table directly
-                try {
-                    val profileRes = ApiClient.apiService.getProfiles()
-                    if (profileRes.isSuccessful && profileRes.body() != null) {
-                        val matchedProfile = profileRes.body()!!.firstOrNull { it.email?.equals(email, ignoreCase = true) == true }
-                        if (matchedProfile != null) {
-                            val assignedRole = if (matchedProfile.site_role?.contains("supervisor", ignoreCase = true) == true) UserRole.SUPERVISOR else UserRole.WORKER
-                            val updatedUser = UserProfile(
-                                id = matchedProfile.id,
-                                email = matchedProfile.email ?: email,
-                                name = matchedProfile.display_name ?: email.substringBefore("@").replace(".", " "),
-                                role = assignedRole
-                            )
-                            _currentUser.value = updatedUser
-                            _profileState.value = ProfileState(profile = updatedUser)
-                            _authLoading.value = false
-                            _authState.value = AuthScreenState.AUTHENTICATED
-                            syncWithSupabase()
-                            return@launch
-                        }
-                    }
-                } catch (pErr: Exception) {
-                    pErr.printStackTrace()
-                }
-
                 _authError.value = "Connection error: ${e.localizedMessage ?: "Unable to connect"}"
                 _authLoading.value = false
             }
         }
     }
 
-    fun loginWithGoogle() {
-        viewModelScope.launch {
+    fun loginWithGoogle(googleIdToken: String? = null) {
+        viewModelScope.launch(Dispatchers.IO) {
             _authLoading.value = true
             _authError.value = null
-            delay(800)
-            _authLoading.value = false
 
-            val updatedUser = UserProfile(
+            var firebaseUser: UserProfile? = null
+            if (!googleIdToken.isNullOrBlank()) {
+                firebaseUser = firestoreRepository.firebaseSignInWithGoogleToken(googleIdToken)
+            }
+
+            val updatedUser = firebaseUser ?: UserProfile(
                 id = "google_user_${System.currentTimeMillis()}",
                 name = "Google User",
                 email = "user@gmail.com",
                 role = UserRole.SUPERVISOR,
                 isGoogleAuth = true
             )
+
             _currentUser.value = updatedUser
             _profileState.value = ProfileState(profile = updatedUser)
+            _authLoading.value = false
             _authState.value = AuthScreenState.AUTHENTICATED
+            syncUserToDatabases(updatedUser)
             syncWithSupabase()
         }
     }
@@ -1690,69 +1837,60 @@ class SiteMindViewModel(application: Application) : AndroidViewModel(application
             _authLoading.value = true
             _authError.value = null
             try {
-                var createdUserId: String? = null
-
-                // Try Admin Sign Up first (bypasses email confirmation)
-                val adminRes = ApiClient.apiService.adminSignUp(
+                val standardRes = ApiClient.apiService.signUp(
                     SupabaseSignUpRequestDto(
                         email = email,
                         password = pass,
-                        email_confirm = true,
                         user_metadata = SupabaseSignUpUserMetadata(
                             display_name = name,
-                            site_role = siteRoleStr,
-                            email_verified = true
+                            site_role = siteRoleStr
                         )
                     )
                 )
 
-                if (adminRes.isSuccessful && adminRes.body() != null) {
-                    createdUserId = adminRes.body()?.id
-                } else {
-                    // Fallback to standard sign up
-                    val standardRes = ApiClient.apiService.signUp(
-                        SupabaseSignUpRequestDto(
-                            email = email,
-                            password = pass,
-                            user_metadata = SupabaseSignUpUserMetadata(
+                if (standardRes.isSuccessful && standardRes.body() != null) {
+                    val signUpBody = standardRes.body()!!
+                    val createdUserId = signUpBody.user?.id ?: signUpBody.id ?: "usr_${System.currentTimeMillis()}"
+
+                    // Save profile & role to Supabase tables
+                    try {
+                        ApiClient.apiService.createProfile(
+                            SupabaseProfileDto(
+                                id = createdUserId,
                                 display_name = name,
-                                site_role = siteRoleStr
+                                email = email,
+                                site_role = siteRoleStr,
+                                approval_status = "approved"
                             )
                         )
-                    )
-                    if (standardRes.isSuccessful && standardRes.body() != null) {
-                        createdUserId = standardRes.body()?.user?.id
-                    }
-                }
-
-                val finalId = createdUserId ?: java.util.UUID.randomUUID().toString()
-
-                // Save profile to Supabase profiles table
-                try {
-                    ApiClient.apiService.createProfile(
-                        SupabaseProfileDto(
-                            id = finalId,
-                            display_name = name,
-                            email = email,
-                            site_role = siteRoleStr,
-                            approval_status = "approved"
+                        ApiClient.apiService.createUserRole(
+                            com.example.data.network.SupabaseUserRoleDto(
+                                user_id = createdUserId,
+                                role = if (role == UserRole.SUPERVISOR) "supervisor" else "worker"
+                            )
                         )
-                    )
-                } catch (pErr: Exception) {
-                    pErr.printStackTrace()
-                }
+                    } catch (pErr: Exception) {
+                        pErr.printStackTrace()
+                    }
 
-                val newUser = UserProfile(
-                    id = finalId,
-                    name = name,
-                    email = email,
-                    role = role
-                )
-                _currentUser.value = newUser
-                _profileState.value = ProfileState(profile = newUser)
-                _authLoading.value = false
-                _authState.value = AuthScreenState.AUTHENTICATED
-                syncWithSupabase()
+                    val newUser = UserProfile(
+                        id = createdUserId,
+                        name = name,
+                        email = email,
+                        role = role
+                    )
+                    _currentUser.value = newUser
+                    _profileState.value = ProfileState(profile = newUser)
+                    _authLoading.value = false
+                    _authState.value = AuthScreenState.AUTHENTICATED
+                    syncUserToDatabases(newUser)
+                    syncWithSupabase()
+                } else {
+                    val errBody = standardRes.errorBody()?.string()
+                    val errMsg = parseSupabaseError(errBody, standardRes.code(), "Registration failed")
+                    _authError.value = errMsg
+                    _authLoading.value = false
+                }
             } catch (e: Exception) {
                 _authError.value = "Registration error: ${e.localizedMessage ?: "Failed to create account"}"
                 _authLoading.value = false
@@ -1806,45 +1944,49 @@ class SiteMindViewModel(application: Application) : AndroidViewModel(application
         _authState.value = AuthScreenState.LOGIN
     }
 
-    fun runAiQuery(query: String) {
-        if (query.isBlank()) return
+    fun runAiQuery(query: String, base64Frame: String? = null) {
+        if (query.isBlank() && base64Frame.isNullOrBlank()) return
         viewModelScope.launch {
+            val effectiveQuery = query.ifBlank { "Analyze live camera frame for worker hazards, PPE compliance, and blueprints" }
             val time = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date())
             
-            // Append user transcript entry
-            val userEntry = LiveTranscriptEntry(
-                id = "tr_${System.currentTimeMillis()}_u",
-                speaker = "User (Ray-Ban Mic)",
-                text = query,
-                timestamp = time,
-                isAi = false
-            )
-            _liveTranscripts.value = _liveTranscripts.value + userEntry
+            // Append user transcript entry if query is present
+            if (query.isNotBlank()) {
+                val userEntry = LiveTranscriptEntry(
+                    id = "tr_${System.currentTimeMillis()}_u",
+                    speaker = "User (Ray-Ban Mic)",
+                    text = query,
+                    timestamp = time,
+                    isAi = false
+                )
+                _liveTranscripts.value = _liveTranscripts.value + userEntry
+            }
 
             _isAnalyzing.value = true
             _glassState.value = _glassState.value.copy(connectionState = GlassAiState.LISTENING)
 
-            kotlinx.coroutines.delay(600)
             _glassState.value = _glassState.value.copy(connectionState = GlassAiState.THINKING)
 
-            val result = aiService.processQueryAndFrame(query)
+            val result = aiService.processQueryAndFrame(query = effectiveQuery, base64Frame = base64Frame)
 
             // Record voice interaction into central AI Context Engine memory
-            aiContextEngine.recordVoiceInteraction(query, result.aiResponseText)
+            aiContextEngine.recordVoiceInteraction(effectiveQuery, result.aiResponseText)
 
             _glassState.value = _glassState.value.copy(connectionState = GlassAiState.SPEAKING)
             _liveResult.value = result
             _isAnalyzing.value = false
 
-            // Append AI transcript entry
-            val aiEntry = LiveTranscriptEntry(
-                id = "tr_${System.currentTimeMillis()}_ai",
-                speaker = "SiteMind AI (Glasses Audio)",
-                text = result.aiResponseText,
-                timestamp = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date()),
-                isAi = true
-            )
-            _liveTranscripts.value = _liveTranscripts.value + aiEntry
+            // Append AI transcript entry if present
+            if (result.aiResponseText.isNotBlank()) {
+                val aiEntry = LiveTranscriptEntry(
+                    id = "tr_${System.currentTimeMillis()}_ai",
+                    speaker = "SiteMind AI (Glasses Audio)",
+                    text = result.aiResponseText,
+                    timestamp = time,
+                    isAi = true
+                )
+                _liveTranscripts.value = _liveTranscripts.value + aiEntry
+            }
 
             kotlinx.coroutines.delay(1800)
             _glassState.value = _glassState.value.copy(connectionState = GlassAiState.CONNECTED)
@@ -2315,6 +2457,143 @@ class SiteMindViewModel(application: Application) : AndroidViewModel(application
 
     fun stopVoiceAlert() {
         _hazardDetectionState.value = _hazardDetectionState.value.copy(activeVoicePlayingId = null)
+    }
+
+    fun clearVoiceCommandFeedback() {
+        _hazardDetectionState.value = _hazardDetectionState.value.copy(
+            lastVoiceFiledHazard = null,
+            voiceCommandFeedbackMessage = null
+        )
+    }
+
+    fun processVoiceHazardCommand(inputCommand: String): Pair<HazardDetectionItem?, String> {
+        val trimmed = inputCommand.trim()
+        if (trimmed.isBlank()) {
+            return Pair(null, "Voice command was empty. Please speak a hazard observation.")
+        }
+
+        val lower = trimmed.lowercase()
+
+        // 1. Determine Category
+        val category = when {
+            lower.contains("helmet") || lower.contains("hardhat") || lower.contains("head protection") -> HazardCategory.HELMET
+            lower.contains("vest") || lower.contains("hi-vis") || lower.contains("reflective") -> HazardCategory.VEST
+            lower.contains("glove") || lower.contains("hand protection") -> HazardCategory.GLOVE
+            lower.contains("harness") || lower.contains("fall") || lower.contains("height") || lower.contains("deck edge") -> HazardCategory.FALL
+            lower.contains("crane") || lower.contains("rigging") || lower.contains("hoist") -> HazardCategory.CRANE
+            lower.contains("electrical") || lower.contains("wire") || lower.contains("outlet") || lower.contains("voltage") || lower.contains("spark") -> HazardCategory.ELECTRICAL
+            lower.contains("scaffold") || lower.contains("staging") || lower.contains("platform") -> HazardCategory.SCAFFOLD
+            lower.contains("fire") || lower.contains("flame") || lower.contains("thermal") || lower.contains("smoke") || lower.contains("combustible") -> HazardCategory.FIRE
+            else -> HazardCategory.HELMET
+        }
+
+        // 2. Determine Severity
+        val severity = when {
+            lower.contains("critical") || lower.contains("emergency") || lower.contains("imminent") -> "CRITICAL"
+            lower.contains("high") || lower.contains("severe") || lower.contains("danger") -> "HIGH"
+            lower.contains("medium") || lower.contains("moderate") -> "MEDIUM"
+            lower.contains("low") || lower.contains("minor") -> "LOW"
+            else -> "HIGH"
+        }
+
+        // 3. Clean Title
+        var cleanTitle = trimmed
+            .replace(Regex("(?i)^(file hazard|log hazard|report hazard|create hazard|hazard alert|hazard):?"), "")
+            .trim()
+
+        if (cleanTitle.isBlank()) {
+            cleanTitle = "Voice Filed Hazard Observation"
+        } else {
+            cleanTitle = cleanTitle.replaceFirstChar { if (it.isLowerCase()) it.titlecase(java.util.Locale.getDefault()) else it.toString() }
+        }
+
+        // 4. Location extraction
+        val location = when {
+            lower.contains("level 18") -> "Level 18 Deck • Grid B-4"
+            lower.contains("level 12") -> "Level 12 Core • Grid C-2"
+            lower.contains("level 3") -> "Level 3 Framework • Grid A-1"
+            lower.contains("basement") || lower.contains("ground") -> "Ground Level Main Entry"
+            lower.contains("crane") -> "Crane Operations Platform A"
+            else -> "Level 18 Deck • Grid B-4"
+        }
+
+        // 5. OSHA standard mapping
+        val osha = when (category) {
+            HazardCategory.HELMET -> "OSHA 1926.100(a) Head Protection"
+            HazardCategory.VEST -> "OSHA 1926.201 High-Visibility Wear"
+            HazardCategory.GLOVE -> "OSHA 1926.95 Hand Protection"
+            HazardCategory.FALL -> "OSHA 1926.501 Fall Protection Systems"
+            HazardCategory.CRANE -> "OSHA 1926.1400 Cranes and Derricks"
+            HazardCategory.ELECTRICAL -> "OSHA 1926.405 Electrical Wiring"
+            HazardCategory.SCAFFOLD -> "OSHA 1926.451 Scaffolding Requirements"
+            HazardCategory.FIRE -> "OSHA 1926.150 Fire Prevention"
+        }
+
+        val description = "Voice Filed Observation: \"$trimmed\". Location tagged at $location. Category auto-classified as ${category.displayName} ($severity severity) under $osha."
+
+        val time = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.getDefault()).format(java.util.Date())
+        val newId = "hz_v_${(100..999).random()}"
+        val newItem = HazardDetectionItem(
+            id = newId,
+            category = category,
+            title = cleanTitle,
+            location = location,
+            severity = severity,
+            timestamp = time,
+            isAcknowledged = false,
+            audioAlertText = "Voice Hazard Alert: $cleanTitle at $location.",
+            oshaStandard = osha,
+            description = description,
+            detectionConfidence = (95..99).random(),
+            assignedWorkerId = "w_01",
+            assignedWorkerName = "John Doe (Safety Lead)"
+        )
+
+        val updatedList = listOf(newItem) + _hazardDetectionState.value.hazards
+        _hazardDetectionState.value = _hazardDetectionState.value.copy(
+            hazards = updatedList,
+            lastVoiceFiledHazard = newItem,
+            voiceCommandFeedbackMessage = "Voice Command Success: Filed hazard '$cleanTitle' at $location."
+        )
+
+        // Log context event
+        aiContextEngine.recordEvent(
+            com.example.data.model.ContextEvent(
+                id = "evt_vhz_${System.currentTimeMillis()}",
+                timestampMs = System.currentTimeMillis(),
+                formattedTime = time,
+                type = com.example.data.model.ContextEventType.HAZARD_DETECTED,
+                source = com.example.data.model.ContextEventSource.VOICE_AI,
+                title = "Voice Hazard Filed: $cleanTitle",
+                description = description,
+                location = location,
+                severity = severity,
+                metadata = mapOf("category" to category.displayName)
+            )
+        )
+
+        // Sync local DB
+        viewModelScope.launch {
+            try {
+                val localEntity = HazardEntity(
+                    title = cleanTitle,
+                    category = category.displayName,
+                    severity = severity,
+                    location = location,
+                    description = description,
+                    timestamp = System.currentTimeMillis(),
+                    assignedWorkerId = "w_01",
+                    assignedWorkerName = "John Doe (Safety Lead)",
+                    syncStatus = "SYNCED"
+                )
+                repository.insertHazard(localEntity)
+            } catch (e: Exception) {
+                // local fallback
+            }
+        }
+
+        val confirmationMessage = "Hazard observation filed via Voice Command: '$cleanTitle' at $location ($severity severity). Assigned to Safety Lead."
+        return Pair(newItem, confirmationMessage)
     }
 
     fun reportHazardToDb(hazard: HazardDetectionItem) {

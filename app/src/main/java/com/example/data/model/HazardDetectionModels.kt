@@ -32,6 +32,8 @@ data class HazardDetectionState(
     val hazards: List<HazardDetectionItem> = emptyList(),
     val activeVoicePlayingId: String? = null,
     val selectedCategoryFilter: HazardCategory? = null,
-    val selectedSeverityFilter: String? = null // "CRITICAL", "HIGH", "MEDIUM", "LOW"
+    val selectedSeverityFilter: String? = null, // "CRITICAL", "HIGH", "MEDIUM", "LOW"
+    val lastVoiceFiledHazard: HazardDetectionItem? = null,
+    val voiceCommandFeedbackMessage: String? = null
 )
 

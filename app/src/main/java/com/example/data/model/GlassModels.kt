@@ -17,6 +17,8 @@ data class GlassDeviceState(
     val batteryPercent: Int = 92,
     val caseBatteryPercent: Int = 88,
     val isCharging: Boolean = false,
+    val chargingStatusText: String = "Discharging",
+    val batteryHealth: String = "Good",
     val tempCelsius: Int = 31,
     val storageFreeGb: Float = 28.5f,
     val storageTotalGb: Float = 32.0f,

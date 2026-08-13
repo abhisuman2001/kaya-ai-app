@@ -1055,14 +1055,14 @@ private fun PhoneGlassBridgeCard(
                             }
                             Spacer(modifier = Modifier.height(4.dp))
                             Text(
-                                text = "${if (isBridgeActive) glassState.batteryPercent else 98}% • Charging (USB-C Fast)",
+                                text = "${glassState.batteryPercent}% • ${glassState.chargingStatusText} • Health: ${glassState.batteryHealth}",
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
                             Spacer(modifier = Modifier.height(6.dp))
                             LinearProgressIndicator(
-                                progress = { if (isBridgeActive) glassState.batteryPercent / 100f else 0.98f },
+                                progress = { (glassState.batteryPercent.coerceIn(0, 100)) / 100f },
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(4.dp)
