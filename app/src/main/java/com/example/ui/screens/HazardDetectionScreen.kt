@@ -51,6 +51,7 @@ import com.example.data.model.UserRole
 import com.example.ui.components.CreateHazardDialog
 import com.example.ui.components.HazardCard
 import com.example.ui.components.HazardCategoryFilterChips
+import com.example.ui.components.VoiceHazardCommandCard
 import com.example.ui.theme.MetaBlue
 import com.example.ui.theme.StatusError
 import com.example.ui.theme.StatusSuccess
@@ -188,6 +189,18 @@ fun HazardDetectionScreen(
                     }
                 }
             }
+        }
+
+        // Voice Command Feature to File Hazard
+        item {
+            VoiceHazardCommandCard(
+                onProcessVoiceCommand = { voiceCmd ->
+                    viewModel.processVoiceHazardCommand(voiceCmd)
+                },
+                lastVoiceFiledHazard = hazardState.lastVoiceFiledHazard,
+                voiceFeedbackMessage = hazardState.voiceCommandFeedbackMessage,
+                onDismissFeedback = { viewModel.clearVoiceCommandFeedback() }
+            )
         }
 
         // Voice Alert Active Playing Banner
