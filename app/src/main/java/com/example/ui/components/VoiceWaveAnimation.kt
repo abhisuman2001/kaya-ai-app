@@ -43,10 +43,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.GlassAiState
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusError
-import com.example.ui.theme.StatusSuccess
-import com.example.ui.theme.StatusWarning
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun VoiceWaveAnimationCard(
@@ -62,9 +59,9 @@ fun VoiceWaveAnimationCard(
             .border(
                 1.dp,
                 when (aiState) {
-                    GlassAiState.LISTENING -> MetaBlue
-                    GlassAiState.THINKING -> StatusWarning
-                    GlassAiState.SPEAKING -> StatusSuccess
+                    GlassAiState.LISTENING -> LocalKayaColors.current.accent
+                    GlassAiState.THINKING -> LocalKayaColors.current.status.warning
+                    GlassAiState.SPEAKING -> LocalKayaColors.current.status.success
                     else -> MaterialTheme.colorScheme.outlineVariant
                 },
                 RoundedCornerShape(20.dp)
@@ -90,9 +87,9 @@ fun VoiceWaveAnimationCard(
                         },
                         contentDescription = null,
                         tint = when (aiState) {
-                            GlassAiState.LISTENING -> MetaBlue
-                            GlassAiState.THINKING -> StatusWarning
-                            GlassAiState.SPEAKING -> StatusSuccess
+                            GlassAiState.LISTENING -> LocalKayaColors.current.accent
+                            GlassAiState.THINKING -> LocalKayaColors.current.status.warning
+                            GlassAiState.SPEAKING -> LocalKayaColors.current.status.success
                             else -> MaterialTheme.colorScheme.onSurfaceVariant
                         },
                         modifier = Modifier.size(20.dp)
@@ -112,9 +109,9 @@ fun VoiceWaveAnimationCard(
                 Surface(
                     shape = RoundedCornerShape(8.dp),
                     color = when (aiState) {
-                        GlassAiState.LISTENING -> MetaBlue.copy(0.15f)
-                        GlassAiState.THINKING -> StatusWarning.copy(0.15f)
-                        GlassAiState.SPEAKING -> StatusSuccess.copy(0.15f)
+                        GlassAiState.LISTENING -> LocalKayaColors.current.accent.copy(0.15f)
+                        GlassAiState.THINKING -> LocalKayaColors.current.status.warning.copy(0.15f)
+                        GlassAiState.SPEAKING -> LocalKayaColors.current.status.success.copy(0.15f)
                         else -> MaterialTheme.colorScheme.surfaceVariant
                     }
                 ) {
@@ -123,9 +120,9 @@ fun VoiceWaveAnimationCard(
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
                         color = when (aiState) {
-                            GlassAiState.LISTENING -> MetaBlue
-                            GlassAiState.THINKING -> StatusWarning
-                            GlassAiState.SPEAKING -> StatusSuccess
+                            GlassAiState.LISTENING -> LocalKayaColors.current.accent
+                            GlassAiState.THINKING -> LocalKayaColors.current.status.warning
+                            GlassAiState.SPEAKING -> LocalKayaColors.current.status.success
                             else -> MaterialTheme.colorScheme.onSurfaceVariant
                         },
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
@@ -150,9 +147,9 @@ fun VoiceWaveAnimationCard(
                 ) {
                     val barCount = 18
                     val activeColor = when (aiState) {
-                        GlassAiState.LISTENING -> MetaBlue
-                        GlassAiState.THINKING -> StatusWarning
-                        GlassAiState.SPEAKING -> StatusSuccess
+                        GlassAiState.LISTENING -> LocalKayaColors.current.accent
+                        GlassAiState.THINKING -> LocalKayaColors.current.status.warning
+                        GlassAiState.SPEAKING -> LocalKayaColors.current.status.success
                         else -> Color.Gray.copy(0.4f)
                     }
 
@@ -207,7 +204,7 @@ fun VoiceWaveAnimationCard(
                 VoiceStateChip(
                     label = "🎤 Listening",
                     isSelected = aiState == GlassAiState.LISTENING,
-                    activeColor = MetaBlue,
+                    activeColor = LocalKayaColors.current.accent,
                     onClick = onSimulateListening,
                     modifier = Modifier.weight(1f)
                 )
@@ -215,7 +212,7 @@ fun VoiceWaveAnimationCard(
                 VoiceStateChip(
                     label = "🧠 Thinking",
                     isSelected = aiState == GlassAiState.THINKING,
-                    activeColor = StatusWarning,
+                    activeColor = LocalKayaColors.current.status.warning,
                     onClick = onSimulateThinking,
                     modifier = Modifier.weight(1f)
                 )
@@ -223,7 +220,7 @@ fun VoiceWaveAnimationCard(
                 VoiceStateChip(
                     label = "🔊 Speaking",
                     isSelected = aiState == GlassAiState.SPEAKING,
-                    activeColor = StatusSuccess,
+                    activeColor = LocalKayaColors.current.status.success,
                     onClick = onSimulateSpeaking,
                     modifier = Modifier.weight(1f)
                 )

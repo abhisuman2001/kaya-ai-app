@@ -49,10 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.example.data.model.VisionBoundingBox
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusError
-import com.example.ui.theme.StatusSuccess
-import com.example.ui.theme.StatusWarning
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun SceneBoundingBoxOverlay(
@@ -83,7 +80,7 @@ fun SceneBoundingBoxOverlay(
                     Icon(
                         imageVector = Icons.Default.CenterFocusWeak,
                         contentDescription = null,
-                        tint = MetaBlue,
+                        tint = LocalKayaColors.current.accent,
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -98,13 +95,13 @@ fun SceneBoundingBoxOverlay(
 
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = MetaBlue.copy(0.15f)
+                    color = LocalKayaColors.current.accent.copy(0.15f)
                 ) {
                     Text(
                         text = "1080p HD Frame • 60 FPS",
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MetaBlue,
+                        color = LocalKayaColors.current.accent,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                     )
                 }
@@ -140,6 +137,11 @@ fun SceneBoundingBoxOverlay(
                         )
                 )
 
+                // Hoisted: a DrawScope is not a composable scope, so LocalKayaColors
+                // cannot be read inside the draw block below.
+                val hazardColor = LocalKayaColors.current.status.error
+                val equipmentColor = LocalKayaColors.current.status.success
+                val otherColor = LocalKayaColors.current.status.warning
                 // HUD Grid & Crosshair Canvas
                 Canvas(modifier = Modifier.fillMaxSize()) {
                     val w = size.width
@@ -159,11 +161,11 @@ fun SceneBoundingBoxOverlay(
                         val boxHeight = box.normHeight * h
 
                         val boxColor = when (box.category) {
-                            "Worker" -> if (box.isHazard) StatusError else Color(0xFF38BDF8)
+                            "Worker" -> if (box.isHazard) hazardColor else Color(0xFF38BDF8)
                             "Material" -> Color(0xFFA855F7)
-                            "Equipment" -> StatusSuccess
-                            "Hazard" -> StatusError
-                            else -> StatusWarning
+                            "Equipment" -> equipmentColor
+                            "Hazard" -> hazardColor
+                            else -> otherColor
                         }
 
                         val isSelected = selectedBox?.label == box.label
@@ -180,11 +182,11 @@ fun SceneBoundingBoxOverlay(
                 // Interactive Clickable Badges overlaying normalized coordinates
                 boundingBoxes.forEach { box ->
                     val categoryColor = when (box.category) {
-                        "Worker" -> if (box.isHazard) StatusError else Color(0xFF38BDF8)
+                        "Worker" -> if (box.isHazard) LocalKayaColors.current.status.error else Color(0xFF38BDF8)
                         "Material" -> Color(0xFFA855F7)
-                        "Equipment" -> StatusSuccess
-                        "Hazard" -> StatusError
-                        else -> StatusWarning
+                        "Equipment" -> LocalKayaColors.current.status.success
+                        "Hazard" -> LocalKayaColors.current.status.error
+                        else -> LocalKayaColors.current.status.warning
                     }
 
                     val isSelected = selectedBox?.label == box.label
@@ -254,7 +256,7 @@ fun SceneBoundingBoxOverlay(
                     if (isCapturing) {
                         CircularProgressIndicator(
                             modifier = Modifier.size(18.dp),
-                            color = MetaBlue,
+                            color = LocalKayaColors.current.accent,
                             strokeWidth = 2.dp
                         )
                     }
@@ -264,7 +266,7 @@ fun SceneBoundingBoxOverlay(
                 Button(
                     onClick = onCaptureClick,
                     enabled = !isCapturing,
-                    colors = ButtonDefaults.buttonColors(containerColor = MetaBlue),
+                    colors = ButtonDefaults.buttonColors(containerColor = LocalKayaColors.current.accent),
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier
                         .align(Alignment.BottomEnd)

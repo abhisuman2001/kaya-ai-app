@@ -40,10 +40,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.VisionBoundingBox
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusError
-import com.example.ui.theme.StatusSuccess
-import com.example.ui.theme.StatusWarning
+import com.example.ui.theme.LocalKayaColors
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,10 +54,10 @@ fun SceneBottomSheet(
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     val riskColor = when (selectedBox.riskLevel) {
-        "CRITICAL" -> StatusError
-        "HIGH" -> StatusError
-        "MEDIUM" -> StatusWarning
-        else -> StatusSuccess
+        "CRITICAL" -> LocalKayaColors.current.status.error
+        "HIGH" -> LocalKayaColors.current.status.error
+        "MEDIUM" -> LocalKayaColors.current.status.warning
+        else -> LocalKayaColors.current.status.success
     }
 
     ModalBottomSheet(
@@ -135,7 +132,7 @@ fun SceneBottomSheet(
                         fontSize = 9.sp,
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold,
-                        color = MetaBlue
+                        color = LocalKayaColors.current.accent
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
@@ -151,7 +148,7 @@ fun SceneBottomSheet(
 
             // AI Vision Breakdown
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(18.dp))
+                Icon(imageVector = Icons.Default.AutoAwesome, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(6.dp))
                 Text(
                     text = "AI VISION ANALYSIS & ACTION PLAN",
@@ -178,7 +175,7 @@ fun SceneBottomSheet(
 
             Button(
                 onClick = onDismiss,
-                colors = ButtonDefaults.buttonColors(containerColor = MetaBlue),
+                colors = ButtonDefaults.buttonColors(containerColor = LocalKayaColors.current.accent),
                 shape = RoundedCornerShape(12.dp),
                 modifier = Modifier
                     .fillMaxWidth()

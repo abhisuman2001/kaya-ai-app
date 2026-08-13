@@ -48,9 +48,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusError
-import com.example.ui.theme.StatusSuccess
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun VoiceFirstHudCard(
@@ -94,10 +92,10 @@ fun VoiceFirstHudCard(
     )
 
     val stateColor = when {
-        isListening -> StatusError
-        isThinking -> MetaBlue
-        isSpeaking -> StatusSuccess
-        else -> MetaBlue
+        isListening -> LocalKayaColors.current.status.error
+        isThinking -> LocalKayaColors.current.accent
+        isSpeaking -> LocalKayaColors.current.status.success
+        else -> LocalKayaColors.current.accent
     }
 
     val stateText = when {
@@ -131,7 +129,7 @@ fun VoiceFirstHudCard(
             ) {
                 Surface(
                     shape = RoundedCornerShape(10.dp),
-                    color = if (isHandsFreeEnabled) MetaBlue else MaterialTheme.colorScheme.surfaceVariant,
+                    color = if (isHandsFreeEnabled) LocalKayaColors.current.accent else MaterialTheme.colorScheme.surfaceVariant,
                     modifier = Modifier
                         .clickable { onToggleHandsFree() }
                         .testTag("toggle_hands_free_button")

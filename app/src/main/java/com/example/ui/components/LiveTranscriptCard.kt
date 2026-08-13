@@ -35,8 +35,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.LiveTranscriptEntry
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusSuccess
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun LiveTranscriptCard(
@@ -61,7 +60,7 @@ fun LiveTranscriptCard(
                     Icon(
                         imageVector = Icons.Default.Forum,
                         contentDescription = null,
-                        tint = MetaBlue,
+                        tint = LocalKayaColors.current.accent,
                         modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -76,13 +75,13 @@ fun LiveTranscriptCard(
 
                 Surface(
                     shape = RoundedCornerShape(6.dp),
-                    color = StatusSuccess.copy(0.15f)
+                    color = LocalKayaColors.current.status.success.copy(0.15f)
                 ) {
                     Text(
                         text = "Real-time Voice STT/TTS",
                         fontSize = 9.sp,
                         fontWeight = FontWeight.Bold,
-                        color = StatusSuccess,
+                        color = LocalKayaColors.current.status.success,
                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                     )
                 }
@@ -109,8 +108,8 @@ fun LiveTranscriptCard(
 
 @Composable
 private fun TranscriptBubble(entry: LiveTranscriptEntry) {
-    val bubbleBg = if (entry.isAi) MetaBlue.copy(0.12f) else MaterialTheme.colorScheme.surfaceVariant
-    val iconColor = if (entry.isAi) MetaBlue else MaterialTheme.colorScheme.onSurfaceVariant
+    val bubbleBg = if (entry.isAi) LocalKayaColors.current.accent.copy(0.12f) else MaterialTheme.colorScheme.surfaceVariant
+    val iconColor = if (entry.isAi) LocalKayaColors.current.accent else MaterialTheme.colorScheme.onSurfaceVariant
 
     Box(
         modifier = Modifier
@@ -138,7 +137,7 @@ private fun TranscriptBubble(entry: LiveTranscriptEntry) {
                         text = entry.speaker,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
-                        color = if (entry.isAi) MetaBlue else MaterialTheme.colorScheme.onSurface
+                        color = if (entry.isAi) LocalKayaColors.current.accent else MaterialTheme.colorScheme.onSurface
                     )
                 }
 
