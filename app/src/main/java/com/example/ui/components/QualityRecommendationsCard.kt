@@ -36,10 +36,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.QualityRecommendationItem
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusError
-import com.example.ui.theme.StatusSuccess
-import com.example.ui.theme.StatusWarning
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun QualityRecommendationsCard(
@@ -63,26 +60,26 @@ fun QualityRecommendationsCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(imageVector = Icons.Default.Lightbulb, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(18.dp))
+                    Icon(imageVector = Icons.Default.Lightbulb, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "AI SITE REMEDIATION ACTION PLAN",
                         fontSize = 11.sp,
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold,
-                        color = MetaBlue
+                        color = LocalKayaColors.current.accent
                     )
                 }
 
                 Surface(
                     shape = RoundedCornerShape(6.dp),
-                    color = StatusWarning.copy(0.12f)
+                    color = LocalKayaColors.current.status.warning.copy(0.12f)
                 ) {
                     Text(
                         text = "${recommendations.count { !it.isCompleted }} PENDING",
                         fontSize = 9.sp,
                         fontWeight = FontWeight.Bold,
-                        color = StatusWarning,
+                        color = LocalKayaColors.current.status.warning,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                     )
                 }
@@ -94,9 +91,9 @@ fun QualityRecommendationsCard(
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 recommendations.forEach { rec ->
                     val prioColor = when (rec.priority) {
-                        "CRITICAL" -> StatusError
-                        "HIGH" -> StatusWarning
-                        else -> MetaBlue
+                        "CRITICAL" -> LocalKayaColors.current.status.error
+                        "HIGH" -> LocalKayaColors.current.status.warning
+                        else -> LocalKayaColors.current.accent
                     }
 
                     Surface(
@@ -118,7 +115,7 @@ fun QualityRecommendationsCard(
                                 ) {
                                     Surface(
                                         shape = RoundedCornerShape(6.dp),
-                                        color = if (rec.isCompleted) StatusSuccess else prioColor
+                                        color = if (rec.isCompleted) LocalKayaColors.current.status.success else prioColor
                                     ) {
                                         Text(
                                             text = if (rec.isCompleted) "RESOLVED" else rec.priority,
@@ -162,15 +159,15 @@ fun QualityRecommendationsCard(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(imageVector = Icons.Default.Grid4x4, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(11.dp))
+                                    Icon(imageVector = Icons.Default.Grid4x4, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(11.dp))
                                     Spacer(modifier = Modifier.width(4.dp))
                                     Text(text = rec.location, fontSize = 9.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
 
                                 Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(imageVector = Icons.Default.Schedule, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(11.dp))
+                                    Icon(imageVector = Icons.Default.Schedule, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(11.dp))
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text(text = "${rec.estimatedFixTime} • ${rec.assignedTrade}", fontSize = 9.sp, fontWeight = FontWeight.SemiBold, color = MetaBlue)
+                                    Text(text = "${rec.estimatedFixTime} • ${rec.assignedTrade}", fontSize = 9.sp, fontWeight = FontWeight.SemiBold, color = LocalKayaColors.current.accent)
                                 }
                             }
                         }

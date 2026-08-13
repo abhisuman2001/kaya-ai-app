@@ -33,8 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.QualityHistoryRecord
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusSuccess
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun QualityHistoryCard(
@@ -57,26 +56,26 @@ fun QualityHistoryCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(imageVector = Icons.Default.History, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(18.dp))
+                    Icon(imageVector = Icons.Default.History, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "QA / QC AUDIT HISTORY LOGS",
                         fontSize = 11.sp,
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold,
-                        color = MetaBlue
+                        color = LocalKayaColors.current.accent
                     )
                 }
 
                 Surface(
                     shape = RoundedCornerShape(6.dp),
-                    color = MetaBlue.copy(0.12f)
+                    color = LocalKayaColors.current.accent.copy(0.12f)
                 ) {
                     Text(
                         text = "${historyLogs.size} AUDITS RECORDED",
                         fontSize = 9.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MetaBlue,
+                        color = LocalKayaColors.current.accent,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                     )
                 }
@@ -108,7 +107,7 @@ fun QualityHistoryCard(
                                         color = MaterialTheme.colorScheme.onSurface
                                     )
                                     Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(imageVector = Icons.Default.Person, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(11.dp))
+                                        Icon(imageVector = Icons.Default.Person, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(11.dp))
                                         Spacer(modifier = Modifier.width(4.dp))
                                         Text(text = "${log.inspector} • ${log.inspectionDate}", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                     }
@@ -116,14 +115,14 @@ fun QualityHistoryCard(
 
                                 Surface(
                                     shape = RoundedCornerShape(6.dp),
-                                    color = StatusSuccess.copy(0.15f)
+                                    color = LocalKayaColors.current.status.success.copy(0.15f)
                                 ) {
                                     Text(
                                         text = "${log.passRatePercent}% PASS",
                                         fontSize = 10.sp,
                                         fontFamily = FontFamily.Monospace,
                                         fontWeight = FontWeight.Bold,
-                                        color = StatusSuccess,
+                                        color = LocalKayaColors.current.status.success,
                                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                                     )
                                 }
@@ -144,13 +143,13 @@ fun QualityHistoryCard(
 
                                 Surface(
                                     shape = RoundedCornerShape(4.dp),
-                                    color = MetaBlue.copy(0.12f)
+                                    color = LocalKayaColors.current.accent.copy(0.12f)
                                 ) {
                                     Text(
                                         text = log.status,
                                         fontSize = 8.sp,
                                         fontWeight = FontWeight.Bold,
-                                        color = MetaBlue,
+                                        color = LocalKayaColors.current.accent,
                                         modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                                     )
                                 }
@@ -170,9 +169,9 @@ fun QualityHistoryCard(
                     .height(40.dp)
                     .testTag("export_quality_pdf_button")
             ) {
-                Icon(imageVector = Icons.Default.Download, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(14.dp))
+                Icon(imageVector = Icons.Default.Download, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(14.dp))
                 Spacer(modifier = Modifier.width(6.dp))
-                Text("EXPORT COMPLETE QA/QC CERTIFICATE (PDF)", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MetaBlue)
+                Text("EXPORT COMPLETE QA/QC CERTIFICATE (PDF)", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = LocalKayaColors.current.accent)
             }
         }
     }

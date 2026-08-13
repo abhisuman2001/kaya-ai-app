@@ -39,10 +39,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusError
-import com.example.ui.theme.StatusSuccess
-import com.example.ui.theme.StatusWarning
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun QualityScoreCard(
@@ -61,7 +58,7 @@ fun QualityScoreCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .border(1.dp, MetaBlue.copy(0.4f), RoundedCornerShape(24.dp))
+            .border(1.dp, LocalKayaColors.current.accent.copy(0.4f), RoundedCornerShape(24.dp))
             .testTag("quality_score_card"),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
@@ -78,10 +75,10 @@ fun QualityScoreCard(
                         modifier = Modifier
                             .size(36.dp)
                             .clip(CircleShape)
-                            .background(MetaBlue.copy(0.15f)),
+                            .background(LocalKayaColors.current.accent.copy(0.15f)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(imageVector = Icons.Default.FactCheck, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(20.dp))
+                        Icon(imageVector = Icons.Default.FactCheck, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(20.dp))
                     }
                     Spacer(modifier = Modifier.width(10.dp))
                     Column {
@@ -90,7 +87,7 @@ fun QualityScoreCard(
                             fontSize = 11.sp,
                             fontFamily = FontFamily.Monospace,
                             fontWeight = FontWeight.Bold,
-                            color = MetaBlue
+                            color = LocalKayaColors.current.accent
                         )
                         Text(
                             text = "QA / QC Performance Score",
@@ -103,19 +100,19 @@ fun QualityScoreCard(
 
                 Surface(
                     shape = RoundedCornerShape(10.dp),
-                    color = StatusSuccess.copy(0.15f)
+                    color = LocalKayaColors.current.status.success.copy(0.15f)
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(imageVector = Icons.Default.Grade, contentDescription = null, tint = StatusSuccess, modifier = Modifier.size(14.dp))
+                        Icon(imageVector = Icons.Default.Grade, contentDescription = null, tint = LocalKayaColors.current.status.success, modifier = Modifier.size(14.dp))
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = qualityGrade,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Bold,
-                            color = StatusSuccess
+                            color = LocalKayaColors.current.status.success
                         )
                     }
                 }
@@ -133,8 +130,8 @@ fun QualityScoreCard(
                     modifier = Modifier
                         .size(80.dp)
                         .clip(CircleShape)
-                        .background(MetaBlue.copy(0.12f))
-                        .border(3.dp, MetaBlue, CircleShape),
+                        .background(LocalKayaColors.current.accent.copy(0.12f))
+                        .border(3.dp, LocalKayaColors.current.accent, CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -142,7 +139,7 @@ fun QualityScoreCard(
                             text = "$overallScore",
                             fontSize = 26.sp,
                             fontWeight = FontWeight.ExtraBold,
-                            color = MetaBlue
+                            color = LocalKayaColors.current.accent
                         )
                         Text(
                             text = "/ 100",
@@ -174,7 +171,7 @@ fun QualityScoreCard(
             // AI Vision Scan Trigger Button
             Button(
                 onClick = onRunScan,
-                colors = ButtonDefaults.buttonColors(containerColor = MetaBlue),
+                colors = ButtonDefaults.buttonColors(containerColor = LocalKayaColors.current.accent),
                 shape = RoundedCornerShape(14.dp),
                 modifier = Modifier
                     .fillMaxWidth()
@@ -201,9 +198,9 @@ private fun CategoryScoreProgressBar(
     score: Int
 ) {
     val scoreColor = when {
-        score >= 90 -> StatusSuccess
-        score >= 75 -> StatusWarning
-        else -> StatusError
+        score >= 90 -> LocalKayaColors.current.status.success
+        score >= 75 -> LocalKayaColors.current.status.warning
+        else -> LocalKayaColors.current.status.error
     }
 
     Column {

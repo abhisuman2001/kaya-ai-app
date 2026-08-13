@@ -33,8 +33,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusSuccess
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun MaterialInventoryAuditCard(
@@ -55,26 +54,26 @@ fun MaterialInventoryAuditCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(imageVector = Icons.Default.CloudDone, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(18.dp))
+                    Icon(imageVector = Icons.Default.CloudDone, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "ERP & BIM INVENTORY SYNC ENGINE",
                         fontSize = 11.sp,
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold,
-                        color = MetaBlue
+                        color = LocalKayaColors.current.accent
                     )
                 }
 
                 Surface(
                     shape = RoundedCornerShape(6.dp),
-                    color = StatusSuccess.copy(0.15f)
+                    color = LocalKayaColors.current.status.success.copy(0.15f)
                 ) {
                     Text(
                         text = "LIVE SYNC ACTIVE",
                         fontSize = 9.sp,
                         fontWeight = FontWeight.Bold,
-                        color = StatusSuccess,
+                        color = LocalKayaColors.current.status.success,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                     )
                 }
@@ -120,14 +119,14 @@ fun MaterialInventoryAuditCard(
                         .height(40.dp)
                         .testTag("force_erp_sync_btn")
                 ) {
-                    Icon(imageVector = Icons.Default.Sync, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(14.dp))
+                    Icon(imageVector = Icons.Default.Sync, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(14.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("SYNC ERP NOW", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = MetaBlue)
+                    Text("SYNC ERP NOW", fontSize = 10.sp, fontWeight = FontWeight.Bold, color = LocalKayaColors.current.accent)
                 }
 
                 Button(
                     onClick = { /* Export Material Report */ },
-                    colors = ButtonDefaults.buttonColors(containerColor = MetaBlue),
+                    colors = ButtonDefaults.buttonColors(containerColor = LocalKayaColors.current.accent),
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier
                         .weight(1f)
