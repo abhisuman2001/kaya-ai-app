@@ -30,7 +30,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.ui.theme.MetaBlue
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun BimAlignmentControls(
@@ -56,14 +56,14 @@ fun BimAlignmentControls(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(imageVector = Icons.Default.CenterFocusStrong, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(18.dp))
+                    Icon(imageVector = Icons.Default.CenterFocusStrong, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "AR MATRIX ALIGNMENT & CALIBRATION",
                         fontSize = 11.sp,
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold,
-                        color = MetaBlue
+                        color = LocalKayaColors.current.accent
                     )
                 }
 
@@ -72,9 +72,9 @@ fun BimAlignmentControls(
                     shape = RoundedCornerShape(8.dp),
                     modifier = Modifier.testTag("reset_alignment_button")
                 ) {
-                    Icon(imageVector = Icons.Default.RestartAlt, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(14.dp))
+                    Icon(imageVector = Icons.Default.RestartAlt, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(14.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("Zero Reset", fontSize = 10.sp, color = MetaBlue, fontWeight = FontWeight.Bold)
+                    Text("Zero Reset", fontSize = 10.sp, color = LocalKayaColors.current.accent, fontWeight = FontWeight.Bold)
                 }
             }
 
@@ -136,7 +136,7 @@ private fun AlignmentRow(
         ) {
             Column {
                 Text(text = label, fontSize = 9.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text(text = value, fontSize = 12.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, color = MetaBlue)
+                Text(text = value, fontSize = 12.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Bold, color = LocalKayaColors.current.accent)
             }
 
             Row(verticalAlignment = Alignment.CenterVertically) {

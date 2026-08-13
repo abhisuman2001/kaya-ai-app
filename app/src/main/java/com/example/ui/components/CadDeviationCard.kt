@@ -41,10 +41,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.CadDeviationItem
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusError
-import com.example.ui.theme.StatusSuccess
-import com.example.ui.theme.StatusWarning
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun CadDeviationCard(
@@ -55,9 +52,9 @@ fun CadDeviationCard(
     modifier: Modifier = Modifier
 ) {
     val severityColor = when (deviation.severity) {
-        "HIGH" -> StatusError
-        "MEDIUM" -> StatusWarning
-        else -> MetaBlue
+        "HIGH" -> LocalKayaColors.current.status.error
+        "MEDIUM" -> LocalKayaColors.current.status.warning
+        else -> LocalKayaColors.current.accent
     }
 
     Card(
@@ -65,7 +62,7 @@ fun CadDeviationCard(
             .fillMaxWidth()
             .border(
                 width = 1.dp,
-                color = if (deviation.isResolved) StatusSuccess.copy(0.4f) else severityColor.copy(0.5f),
+                color = if (deviation.isResolved) LocalKayaColors.current.status.success.copy(0.4f) else severityColor.copy(0.5f),
                 shape = RoundedCornerShape(20.dp)
             )
             .testTag("cad_deviation_card_${deviation.id}"),
@@ -86,13 +83,13 @@ fun CadDeviationCard(
                         modifier = Modifier
                             .size(32.dp)
                             .clip(CircleShape)
-                            .background(if (deviation.isResolved) StatusSuccess.copy(0.15f) else severityColor.copy(0.15f)),
+                            .background(if (deviation.isResolved) LocalKayaColors.current.status.success.copy(0.15f) else severityColor.copy(0.15f)),
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(
                             imageVector = if (deviation.isResolved) Icons.Default.CheckCircle else Icons.Default.Warning,
                             contentDescription = null,
-                            tint = if (deviation.isResolved) StatusSuccess else severityColor,
+                            tint = if (deviation.isResolved) LocalKayaColors.current.status.success else severityColor,
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -107,7 +104,7 @@ fun CadDeviationCard(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(imageVector = Icons.Default.Grid4x4, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(12.dp))
+                            Icon(imageVector = Icons.Default.Grid4x4, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(12.dp))
                             Spacer(modifier = Modifier.width(4.dp))
                             Text(text = deviation.gridLocation, fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
@@ -116,13 +113,13 @@ fun CadDeviationCard(
 
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = if (deviation.isResolved) StatusSuccess.copy(0.15f) else severityColor.copy(0.15f)
+                    color = if (deviation.isResolved) LocalKayaColors.current.status.success.copy(0.15f) else severityColor.copy(0.15f)
                 ) {
                     Text(
                         text = if (deviation.isResolved) "RESOLVED" else "${deviation.severity} VARIANCE",
                         fontSize = 9.sp,
                         fontWeight = FontWeight.Bold,
-                        color = if (deviation.isResolved) StatusSuccess else severityColor,
+                        color = if (deviation.isResolved) LocalKayaColors.current.status.success else severityColor,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
                 }
@@ -142,7 +139,7 @@ fun CadDeviationCard(
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(text = "CAD BLUEPRINT SPEC", fontSize = 8.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Text(text = deviation.cadSpec, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = MetaBlue)
+                        Text(text = deviation.cadSpec, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = LocalKayaColors.current.accent)
                     }
 
                     Column(modifier = Modifier.weight(1f)) {
@@ -158,15 +155,15 @@ fun CadDeviationCard(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Surface(
                     shape = RoundedCornerShape(6.dp),
-                    color = MetaBlue.copy(0.12f)
+                    color = LocalKayaColors.current.accent.copy(0.12f)
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(imageVector = Icons.Default.Shield, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(12.dp))
+                        Icon(imageVector = Icons.Default.Shield, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(12.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text(text = deviation.oshaBimCode, fontSize = 9.sp, fontWeight = FontWeight.Bold, color = MetaBlue)
+                        Text(text = deviation.oshaBimCode, fontSize = 9.sp, fontWeight = FontWeight.Bold, color = LocalKayaColors.current.accent)
                     }
                 }
             }
@@ -182,7 +179,7 @@ fun CadDeviationCard(
                 Button(
                     onClick = onVoiceFeedbackClick,
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = if (isVoicePlaying) StatusSuccess else MetaBlue
+                        containerColor = if (isVoicePlaying) LocalKayaColors.current.status.success else LocalKayaColors.current.accent
                     ),
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier
@@ -213,7 +210,7 @@ fun CadDeviationCard(
                         text = if (deviation.isResolved) "REOPEN" else "MARK RESOLVED",
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
-                        color = if (deviation.isResolved) StatusSuccess else MaterialTheme.colorScheme.onSurface
+                        color = if (deviation.isResolved) LocalKayaColors.current.status.success else MaterialTheme.colorScheme.onSurface
                     )
                 }
             }

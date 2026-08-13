@@ -38,7 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.CadBimFileItem
 import com.example.data.model.CadFileType
-import com.example.ui.theme.MetaBlue
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun CadFileUploadSection(
@@ -64,26 +64,26 @@ fun CadFileUploadSection(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(imageVector = Icons.Default.FolderZip, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(18.dp))
+                    Icon(imageVector = Icons.Default.FolderZip, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "CAD / IFC FILE ENGINE & PROJECT MAPPING",
                         fontSize = 11.sp,
                         fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold,
-                        color = MetaBlue
+                        color = LocalKayaColors.current.accent
                     )
                 }
 
                 Surface(
                     shape = RoundedCornerShape(6.dp),
-                    color = MetaBlue.copy(0.12f)
+                    color = LocalKayaColors.current.accent.copy(0.12f)
                 ) {
                     Text(
                         text = "${files.size} MODELS LOADED",
                         fontSize = 9.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MetaBlue,
+                        color = LocalKayaColors.current.accent,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp)
                     )
                 }
@@ -99,7 +99,7 @@ fun CadFileUploadSection(
                 // Upload CAD (.dwg / .dxf) Button
                 Button(
                     onClick = { onUploadClick(CadFileType.DWG) },
-                    colors = ButtonDefaults.buttonColors(containerColor = MetaBlue),
+                    colors = ButtonDefaults.buttonColors(containerColor = LocalKayaColors.current.accent),
                     shape = RoundedCornerShape(12.dp),
                     modifier = Modifier
                         .weight(1f)
@@ -120,9 +120,9 @@ fun CadFileUploadSection(
                         .height(40.dp)
                         .testTag("upload_ifc_button")
                 ) {
-                    Icon(imageVector = Icons.Default.Architecture, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(14.dp))
+                    Icon(imageVector = Icons.Default.Architecture, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(14.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("Upload IFC (.ifc)", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = MetaBlue)
+                    Text("Upload IFC (.ifc)", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = LocalKayaColors.current.accent)
                 }
             }
 
@@ -143,12 +143,12 @@ fun CadFileUploadSection(
                     val isActive = file.id == activeFileId
                     Surface(
                         shape = RoundedCornerShape(14.dp),
-                        color = if (isActive) MetaBlue.copy(0.12f) else MaterialTheme.colorScheme.surfaceVariant.copy(0.5f),
+                        color = if (isActive) LocalKayaColors.current.accent.copy(0.12f) else MaterialTheme.colorScheme.surfaceVariant.copy(0.5f),
                         modifier = Modifier
                             .fillMaxWidth()
                             .border(
                                 width = if (isActive) 1.5.dp else 0.5.dp,
-                                color = if (isActive) MetaBlue else MaterialTheme.colorScheme.outlineVariant,
+                                color = if (isActive) LocalKayaColors.current.accent else MaterialTheme.colorScheme.outlineVariant,
                                 shape = RoundedCornerShape(14.dp)
                             )
                             .clickable { onSelectFile(file.id) }
@@ -167,7 +167,7 @@ fun CadFileUploadSection(
                             ) {
                                 Surface(
                                     shape = RoundedCornerShape(8.dp),
-                                    color = MetaBlue
+                                    color = LocalKayaColors.current.accent
                                 ) {
                                     Text(
                                         text = file.fileType.extension.uppercase(),
@@ -188,7 +188,7 @@ fun CadFileUploadSection(
                                         color = MaterialTheme.colorScheme.onSurface
                                     )
                                     Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Icon(imageVector = Icons.Default.Grid4x4, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(11.dp))
+                                        Icon(imageVector = Icons.Default.Grid4x4, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(11.dp))
                                         Spacer(modifier = Modifier.width(4.dp))
                                         Text(
                                             text = "${file.projectGridMapping} • ${file.elementCount} Elements • ${file.revision}",
@@ -202,7 +202,7 @@ fun CadFileUploadSection(
                             if (isActive) {
                                 Surface(
                                     shape = RoundedCornerShape(6.dp),
-                                    color = MetaBlue
+                                    color = LocalKayaColors.current.accent
                                 ) {
                                     Row(
                                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),

@@ -48,10 +48,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.ui.theme.MetaBlue
-import com.example.ui.theme.StatusError
-import com.example.ui.theme.StatusSuccess
-import com.example.ui.theme.StatusWarning
+import com.example.ui.theme.LocalKayaColors
 
 @Composable
 fun DifferenceVisualizationCard(
@@ -74,7 +71,7 @@ fun DifferenceVisualizationCard(
     Card(
         modifier = modifier
             .fillMaxWidth()
-            .border(1.dp, MetaBlue.copy(0.4f), RoundedCornerShape(24.dp))
+            .border(1.dp, LocalKayaColors.current.accent.copy(0.4f), RoundedCornerShape(24.dp))
             .testTag("difference_visualization_card"),
         shape = RoundedCornerShape(24.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
@@ -91,10 +88,10 @@ fun DifferenceVisualizationCard(
                         modifier = Modifier
                             .size(32.dp)
                             .clip(CircleShape)
-                            .background(MetaBlue.copy(0.15f)),
+                            .background(LocalKayaColors.current.accent.copy(0.15f)),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(imageVector = Icons.Default.Compare, contentDescription = null, tint = MetaBlue, modifier = Modifier.size(18.dp))
+                        Icon(imageVector = Icons.Default.Compare, contentDescription = null, tint = LocalKayaColors.current.accent, modifier = Modifier.size(18.dp))
                     }
                     Spacer(modifier = Modifier.width(10.dp))
                     Column {
@@ -103,7 +100,7 @@ fun DifferenceVisualizationCard(
                             fontSize = 11.sp,
                             fontFamily = FontFamily.Monospace,
                             fontWeight = FontWeight.Bold,
-                            color = MetaBlue
+                            color = LocalKayaColors.current.accent
                         )
                         Text(
                             text = "Difference Visualization Engine",
@@ -116,13 +113,13 @@ fun DifferenceVisualizationCard(
 
                 Surface(
                     shape = RoundedCornerShape(8.dp),
-                    color = StatusWarning.copy(0.15f)
+                    color = LocalKayaColors.current.status.warning.copy(0.15f)
                 ) {
                     Text(
                         text = "2 VARIANCES",
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
-                        color = StatusWarning,
+                        color = LocalKayaColors.current.status.warning,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
                     )
                 }
@@ -139,7 +136,7 @@ fun DifferenceVisualizationCard(
                     val isSelected = selectedViewMode == modeKey
                     Surface(
                         shape = RoundedCornerShape(10.dp),
-                        color = if (isSelected) MetaBlue else MaterialTheme.colorScheme.surfaceVariant,
+                        color = if (isSelected) LocalKayaColors.current.accent else MaterialTheme.colorScheme.surfaceVariant,
                         modifier = Modifier
                             .clickable { onViewModeChange(modeKey) }
                             .testTag("cad_mode_$modeKey")
@@ -165,13 +162,18 @@ fun DifferenceVisualizationCard(
                     .height(190.dp)
                     .clip(RoundedCornerShape(16.dp))
                     .background(Color(0xFF0F172A))
-                    .border(1.dp, MetaBlue.copy(0.5f), RoundedCornerShape(16.dp)),
+                    .border(1.dp, LocalKayaColors.current.accent.copy(0.5f), RoundedCornerShape(16.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 val gridColor = Color(0xFF1E293B)
-                val cadColor = MetaBlue
-                val asBuiltColor = StatusSuccess
-                val devColor = StatusError
+                // Hoisted out of the Canvas: a DrawScope is not a composable scope, so
+                // LocalKayaColors cannot be read inside the draw block.
+                val heatHigh = LocalKayaColors.current.status.error
+                val heatMid = LocalKayaColors.current.status.warning
+                val heatLow = LocalKayaColors.current.status.success
+                val cadColor = LocalKayaColors.current.accent
+                val asBuiltColor = LocalKayaColors.current.status.success
+                val devColor = LocalKayaColors.current.status.error
                 val dashedEffect = PathEffect.dashPathEffect(floatArrayOf(10f, 10f), 0f)
 
                 Canvas(modifier = Modifier.fillMaxSize()) {
@@ -188,17 +190,17 @@ fun DifferenceVisualizationCard(
                         "HEATMAP" -> {
                             // Heatmap gradient overlay blocks
                             drawRect(
-                                color = StatusError.copy(0.35f),
+                                color = heatHigh.copy(0.35f),
                                 topLeft = Offset(w * 0.25f, h * 0.3f),
                                 size = Size(w * 0.2f, h * 0.4f)
                             )
                             drawRect(
-                                color = StatusWarning.copy(0.25f),
+                                color = heatMid.copy(0.25f),
                                 topLeft = Offset(w * 0.55f, h * 0.25f),
                                 size = Size(w * 0.25f, h * 0.35f)
                             )
                             drawRect(
-                                color = StatusSuccess.copy(0.15f),
+                                color = heatLow.copy(0.15f),
                                 topLeft = Offset(w * 0.1f, h * 0.1f),
                                 size = Size(w * 0.8f, h * 0.8f)
                             )
@@ -247,7 +249,7 @@ fun DifferenceVisualizationCard(
                                 fontSize = 9.sp,
                                 fontFamily = FontFamily.Monospace,
                                 fontWeight = FontWeight.Bold,
-                                color = MetaBlue,
+                                color = LocalKayaColors.current.accent,
                                 modifier = Modifier.padding(horizontal = 6.dp, vertical = 3.dp)
                             )
                         }
@@ -270,24 +272,24 @@ fun DifferenceVisualizationCard(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(modifier = Modifier.size(8.dp).background(MetaBlue, CircleShape))
+                            Box(modifier = Modifier.size(8.dp).background(LocalKayaColors.current.accent, CircleShape))
                             Spacer(modifier = Modifier.width(4.dp))
                             Text("CAD SPEC", fontSize = 8.sp, fontFamily = FontFamily.Monospace, color = Color.White)
                             Spacer(modifier = Modifier.width(10.dp))
-                            Box(modifier = Modifier.size(8.dp).background(StatusSuccess, CircleShape))
+                            Box(modifier = Modifier.size(8.dp).background(LocalKayaColors.current.status.success, CircleShape))
                             Spacer(modifier = Modifier.width(4.dp))
                             Text("AS-BUILT", fontSize = 8.sp, fontFamily = FontFamily.Monospace, color = Color.White)
                             Spacer(modifier = Modifier.width(10.dp))
-                            Box(modifier = Modifier.size(8.dp).background(StatusError, CircleShape))
+                            Box(modifier = Modifier.size(8.dp).background(LocalKayaColors.current.status.error, CircleShape))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("DEVIATION (+14mm)", fontSize = 8.sp, fontFamily = FontFamily.Monospace, color = StatusError)
+                            Text("DEVIATION (+14mm)", fontSize = 8.sp, fontFamily = FontFamily.Monospace, color = LocalKayaColors.current.status.error)
                         }
 
                         Text(
                             text = "OFF: X=${xOffsetMm}mm Y=${yOffsetMm}mm R=${rotationDeg}°",
                             fontSize = 8.sp,
                             fontFamily = FontFamily.Monospace,
-                            color = MetaBlue
+                            color = LocalKayaColors.current.accent
                         )
                     }
                 }
@@ -298,7 +300,7 @@ fun DifferenceVisualizationCard(
             // Action Button: Re-run Compare Scan
             Button(
                 onClick = onRunCompare,
-                colors = ButtonDefaults.buttonColors(containerColor = MetaBlue),
+                colors = ButtonDefaults.buttonColors(containerColor = LocalKayaColors.current.accent),
                 shape = RoundedCornerShape(14.dp),
                 modifier = Modifier
                     .fillMaxWidth()
