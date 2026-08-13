@@ -3,6 +3,7 @@ package com.example.data.network
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.Headers
 import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Query
@@ -46,7 +47,9 @@ data class SupabaseSiteEventDto(
     val type: String = "HAZARD",
     val title: String,
     val description: String? = null,
-    val project_id: String = "proj_01",
+    val project_id: String = "project_001",
+    val level_id: String? = null,
+    val zone_id: String? = null,
     val created_by_label: String? = "Supervisor",
     val created_by_role: String? = "SUPERVISOR",
     val assigned_to: String? = null,
@@ -57,7 +60,7 @@ data class SupabaseSiteEventDto(
 
 data class SupabaseReportDto(
     val id: String? = null,
-    val project_id: String = "proj_01",
+    val project_id: String = "project_001",
     val title: String,
     val summary: String? = null,
     val body: String? = null,
@@ -66,7 +69,7 @@ data class SupabaseReportDto(
 
 data class SupabaseTaskDto(
     val id: String? = null,
-    val project_id: String = "proj_01",
+    val project_id: String = "project_001",
     val title: String,
     val description: String? = null,
     val status: String = "todo",
@@ -78,7 +81,7 @@ data class SupabaseTaskDto(
 
 data class SupabaseBlueprintDto(
     val id: String? = null,
-    val project_id: String = "proj_01",
+    val project_id: String = "project_001",
     val name: String,
     val code: String? = null,
     val revision: String? = null,
@@ -93,8 +96,25 @@ data class SupabaseDeviceDto(
     val name: String,
     val firmware: String? = null,
     val battery_level: Int = 100,
-    val connection_state: String = "CONNECTED",
-    val project_id: String = "proj_01"
+    val connection_state: String = "connected",
+    val project_id: String = "project_001",
+    val last_seen_at: String? = null
+)
+
+// Upserted by the app (see worker_status table comment); read by the dashboard
+// roster and monitoring page. ai_session must be exactly "active" | "idle" | "offline"
+// — a Postgres enum on the worker_status.ai_session column.
+data class SupabaseWorkerStatusDto(
+    val user_id: String,
+    val device_id: String? = null,
+    val project_id: String? = "project_001",
+    val level_id: String? = null,
+    val zone_id: String? = null,
+    val task: String? = null,
+    val ai_session: String = "offline",
+    val hazard: String? = null,
+    val hazard_severity: String? = null,
+    val last_active_at: String? = null
 )
 
 data class SupabaseProfileDto(
@@ -103,6 +123,48 @@ data class SupabaseProfileDto(
     val email: String? = null,
     val site_role: String? = null,
     val approval_status: String? = "approved"
+)
+
+/**
+ * A capture from the `media_assets` table — the same rows the dashboard counts for its
+ * "Captures analysed" metric. `storage_path` points into a private Storage bucket, so it
+ * needs a signed URL before it can be displayed.
+ */
+data class SupabaseMediaAssetDto(
+    val id: String? = null,
+    val user_id: String? = null,
+    val project_id: String? = "project_001",
+    val level_id: String? = null,
+    val zone_id: String? = null,
+    val session_id: String? = null,
+    val type: String = "photo",
+    val source: String = "glasses",
+    val title: String? = null,
+    val storage_path: String? = null,
+    val width: Int? = null,
+    val height: Int? = null,
+    val duration_ms: Int? = null,
+    val byte_size: Int? = null,
+    val captured_at: String? = null,
+    val sync_status: String = "pending",
+    val ai_status: String = "pending",
+    val ai_provider: String? = null,
+    val ai_model: String? = null,
+    val analyzed_at: String? = null
+)
+
+/** A row from `projects` — needed for the project picker and to stop hardcoding project ids. */
+data class SupabaseProjectDto(
+    val id: String,
+    val name: String,
+    val code: String? = null,
+    val client: String? = null,
+    val location: String? = null,
+    val description: String? = null,
+    val status: String? = "active",
+    val phase: String? = null,
+    val progress: Int? = 0,
+    val budget: String? = null
 )
 
 interface SiteMindApiService {
@@ -169,8 +231,45 @@ interface SiteMindApiService {
     @GET("devices")
     suspend fun getDevices(@Query("select") select: String = "*"): Response<List<SupabaseDeviceDto>>
 
+    @Headers("Prefer: resolution=merge-duplicates,return=representation")
+    @POST("devices")
+    suspend fun upsertDevice(
+        @Body request: SupabaseDeviceDto,
+        @Query("on_conflict") onConflict: String = "id"
+    ): Response<List<SupabaseDeviceDto>>
+
+    @Headers("Prefer: resolution=merge-duplicates,return=representation")
+    @POST("worker_status")
+    suspend fun upsertWorkerStatus(
+        @Body request: SupabaseWorkerStatusDto,
+        @Query("on_conflict") onConflict: String = "user_id"
+    ): Response<List<SupabaseWorkerStatusDto>>
+
     @GET("profiles")
     suspend fun getProfiles(@Query("select") select: String = "*"): Response<List<SupabaseProfileDto>>
+
+    // ---- Media ----
+
+    /** Newest captures first, matching how the dashboard and v1's gallery order them. */
+    @GET("media_assets")
+    suspend fun getMediaAssets(
+        @Query("select") select: String = "*",
+        @Query("order") order: String = "captured_at.desc",
+        @Query("limit") limit: Int = 100
+    ): Response<List<SupabaseMediaAssetDto>>
+
+    @POST("media_assets")
+    suspend fun postMediaAsset(
+        @Body request: SupabaseMediaAssetDto
+    ): Response<List<SupabaseMediaAssetDto>>
+
+    // ---- Projects ----
+
+    @GET("projects")
+    suspend fun getProjects(
+        @Query("select") select: String = "*",
+        @Query("order") order: String = "created_at.asc"
+    ): Response<List<SupabaseProjectDto>>
 }
 
 

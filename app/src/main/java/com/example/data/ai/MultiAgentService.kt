@@ -28,8 +28,6 @@ class MultiAgentService {
         siteZone: String = "Grid B-4 Level 3"
     ): LiveAiAnalysisResult = withContext(Dispatchers.Default) {
 
-        val apiKey = try { BuildConfig.GEMINI_API_KEY } catch (e: Exception) { "" }
-
         val steps = mutableListOf<AgentExecutionStep>()
 
         // 1. Vision Agent
@@ -100,7 +98,7 @@ class MultiAgentService {
             )
         )
 
-        val geminiResult = callGeminiApi(apiKey, query, siteZone)
+        val geminiResult = callGeminiApi(query, siteZone)
         val responseText = geminiResult.text ?: generateSmartFallbackResponse(query, siteZone)
 
         val boxes = if (hasPpeIssue) {
@@ -140,17 +138,71 @@ class MultiAgentService {
         val errorMessage: String?
     )
 
-    private fun callGeminiApi(apiKey: String, query: String, zone: String): GeminiApiCallResult {
-        if (apiKey.isBlank() || apiKey == "MY_GEMINI_API_KEY") {
+    /**
+     * All usable Gemini keys, in rotation order. Free-tier keys each carry their own
+     * per-minute and per-day quota, so spreading calls across several multiplies the
+     * usable budget. Falls back to the single-key field when the plural one is absent.
+     */
+    private val geminiKeys: List<String> by lazy {
+        val multi = try { BuildConfig.GEMINI_API_KEYS } catch (e: Throwable) { "" }
+        val single = try { BuildConfig.GEMINI_API_KEY } catch (e: Throwable) { "" }
+        (multi.split(",") + single)
+            .map { it.trim() }
+            .filter { it.isNotBlank() && it != "MY_GEMINI_API_KEY" }
+            .distinct()
+    }
+
+    /**
+     * Round-robin cursor. Starting each request where the last one left off spreads load
+     * evenly instead of hammering key #1 until it 429s.
+     */
+    private val keyCursor = java.util.concurrent.atomic.AtomicInteger(0)
+
+    /** HTTP codes where a *different* key might succeed. A 404 is the model id being wrong,
+     *  which every key would hit identically, so it is deliberately not in this set. */
+    private fun isKeyExhaustedCode(code: Int) = code == 429 || code == 403 || code == 401
+
+    /**
+     * Tries each key in turn until one answers or all are exhausted. Only quota/auth
+     * failures advance the cursor — a network blip retries nothing, because the next key
+     * would fail the same way and burn quota for no reason.
+     */
+    private fun callGeminiApi(query: String, zone: String): GeminiApiCallResult {
+        if (geminiKeys.isEmpty()) {
             return GeminiApiCallResult(
                 text = null,
                 isError = true,
-                errorMessage = "Gemini API Key is missing or invalid placeholder. Please check secrets."
+                errorMessage = "No Gemini API key configured. Add GEMINI_API_KEYS to .env."
             )
         }
+
+        var lastError: GeminiApiCallResult? = null
+        val start = keyCursor.getAndIncrement()
+
+        for (offset in geminiKeys.indices) {
+            val key = geminiKeys[((start + offset) % geminiKeys.size + geminiKeys.size) % geminiKeys.size]
+            val result = callGeminiWithKey(key, query, zone)
+            if (!result.isError) return result
+            lastError = result
+            // Only worth trying another key when this one is rate-limited or rejected.
+            if (result.errorMessage?.contains("quota", ignoreCase = true) != true &&
+                result.errorMessage?.contains("unauthorized", ignoreCase = true) != true &&
+                result.errorMessage?.contains("permission denied", ignoreCase = true) != true
+            ) {
+                return result
+            }
+        }
+        return lastError ?: GeminiApiCallResult(null, true, "All Gemini API keys failed.")
+    }
+
+    private fun callGeminiWithKey(apiKey: String, query: String, zone: String): GeminiApiCallResult {
         return try {
-            val systemPrompt = "You are SiteMind AI, an expert construction intelligence assistant running on Ray-Ban Meta Smart Glasses. Answer concisely, professionally, and prioritize safety, OSHA rules, and quality standards for location: $zone."
-            val fullPrompt = "$systemPrompt\n\nWorker query: $query"
+            // Kept deliberately short: every token here is billed against the free-tier
+            // budget on each request, and the answer is read on a HUD, not a page.
+            val fullPrompt =
+                "You are Kaya AI, a construction safety assistant on Ray-Ban Meta glasses. " +
+                    "Zone: $zone. Answer in under 60 words, prioritising safety and OSHA rules.\n\n" +
+                    "Worker: $query"
 
             val jsonBody = JSONObject().apply {
                 put("contents", JSONArray().apply {
@@ -162,9 +214,14 @@ class MultiAgentService {
                         })
                     })
                 })
+                // Hard cap on output so a runaway answer cannot drain the daily token budget.
+                put("generationConfig", JSONObject().apply {
+                    put("maxOutputTokens", 200)
+                    put("temperature", 0.4)
+                })
             }
 
-            val url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=$apiKey"
+            val url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=$apiKey"
             val httpRequest = Request.Builder()
                 .url(url)
                 .post(jsonBody.toString().toRequestBody("application/json".toMediaType()))
@@ -222,7 +279,7 @@ class MultiAgentService {
                 "Overlapping BIM Model S-204 against current frame. 2 structural penetrations aligned. Electrical riser conduit in MEP-302 offset by 25mm."
 
             else ->
-                "SiteMind AI active in $zone. Camera feed analyzed: Work area clear of critical hazards. PPE compliance at 96%. All crew members operating in safe zones."
+                "Kaya AI active in $zone. Camera feed analyzed: Work area clear of critical hazards. PPE compliance at 96%. All crew members operating in safe zones."
         }
     }
 }

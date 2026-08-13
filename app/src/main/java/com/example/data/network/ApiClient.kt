@@ -44,11 +44,14 @@ object ApiClient {
     private val authInterceptor = Interceptor { chain ->
         val original = chain.request()
         val keyToUse = serviceRoleKey
+        // Preserve a per-request Prefer header (e.g. upsert's "resolution=merge-duplicates")
+        // set via @Headers on the service method instead of always forcing the default.
+        val preferValue = original.header("Prefer") ?: "return=representation"
         val requestBuilder = original.newBuilder()
             .header("apikey", keyToUse)
             .header("Authorization", "Bearer $keyToUse")
             .header("Content-Type", "application/json")
-            .header("Prefer", "return=representation")
+            .header("Prefer", preferValue)
         chain.proceed(requestBuilder.build())
     }
 
